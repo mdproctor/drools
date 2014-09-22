@@ -46,6 +46,7 @@ import org.kie.api.event.rule.MatchCancelledCause;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.api.runtime.rule.AgendaFilter;
 import org.kie.api.runtime.rule.Match;
+import org.kie.internal.runtime.beliefs.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -756,7 +757,7 @@ public class DefaultAgenda
         throw new UnsupportedOperationException("rete only");
     }
 
-    public org.drools.core.util.LinkedList<ScheduledAgendaItem> getScheduledActivationsLinkedList() {
+    public org.drools.core.util.LinkedList<ScheduledAgendaItem<Mode>> getScheduledActivationsLinkedList() {
         throw new UnsupportedOperationException("rete only");
     }
 
