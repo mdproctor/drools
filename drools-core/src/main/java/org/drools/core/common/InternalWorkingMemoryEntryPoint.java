@@ -16,6 +16,7 @@
 
 package org.drools.core.common;
 
+import org.drools.core.spi.FactHandleFactory;
 import org.kie.api.runtime.rule.FactHandle;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.InternalKnowledgeBase;
@@ -38,6 +39,8 @@ public interface InternalWorkingMemoryEntryPoint extends EntryPoint {
                        Class<?> modifiedClass,
                        Activation activation);
 
+    public TruthMaintenanceSystem getTruthMaintenanceSystem();
+
     public EntryPointId getEntryPoint();
     public InternalWorkingMemory getInternalWorkingMemory();
 
@@ -46,6 +49,8 @@ public interface InternalWorkingMemoryEntryPoint extends EntryPoint {
     void reset();
     
     ObjectStore getObjectStore();
+
+    FactHandleFactory getHandleFactory();
     
     EntryPointNode getEntryPointNode();
 }

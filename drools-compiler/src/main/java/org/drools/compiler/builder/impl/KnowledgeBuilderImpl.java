@@ -2253,6 +2253,17 @@ public class KnowledgeBuilderImpl implements KnowledgeBuilder {
                 annotationClass = typeResolver.resolveType(className, TypeResolver.ONLY_ANNOTATION_CLASS_FILTER);
             } catch (ClassNotFoundException e1) {
                 // non-strict annotation, ignore error
+            }  catch (NoClassDefFoundError e2) {
+                // non-strict annotation, ignore error
+            }
+        }  catch (NoClassDefFoundError e) {
+            String className = normalizeAnnotationNonStrictName(annotationDescr.getName());
+            try {
+                annotationClass = typeResolver.resolveType(className, TypeResolver.ONLY_ANNOTATION_CLASS_FILTER);
+            } catch (ClassNotFoundException e1) {
+                // non-strict annotation, ignore error
+            }   catch (NoClassDefFoundError e2) {
+                // non-strict annotation, ignore error
             }
         }
         if (annotationClass != null) {

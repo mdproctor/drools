@@ -39,9 +39,7 @@ import org.drools.core.common.TruthMaintenanceSystemHelper;
 import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.factmodel.ClassDefinition;
-import org.drools.core.factmodel.MapCore;
 import org.drools.core.factmodel.traits.CoreWrapper;
-import org.drools.core.factmodel.traits.LogicalMapCore;
 import org.drools.core.factmodel.traits.LogicalTypeInconsistencyException;
 import org.drools.core.factmodel.traits.Thing;
 import org.drools.core.factmodel.traits.TraitFactory;
@@ -101,7 +99,7 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
     private IdentityHashMap<Object, FactHandle>       identityMap;
 
     private LinkedList<LogicalDependency<T>>          previousJustified;
-    
+
     private LinkedList<LogicalDependency<SimpleMode>> previousBlocked;
 
     public DefaultKnowledgeHelper() {
@@ -114,13 +112,13 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
         this.identityMap = null;
 
     }
-    
+
     public DefaultKnowledgeHelper(Activation activation, final WorkingMemory workingMemory) {
         this.workingMemory = (InternalWorkingMemoryActions) workingMemory;
         this.activation = activation;
         this.identityMap = null;
 
-    }    
+    }
 
     public void readExternal(ObjectInput in) throws IOException,
                                             ClassNotFoundException {
@@ -155,11 +153,11 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
         this.previousJustified = null;
         this.previousBlocked = null;
     }
-      
+
     public LinkedList<LogicalDependency<T>> getpreviousJustified() {
         return previousJustified;
     }
-    
+
     public void blockMatch(Match act) {
         AgendaItem targetMatch = ( AgendaItem ) act;
         // iterate to find previous equal logical insertion
@@ -172,7 +170,7 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
                 }
             }
         }
-        
+
         if ( dep == null ) {
             SimpleMode mode = new SimpleMode();
             dep = new SimpleLogicalDependency( activation, targetMatch, mode );
@@ -198,11 +196,11 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
             }
         }
     }
-    
+
     public void unblockAllMatches(Match act) {
         AgendaItem targetMatch = ( AgendaItem ) act;
         boolean wasBlocked = (targetMatch.getBlockers() != null && !targetMatch.getBlockers().isEmpty() );
-        
+
         for ( LinkedListEntry entry = ( LinkedListEntry ) targetMatch.getBlockers().getFirst(); entry != null;  ) {
             LinkedListEntry tmp = ( LinkedListEntry ) entry.getNext();
             LogicalDependency dep = ( LogicalDependency ) entry.getObject();
@@ -293,12 +291,16 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
             this.activation.addLogicalDependency( dep );
         } else {
             // no previous matching logical dependency, so create a new one
-            FactHandle handle = this.workingMemory.insert( object,
-                                                           value,
-                                                           dynamic,
-                                                           true,
-                                                           this.activation.getRule(),
-                                                           this.activation );
+            FactHandle handle = workingMemory.getTruthMaintenanceSystem().insert(object,
+                                                                                 value,
+                                                                                 this.activation.getRule(),
+                                                                                 this.activation);
+//            FactHandle handle = this.workingMemory.insert( object,
+//                                                           value,
+//                                                           dynamic,
+//                                                           true,
+//                                                           this.activation.getRule(),
+//                                                           this.activation );
 
             if ( this.identityMap != null ) {
                 this.getIdentityMap().put( object,
@@ -402,7 +404,6 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
     public void update( final FactHandle handle, long mask, Class<?> modifiedClass ) {
         InternalFactHandle h = (InternalFactHandle) handle;
         ((NamedEntryPoint) h.getEntryPoint()).update( h,
-                                                      h.getEqualityKey() != null && h.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED,
                                                       ((InternalFactHandle)handle).getObject(),
                                                       mask,
                                                       modifiedClass,
@@ -421,7 +422,6 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
                     InternalFactHandle coreHandle = (InternalFactHandle) getFactHandle( core );
                     ((NamedEntryPoint) coreHandle.getEntryPoint()).update(
                             coreHandle,
-                            coreHandle.getEqualityKey() != null && coreHandle.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED,
                             core,
                             mask,
                             modifiedClass,
@@ -449,8 +449,7 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
                 InternalFactHandle h = (InternalFactHandle) lookupFactHandle( t );
                 if ( h != null ) {
                     ((NamedEntryPoint) h.getEntryPoint()).update( h,
-                            h.getEqualityKey() != null && h.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED,
-                            t,
+                                                                  t,
                             mask,
                             modifiedClass,
                             this.activation );
@@ -488,11 +487,21 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
         delete( getFactHandle( object ) );
     }
 
-    public void delete(final FactHandle handle) {
+    public void delete(FactHandle handle) {
         Object o = ((InternalFactHandle) handle).getObject();
-        ((InternalWorkingMemoryEntryPoint) ((InternalFactHandle) handle).getEntryPoint()).delete( handle,
-                                                                                                  this.activation.getRule(),
-                                                                                                  this.activation );
+        EqualityKey key = workingMemory.getTruthMaintenanceSystem().get( o );
+
+        if ( key == null || key.getStatus() == EqualityKey.STATED ) {
+            ((InternalWorkingMemoryEntryPoint) ((InternalFactHandle) handle).getEntryPoint()).delete(handle,
+                                                                                                     this.activation.getRule(),
+                                                                                                     this.activation);
+        }
+        // after removing the stated, it could still be justified
+        if ( key != null && key.getStatus() == EqualityKey.JUSTIFIED ) {
+            InternalFactHandle ifh = key.getLogicalFactHandle();
+            ((InternalWorkingMemoryEntryPoint) ifh.getEntryPoint()).getTruthMaintenanceSystem().delete( ifh );
+        }
+
         if ( this.identityMap != null ) {
             this.getIdentityMap().remove( o );
         }
@@ -872,7 +881,6 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
             TraitFieldTMS fieldTMS = inner._getFieldTMS();
             long mask = fieldTMS == null ? Long.MIN_VALUE : fieldTMS.getModificationMask();
             ((NamedEntryPoint) h.getEntryPoint()).update( h,
-                                                          h.getEqualityKey() != null && h.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED,
                                                           ((InternalFactHandle)handle).getObject(),
                                                           mask,
                                                           core.getClass(),
@@ -912,7 +920,7 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
                 removedTypes = new ArrayList<Thing<K>>( core._getTraitMap().values() );
                 for ( Thing t : removedTypes ) {
                     if ( ! ((TraitType) t).isVirtual() ) {
-                        retract( t );
+                        shedDelete( t );
                     }
                 }
 
@@ -930,7 +938,7 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
             removedTypes = new ArrayList<Thing<K>>( removedTypes );
             for ( Thing t : removedTypes ) {
                 if ( ! ((TraitType) t).isVirtual() ) {
-                    retract( t );
+                    shedDelete(t );
                 }
             }
 
@@ -944,7 +952,16 @@ public class DefaultKnowledgeHelper<T extends ModedAssertion<T>>
         }
     }
 
-
+    public void shedDelete(Object t) {
+//        EqualityKey key = workingMemory.getTruthMaintenanceSystem().get( t );
+//        if ( key != null ) {
+//            InternalFactHandle ifh = key.getFactHandle();
+//            ((InternalWorkingMemoryEntryPoint) ifh.getEntryPoint()).getTruthMaintenanceSystem().delete( ifh );
+//        } else {
+//            retract( t );
+//        }
+        retract( t );
+    }
 
 
 
