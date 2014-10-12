@@ -1559,8 +1559,12 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
         // Get the logical Handle too
         TruthMaintenanceSystem tms = ((StatefulKnowledgeSessionImpl)session).getTruthMaintenanceSystem();
         InternalFactHandle jfh1 = tms.get( "f1" ).getLogicalFactHandle();
-        assertSame( fh1.getEqualityKey(), jfh1.getEqualityKey() );
+        EqualityKey key = jfh1.getEqualityKey();
+        assertSame( fh1.getEqualityKey(), key );
         assertNotSame( fh1, jfh1 );
+
+        assertEquals(2, key.size());
+        assertSame(jfh1, key.getLogicalFactHandle());
 
         try {
             tms.delete(fh1);
@@ -1674,6 +1678,13 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
         assertSame( fh1.getEqualityKey(), jfh1.getEqualityKey() );
         assertNotSame( fh1, jfh1 );
 
+        EqualityKey key = jfh1.getEqualityKey();
+        assertSame( fh1.getEqualityKey(), key );
+        assertNotSame( fh1, jfh1 );
+
+        assertEquals(2, key.size());
+        assertSame( jfh1,  key.getLogicalFactHandle() );
+
         // Make sure f1 only occurs once
         assertEquals( 1, list.size() );
         assertEquals( "f1", list.get( 0 ) );
@@ -1735,5 +1746,135 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
 
         assertSame(jfh1, session.getFactHandle("f1") );
     }
+
+
+    @Test(timeout=10000)
+    public void testLogicalThenUpdateAsStatedShadowSingleOccurance() {
+        String droolsSource =
+                "package org.drools.tms.test; \n" +
+
+                "global java.util.List list; \n" +
+
+                "rule Justify \n" +
+                "when \n" +
+                "    String( this == 'go1' ) " +
+                "then \n" +
+                "    insertLogical( 'f1' ); \n" +
+                "end \n" +
+
+
+                "rule StillHere \n" +
+                "when \n" +
+                "    String( this == 'go2' ) " +
+                "    s : String( this == 'f1' ) " +
+                "then \n" +
+                "    list.add( s ); \n" +
+                "end \n" +
+                ""
+                ;
+
+        KieBaseConfiguration kieConf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+        kieConf.setOption( EqualityBehaviorOption.IDENTITY );
+        KnowledgeBase kbase = loadKnowledgeBaseFromString( kieConf, droolsSource );
+        StatefulKnowledgeSession session = kbase.newStatefulKnowledgeSession();
+
+        List list = new ArrayList();
+        session.setGlobal("list", list);
+
+        session.insert( "go1" );
+        session.fireAllRules();
+
+        TruthMaintenanceSystem tms = ((StatefulKnowledgeSessionImpl)session).getTruthMaintenanceSystem();
+        InternalFactHandle jfh1 = tms.get( "f1" ).getLogicalFactHandle();
+        assertEquals(EqualityKey.JUSTIFIED, jfh1.getEqualityKey().getStatus() );
+
+        InternalFactHandle fh1 = (InternalFactHandle) session.insert( "f1" );
+        InternalFactHandle fh2 = (InternalFactHandle) session.insert( "f2" );
+
+        session.insert("go2");
+        session.fireAllRules();
+
+        assertEquals( EqualityKey.STATED, fh1.getEqualityKey().getStatus());
+        assertSame( fh1.getEqualityKey(), jfh1.getEqualityKey() );
+        assertNotSame( fh1, jfh1 );
+
+        // Make sure f1 only occurs once
+        assertEquals( 1, list.size() );
+        assertEquals( "f1", list.get( 0 ) );
+    }
+
+    @Test(timeout=10000)
+    public void testLogicalWithStatedShadowThenDeleteLogicalThenDeleteStated() {
+        String droolsSource =
+                "package org.drools.tms.test; \n" +
+
+                "global java.util.List list; \n" +
+
+                "rule Justify \n" +
+                "when \n" +
+                "    String( this == 'go1' ) " +
+                "then \n" +
+                "    insertLogical( 'f1' ); \n" +
+                "end \n" +
+
+
+                "rule StillHere \n" +
+                "when \n" +
+                "    String( this in ('go2', 'go3', 'go4') ) " +
+                "    s : String( this == 'f1' ) " +
+                "then \n" +
+                "    list.add( s ); \n" +
+                "end \n" +
+                ""
+                ;
+
+        KieBaseConfiguration kieConf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+        kieConf.setOption( EqualityBehaviorOption.IDENTITY );
+        KnowledgeBase kbase = loadKnowledgeBaseFromString( kieConf, droolsSource );
+        StatefulKnowledgeSession session = kbase.newStatefulKnowledgeSession();
+
+        List list = new ArrayList();
+        session.setGlobal("list", list);
+
+        session.insert( "go1" );
+        session.fireAllRules();
+
+        TruthMaintenanceSystem tms = ((StatefulKnowledgeSessionImpl)session).getTruthMaintenanceSystem();
+        InternalFactHandle jfh1 = tms.get( "f1" ).getLogicalFactHandle();
+        assertEquals(EqualityKey.JUSTIFIED, jfh1.getEqualityKey().getStatus() );
+
+        InternalFactHandle fh1 = (InternalFactHandle) session.insert( "f1" );
+
+        session.insert("go2");
+        session.fireAllRules();
+
+        assertEquals( EqualityKey.STATED, fh1.getEqualityKey().getStatus());
+        assertEquals( 1, fh1.getEqualityKey().getBeliefSet().size() );
+        assertSame( fh1.getEqualityKey(), jfh1.getEqualityKey() );
+        assertNotSame( fh1, jfh1 );
+
+        // Make sure f1 only occurs once
+        assertEquals( 1, list.size() );
+        assertEquals( "f1", list.get( 0 ) );
+
+        list.clear();
+        tms.delete( jfh1 );
+        session.insert("go3");
+        session.fireAllRules();
+
+        assertNull(fh1.getEqualityKey().getBeliefSet());
+
+        // Make sure f1 only occurs once
+        assertEquals( 1, list.size() );
+        assertEquals( "f1", list.get( 0 ) );
+
+        list.clear();
+        session.delete( fh1 );
+        session.insert("go4");
+        session.fireAllRules();
+
+        assertEquals( 0, list.size() );
+    }
+
 }
 

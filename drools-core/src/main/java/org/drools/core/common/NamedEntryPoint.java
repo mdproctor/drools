@@ -220,11 +220,12 @@ public class NamedEntryPoint
                     handle = createHandle( object,
                                            typeConf ); // we know the handle is null
                     if ( key == null ) {
-                        key = new EqualityKey( handle );
-                        key.setStatus( EqualityKey.STATED );
+                        key = new EqualityKey( handle, EqualityKey.STATED  );
                         tms.put( key );
+                    } else {
+                        key.addFactHandle( handle );
                     }
-                    handle.setEqualityKey( key );
+                     handle.setEqualityKey( key );
                 }
 
                 propagationContext.setFactHandle(handle);
@@ -400,8 +401,9 @@ public class NamedEntryPoint
                         BeliefSet bs = justifiedHandle.getEqualityKey().getBeliefSet();
                         bs.getBeliefSystem().stage( propagationContext, bs );
 
-                        // new target key is JUSTITIED, updates are always STATED
+                        // new target key is JUSTIFIED, updates are always STATED
                         newKey.setStatus( EqualityKey.STATED );
+                        newKey.addFactHandle( handle );
 
                         propagationContext.setFactHandle(handle);
 

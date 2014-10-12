@@ -83,6 +83,7 @@ public class SimpleBeliefSystem
             // if the beliefSet is empty, we must null the logical handle
             EqualityKey key = bfh.getEqualityKey();
             key.setLogicalFactHandle( null );
+            key.setBeliefSet( null );
 
             if ( key.getStatus() == EqualityKey.JUSTIFIED ) {
                 // if it's stated, there will be other handles, so leave it in the TMS

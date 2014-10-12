@@ -145,6 +145,7 @@ public class JTMSBeliefSystem<M extends JTMSMode<M>>
             // if the beliefSet is empty, we must null the logical handle
             EqualityKey key = fh.getEqualityKey();
             key.setLogicalFactHandle( null );
+            key.setBeliefSet(null);
 
             if ( key.getStatus() == EqualityKey.JUSTIFIED ) {
                 // if it's stated, there will be other handles, so leave it in the TMS
