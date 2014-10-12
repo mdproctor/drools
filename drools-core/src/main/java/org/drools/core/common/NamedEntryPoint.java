@@ -193,7 +193,7 @@ public class NamedEntryPoint
                 // check if the object already exists in the WM
                 handle = this.objectStore.getHandleForObject( object );
 
-                if ( !typeConf.isTMSEnabled() ) {
+                 if ( !typeConf.isTMSEnabled() ) {
                     // TMS not enabled for this object type
                     if ( handle != null ) {
                         return handle;
@@ -211,28 +211,20 @@ public class NamedEntryPoint
                         key = tms.get( object );
                     }
 
-                    if ( key == null ) {
-                        handle = createHandle( object,
-                                               typeConf ); // we know the handle is null
-                        key = new EqualityKey( handle );
-                        handle.setEqualityKey( key );
-                        tms.put( key );
-                    } else if ( key.getStatus() == EqualityKey.JUSTIFIED ) {
-                        final InternalFactHandle justifiedHandle = key.getFactHandle();
-
+                    if ( key != null && key.getStatus() == EqualityKey.JUSTIFIED ) {
                         // The justified set needs to be staged, before we can continue with the stated insert
-                        BeliefSet bs = justifiedHandle.getEqualityKey().getBeliefSet();
-                        bs.getBeliefSystem().stage( propagationContext, bs );
-
-                        // Its previous justified, so switch to stated
-                        key.setStatus( EqualityKey.STATED ); // must be done before the justifiedHandle retract
-                    } else   {  // STATED
-                        handle = createHandle( object,
-                                               typeConf ); // we know the handle is null
-                        handle.setEqualityKey( key );
-                        key.addFactHandle( handle );
+                        BeliefSet bs = handle.getEqualityKey().getBeliefSet();
+                        bs.getBeliefSystem().stage( propagationContext, bs ); // staging will set it's status to stated
                     }
-                    key.setStatus( EqualityKey.STATED ); // KEY is always stated
+
+                    handle = createHandle( object,
+                                           typeConf ); // we know the handle is null
+                    if ( key == null ) {
+                        key = new EqualityKey( handle );
+                        key.setStatus( EqualityKey.STATED );
+                        tms.put( key );
+                    }
+                    handle.setEqualityKey( key );
                 }
 
                 propagationContext.setFactHandle(handle);
@@ -551,7 +543,7 @@ public class NamedEntryPoint
                     tms.remove( key );
                 } else if ( key.getLogicalFactHandle() != null) {
                     // The justified set can be unstaged, now that the last stated has been deleted
-                    final InternalFactHandle justifiedHandle = key.getFactHandle();
+                    final InternalFactHandle justifiedHandle = key.getLogicalFactHandle();
 
 
                     BeliefSet bs = justifiedHandle.getEqualityKey().getBeliefSet();

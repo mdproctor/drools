@@ -42,11 +42,10 @@ public class SimpleBeliefSystem
 
         beliefSet.add( node.getMode() );
 
-        if ( empty ) {
-            InternalFactHandle handle = beliefSet.getFactHandle();
-
-            ep.insert( handle,
-                       handle.getObject(),
+        InternalFactHandle bfh = beliefSet.getFactHandle();
+        if ( empty && bfh.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED ) {
+            ep.insert( bfh,
+                       bfh.getObject(),
                        node.getJustifier().getRule(),
                        node.getJustifier(),
                        typeConf,
@@ -70,25 +69,8 @@ public class SimpleBeliefSystem
 
         InternalFactHandle bfh = beliefSet.getFactHandle();
 
-        if ( beliefSet.isEmpty() && bfh.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED ) { // &&
-//             !((context.getType() == PropagationContext.DELETION || context.getType() == PropagationContext.MODIFICATION) // retract and modifies clean up themselves
-//             &&
-//             context.getFactHandle() == bfh)
-//        ) {
-
+        if ( beliefSet.isEmpty() && bfh.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED ) {
             ep.delete(bfh, bfh.getObject(), getObjectTypeConf(beliefSet), (RuleImpl) context.getRule(), (Activation) context.getLeftTupleOrigin() );
-
-            //((NamedEntryPoint) bfh.getEntryPoint()).delete( bfh, context.getRuleOrigin(), node.getJustifier());
-
-//            EqualityKey key = bfh.getEqualityKey();
-//            key.removeFactHandle( bfh );
-//            bfh.setEqualityKey( null );
-//
-//            // If the equality key is now empty, then remove it
-//            if ( key.isEmpty() ) {
-//                tms.remove( key );
-//            }
-
         } else if ( !beliefSet.isEmpty() && bfh.getObject() == node.getObject() && node.getObject() != bfh.getObject() ) {
             // prime has changed, to update new object
             // Equality might have changed on the object, so remove (which uses the handle id) and add back in
@@ -114,11 +96,14 @@ public class SimpleBeliefSystem
         InternalFactHandle bfh = beliefSet.getFactHandle();
         // Remove the FH from the network
         ep.delete(bfh, bfh.getObject(), getObjectTypeConf(beliefSet),(RuleImpl) context.getRule(), null);
+
+        bfh.getEqualityKey().setStatus( EqualityKey.STATED ); // revert to stated
     }
 
     public void unstage(PropagationContext context,
                         BeliefSet<SimpleMode> beliefSet) {
         InternalFactHandle bfh = beliefSet.getFactHandle();
+        bfh.getEqualityKey().setStatus( EqualityKey.JUSTIFIED ); // revert to justified
 
         // Add the FH back into the network
         ep.insert(bfh, bfh.getObject(), (RuleImpl) context.getRule(), null, getObjectTypeConf(beliefSet), null );
