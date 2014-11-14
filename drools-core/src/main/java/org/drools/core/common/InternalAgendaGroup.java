@@ -72,4 +72,6 @@ public interface InternalAgendaGroup extends AgendaGroup {
     void hasRuleFlowListener(boolean hasRuleFlowLister);
 
     boolean isRuleFlowListener();
+
+    public boolean isSequential();
 }

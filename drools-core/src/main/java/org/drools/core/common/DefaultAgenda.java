@@ -255,11 +255,11 @@ public class DefaultAgenda
     public void setWorkingMemory(final InternalWorkingMemory workingMemory) {
         this.workingMemory = workingMemory;
         RuleBaseConfiguration rbc = this.workingMemory.getKnowledgeBase().getConfiguration();
-        if ( rbc.isSequential() ) {
-            this.knowledgeHelper = rbc.getComponentFactory().getKnowledgeHelperFactory().newSequentialKnowledgeHelper( this.workingMemory );
-        } else {
+//        if ( rbc.isSequential() ) {
+//            this.knowledgeHelper = rbc.getComponentFactory().getKnowledgeHelperFactory().newSequentialKnowledgeHelper( this.workingMemory );
+//        } else {
             this.knowledgeHelper = rbc.getComponentFactory().getKnowledgeHelperFactory().newStatefulKnowledgeHelper( this.workingMemory );
-        }
+//        }
     }
 
     /*
@@ -794,7 +794,7 @@ public class DefaultAgenda
             group.setClearedForRecency( this.workingMemory.getFactHandleFactory().getRecency() );
             for ( Match a : group.getActivations() ) {
                 if ( ((Activation) a).isRuleAgendaItem() ) {
-                    ((RuleAgendaItem) a).getRuleExecutor().reEvaluateNetwork( this.workingMemory, new org.drools.core.util.LinkedList<StackEntry>(), false );
+                    ((RuleAgendaItem) a).getRuleExecutor().reEvaluateNetwork( this.workingMemory, new org.drools.core.util.LinkedList<StackEntry>(), false, false );
                 }
             }
 

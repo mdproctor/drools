@@ -62,6 +62,9 @@ public class AgendaGroupQueueImpl
 
     private volatile              boolean hasRuleFlowLister;
 
+    private Activation            lastRemoved;
+    private boolean               sequential;
+
     public AgendaGroupQueueImpl(final String name,
                                 final InternalKnowledgeBase kBase) {
         this.name = name;
@@ -74,6 +77,8 @@ public class AgendaGroupQueueImpl
                 this.priorityQueue = new BinaryHeapQueue(kBase.getConfiguration().getConflictResolver());
             }
         }
+
+        sequential = kBase.getConfiguration().isSequential();
 
         this.clearedForRecency = -1;
     }
@@ -127,11 +132,21 @@ public class AgendaGroupQueueImpl
     }
 
     public void add(final Activation activation) {
-        this.priorityQueue.enqueue((Activation) activation);
+        if ( lastRemoved != null ) {
+            // this will only be set if sequential. Do not add Match's that are higher in salience + load order than the lastRemoved (fired)
+            if ( lastRemoved == activation || PhreakConflictResolver.doCompare( lastRemoved, activation ) < 0 ) {
+                return;
+            }
+        }
+        this.priorityQueue.enqueue( activation);
     }
 
     public Activation remove() {
-        return (Activation) this.priorityQueue.dequeue();
+        Activation match = this.priorityQueue.dequeue();
+        if ( sequential ) {
+            lastRemoved = match;
+        }
+        return match;
     }
 
     public Activation peek() {
@@ -292,6 +307,10 @@ public class AgendaGroupQueueImpl
         public void execute(InternalKnowledgeRuntime kruntime) {
             execute(((StatefulKnowledgeSessionImpl) kruntime).getInternalWorkingMemory());
         }
+    }
+
+    public boolean isSequential() {
+        return sequential;
     }
 
 }

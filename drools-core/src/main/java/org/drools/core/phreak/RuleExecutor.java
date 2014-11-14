@@ -9,6 +9,8 @@ import org.drools.core.common.LeftTupleSets;
 import org.drools.core.common.Memory;
 import org.drools.core.common.StreamTupleEntryQueue;
 import org.drools.core.common.TupleEntryQueue;
+import org.drools.core.conflict.DepthConflictResolver;
+import org.drools.core.conflict.PhreakConflictResolver;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.LeftTuple;
@@ -43,6 +45,7 @@ public class RuleExecutor {
     private volatile boolean                  dirty;
     private boolean                           declarativeAgendaEnabled;
     private boolean                           fireExitedEarly;
+    private boolean                           sequential;
 
     public RuleExecutor(final PathMemory pmem,
             RuleAgendaItem ruleAgendaItem,
@@ -54,6 +57,7 @@ public class RuleExecutor {
         if (ruleAgendaItem.getRule().getSalience().isDynamic()) {
             queue = new BinaryHeapQueue(SalienceComparator.INSTANCE);
         }
+        sequential = ruleAgendaItem.getAgendaGroup().isSequential();
     }
 
     public synchronized void gcStreamQueue() {
@@ -100,7 +104,7 @@ public class RuleExecutor {
         InternalAgenda agenda = (InternalAgenda) wm.getAgenda();
         boolean fireUntilHalt = agenda.isFireUntilHalt();
 
-        reEvaluateNetwork(wm, outerStack, fireUntilHalt);
+        reEvaluateNetwork(wm, outerStack, fireUntilHalt, true);
         wm.executeQueuedActions();
 
         return fire(wm, filter, fireCount, fireLimit, outerStack, agenda, fireUntilHalt);
@@ -120,13 +124,14 @@ public class RuleExecutor {
             InternalAgenda agenda,
             boolean fireUntilHalt) {
         int localFireCount = 0;
+
         if (!tupleList.isEmpty()) {
             RuleTerminalNode rtn = (RuleTerminalNode) pmem.getNetworkNode();
 
             if (!fireExitedEarly && isDeclarativeAgendaEnabled()) {
                 // Network Evaluation can notify meta rules, which should be given a chance to fire first
                 RuleAgendaItem nextRule = agenda.peekNextRule();
-                if (!isHighestSalience(nextRule, ruleAgendaItem.getSalience())) {
+                if (!isHighestSalience(nextRule)) {
                     fireExitedEarly = true;
                     return localFireCount;
                 }
@@ -180,7 +185,7 @@ public class RuleExecutor {
                 if (haltRuleFiring(nextRule, fireCount, fireLimit, localFireCount, agenda, salience)) {
                     break; // another rule has high priority and is on the agenda, so evaluate it first
                 }
-                reEvaluateNetwork(wm, outerStack, fireUntilHalt);
+                reEvaluateNetwork(wm, outerStack, fireUntilHalt, !sequential);
                 wm.executeQueuedActions();
 
                 if (tupleList.isEmpty() && !outerStack.isEmpty()) {
@@ -222,7 +227,13 @@ public class RuleExecutor {
     }
 
     public synchronized void reEvaluateNetwork(InternalWorkingMemory wm, LinkedList<StackEntry> outerStack, boolean fireUntilHalt) {
-        if (isDirty() || (pmem.getStreamQueue() != null && !pmem.getStreamQueue().isEmpty())) {
+        reEvaluateNetwork(wm, outerStack, fireUntilHalt, true);
+    }
+
+    public synchronized void reEvaluateNetwork(InternalWorkingMemory wm, LinkedList<StackEntry> outerStack, boolean fireUntilHalt, boolean evaluate) {
+        if (evaluate && (isDirty() ||
+             (pmem.getStreamQueue() != null && !pmem.getStreamQueue().isEmpty())) ) {
+
             setDirty(false);
             TupleEntryQueue queue = pmem.getStreamQueue() != null ? pmem.getStreamQueue().takeAllForFlushing() : null;
 
@@ -362,13 +373,13 @@ public class RuleExecutor {
 
 
         return !agenda.continueFiring(0) ||
-               ( (nextRule != null) && (!ruleAgendaItem.getRule().getAgendaGroup().equals( nextRule.getAgendaGroup() ) || !isHighestSalience(nextRule, salience)) )
+               ( (nextRule != null) && (!ruleAgendaItem.getAgendaGroup().equals( nextRule.getAgendaGroup() ) || !isHighestSalience(nextRule)) )
                || (fireLimit >= 0 && (localFireCount + fireCount >= fireLimit));
     }
 
-    public boolean isHighestSalience(RuleAgendaItem nextRule,
-                                     int currentSalience) {
-        return nextRule.getSalience() <= currentSalience;
+    public boolean isHighestSalience(RuleAgendaItem nextRule) {
+        return PhreakConflictResolver.doCompare(ruleAgendaItem,nextRule) > 0;
+        //return nextRule.getSalience() <= currentSalience;
     }
 
     public LeftTupleList getLeftTupleList() {

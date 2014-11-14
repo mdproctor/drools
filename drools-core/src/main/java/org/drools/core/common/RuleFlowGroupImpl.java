@@ -431,4 +431,9 @@ public class RuleFlowGroupImpl
             execute(((StatefulKnowledgeSessionImpl) kruntime).getInternalWorkingMemory());
         }
     }
+
+    @Override
+    public boolean isSequential() {
+        return agendaGroup.isSequential();
+    }
 }

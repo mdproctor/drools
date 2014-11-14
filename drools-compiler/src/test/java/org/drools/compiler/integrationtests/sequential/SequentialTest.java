@@ -6,6 +6,7 @@ import org.drools.compiler.Message;
 import org.drools.compiler.Person;
 import org.drools.compiler.compiler.DroolsParserException;
 import org.drools.compiler.integrationtests.DynamicRulesTest;
+import org.drools.compiler.phreak.A;
 import org.drools.core.util.IoUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,9 +42,97 @@ public class SequentialTest extends CommonTestMethodBase {
 
     @Before
     public void setup() {
-        KieBaseConfiguration kconf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+        kconf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
         kconf.setOption( phreak );
         kconf.setOption( SequentialOption.YES );
+    }
+
+    @Test
+    public void testSequentialPlusPhreakOperation() throws Exception {
+        String str = "";
+        str += "package org.drools.compiler.test\n";
+        str +="import " + A.class.getCanonicalName() + "\n";
+
+        str +="rule r0 when\n";
+        str +="then\n";
+        str +="    drools.getKnowledgeRuntime().getAgenda().getAgendaGroup( 'g1' ).setFocus();\n";
+        str +="    drools.getKnowledgeRuntime().getAgenda().getAgendaGroup( 'g2' ).setFocus();\n";
+        str +="    drools.getKnowledgeRuntime().getAgenda().getAgendaGroup( 'g1' ).setFocus();\n";
+        str +="end\n";
+        str +="rule r1 agenda-group 'g1' when\n";
+        str +="    a : A( object > 0 )\n";
+        str +="then\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="    modify(a) { setObject( 3 ) };\n";
+        str +="end\n";
+
+        str +="rule r1_x agenda-group 'g1' when\n";
+        str +="    a : A( object == 2 )\n";
+        str +="then\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+
+        str +="rule r1_y agenda-group 'g1' when\n";
+        str +="    a : A( object == 5 )\n";
+        str +="then\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+
+        str +="rule r2 agenda-group 'g1' when\n";
+        str +="    a : A( object < 3 )\n";
+        str +="then\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+        str +="rule r3 agenda-group 'g1' when\n";
+        str +="    a : A(object >= 3  )\n";
+        str +="then\n";
+        str +="    modify(a) { setObject( 5 ) };\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+        str +="rule r4 agenda-group 'g1' when\n";
+        str +="    a : A(object >= 3  )\n";
+        str +="then\n";
+        str +="    modify(a) { setObject( 5 ) };\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+
+        str +="rule r6 agenda-group 'g2' when\n";
+        str +="    a : A(object < 5  )\n";
+        str +="then\n";
+//        str +="    modify(a) { setObject( 5 ) };\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+
+        str +="rule r7 agenda-group 'g2' when\n";
+        str +="    a : A(object >= 3  )\n";
+        str +="then\n";
+        //str +="    modify(a) { setObject( 5 ) };\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+        str +="rule r8 agenda-group 'g2' when\n";
+        str +="    a : A(object >= 5  )\n";
+        str +="then\n";
+        //str +="    modify(a) { setObject( 5 ) };\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+        str +="rule r9 agenda-group 'g2' when\n";
+        str +="    a : A(object >= 5  )\n";
+        str +="then\n";
+        str +="    modify(a) { setObject( 2 ) };\n";
+        str +="    System.out.println( drools.getRule() );\n";
+        str +="end\n";
+
+
+        KnowledgeBase kbase = loadKnowledgeBaseFromString(kconf, str);
+        StatelessKnowledgeSession ksession = createStatelessKnowledgeSession( kbase );
+        final List list = new ArrayList();
+        ksession.setGlobal( "list",
+                            list );
+
+        ksession.execute( CommandFactory.newInsertElements(Arrays.asList( new Object[]{new A(1)} )) );
+
+//        assertEquals( 3,
+//                      list.size() );
     }
 
     @Test
