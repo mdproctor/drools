@@ -89,19 +89,8 @@ public class AddRemoveRule {
                 if ( isNewSplit( rule, splitStartLeftTupleSource ) ) {
                     previousSmems = reInitPathMemories( wm, tnMems.otherRulePmems, null );
                     splitSegments( splitStartLeftTupleSource, wm, tnMems.otherRulePmems, tnMems.mainPmem, previousSmems );
-                } else {
-                    // Paths may be for subnetworks, which don't initialised segments outside of the subpath  (as they are initialised in the main path only)
-                    // for this reason we must iterate to find the main pmem,, to be sure we skip the subpath with a null smem.
-                    // As Segments are initialised laziy, then it's possible for all smem's to be null in all paths. In this situation do nothing, as nothing to process.
-
-                    // tnMems.firstOtherPmem is the first non subnetwork path
-                    int s = getSegmentPos( splitStartLeftTupleSource, null );
-                    SegmentMemory sm = tnMems.firstOtherPmem.getSegmentMemories()[s];
-                    if  ( sm != null ) {
-                        initNewSegment( splitStartLeftTupleSource, wm, sm );
-                        addExistingSmemsToNewPath(wm, tnMems.mainPmem, tnMems.firstOtherPmem, sm);
-                    }
                 }
+                addExistingSmemsToNewPath(splitStartLeftTupleSource, tnMems, wm);
 
                 // in case there are subnetworks in the newly added rule, checks if any segment split is necessary there
                 for (RiaPathMemory subnetPmem : tnMems.subnetPmems) {
@@ -110,6 +99,7 @@ public class AddRemoveRule {
                     if (splitStartInSubnetwork != splitStartLeftTupleSource && isNewSplit( rule, splitStartInSubnetwork )) {
                         splitSegments( splitStartInSubnetwork, wm, getRiaPathMemories(splitStartInSubnetwork, wm, riaNode), subnetPmem, previousSmems );
                     }
+                    addExistingSmemsToNewPath(splitStartInSubnetwork, tnMems, wm);
                 }
             }
 
@@ -208,7 +198,12 @@ public class AddRemoveRule {
                  SegmentMemory sm = removedPmem.getSegmentMemories()[s+1];
                  if ( sm == null ) {
                      TerminalNodeMemories tnMems = getRtnPathMemories(splitStartNode, wm, tn);
-                     reInitPathMemories(wm, tnMems.otherRulePmems, tn.getRule() );
+                     Map<PathMemory, SegmentMemory[]> previousSmems = reInitPathMemories(wm, tnMems.otherRulePmems, tn.getRule() );
+                     for (int i = 0; i < s; i++) { // restore the segments before the split
+                         for (PathMemory pmem : tnMems.otherRulePmems) {
+                             pmem.setSegmentMemory( i, previousSmems.get( pmem )[i] );
+                         }
+                     }
                      continue; // this rule has not been initialized yet
                  }
                  sink = (LeftTupleSink) sm.getRootNode();
@@ -326,12 +321,13 @@ public class AddRemoveRule {
 
             SegmentMemory sm1 = smems[segmentPos];
             SegmentMemory sm2 = smems[segmentPos+1];
-            if ( sm1 != null && sm2 != null ) {
-                if (sm1.getRootNode() == sm1.getTipNode() && NodeTypeEnums.LeftInputAdapterNode == sm1.getTipNode().getType()) {
-                    sm1.setStagedTuples(sm2.getStagedLeftTuples());
+
+            if (sm1 != null) {
+                if ( sm2 != null && sm1.getRootNode() == sm1.getTipNode() && NodeTypeEnums.LeftInputAdapterNode == sm1.getTipNode().getType() ) {
+                    sm1.setStagedTuples( sm2.getStagedLeftTuples() );
                 } else if ( !sm1.getStagedLeftTuples().isEmpty() ) {
                     flushSegment( splitStartNode, pmem, sm1, wm );
-                } else if ( !sm2.getStagedLeftTuples().isEmpty() ) {
+                } else if ( sm2 != null && !sm2.getStagedLeftTuples().isEmpty() ) {
                     flushStagedTuples( splitStartNode, pmem, wm, false );
                 }
             }
@@ -449,10 +445,6 @@ public class AddRemoveRule {
 
      private static void correctSegmentBeforeSplitOnAdd(InternalWorkingMemory wm, PathMemory newPmem, boolean firstRulePath, PathMemory pmem, SegmentMemory sm) {
          pmem.setSegmentMemory( sm.getPos(), sm );
-         if ( firstRulePath ) {
-             // only handle for the first PathMemory, all others are shared and duplicate until this point
-             setSegmentMemoryOnNewPath( wm, newPmem, sm );
-         }
      }
 
     private static void setSegmentMemoryOnNewPath( InternalWorkingMemory wm, PathMemory newPmem, SegmentMemory sm ) {
@@ -1258,4 +1250,107 @@ public class AddRemoveRule {
          }
          return nodePos;
      }
+
+    /**
+     * When adding a rule it may add one sink or two. Two sinks are added when there is a subnetwork. The subnetwork is always the
+     * fist sink of the two and the outer path the next sink after that.  Existing sinks may or may not be in pairs, due to subnetworks.
+     * If there is a subnetwork the first of the pair is the subnetwork, the next is the outer path.
+     *
+     * Regardless of whether there is a subnetwork or not, the term outer path refers to a single path with no subnetwork pair, or the outer path
+     * of the subnetwork pair.
+     *
+     * When a branch (with single or pair of sinks) is added only the outer branch needs existing Segments copied into its PathMemory. That is becuase PathMemory(s)
+     * of the subnetwork only have references to the Segment's within it's subnetwork. The PathMemory will still have array elements for outside of the subnetwork,
+     * as Segment positions need to always be linear and match, but those array elements will be null and have no impact on linking for the subnetwork.
+     *
+     * However the outer path must have SegmentMemories copied across, regardless of whether it's on the main path or an outer path within an existing subnetwork.
+     *
+     * When it is on the main path, it will copy all SegmentMemories starting from the parent node's (split start) segment to the Lian. When the outer path is within a subnetwork it will
+     * copy from th parent node's (split start) segment to the root node of the first segment within the subnetwork.
+     *
+     * Summary:
+     * 1) Any outer path must have existing (parent) smem's copied to its PathMemory.
+     * 2) When this is the main path it copies SegmentMemories from from parent smem to lian's smem
+     * 3) When it is an outer path within a subetwork it goes from parent node's smem to the subnetnwork start smem.
+     *
+     */
+    public static void addExistingSmemsToNewPath(LeftTupleSource splitStart, TerminalNodeMemories tnMems, InternalWorkingMemory wm) {
+        // find the firs existing peer, always select the outer path peer, so as not to go into the subnetwork
+        LeftTupleSinkNode newOuterSink = splitStart.getSinkPropagator().getLastLeftTupleSink();
+        LeftTupleSinkNode existingOuterSink = newOuterSink.getPreviousLeftTupleSinkNode();
+
+        while (existingOuterSink.getAssociatedRuleSize() == 1 && existingOuterSink.isAssociatedWith(tnMems.mainPmem.getRule())) {
+            // must skip the subnetwork of the new branches, if there is one.
+            existingOuterSink = existingOuterSink.getPreviousLeftTupleSinkNode();
+        }
+
+        // Finds the PathMemory of the outer path, this is the target for the potential SegmentMemory copies.
+        PathMemory targetPMem = getOuterPathPMem(wm, newOuterSink);
+
+        // Now find end parent node that we iterate too. For main paths this is Lian, for subnetworks this is the subnetwork start.
+        LeftTupleSource rootNode = getRootNodeForPath(splitStart, targetPMem);
+
+        // iterate from the split start node to the root node. Peek if there is memory for that node and if there is get the SegmentMemory
+        // and set it on the new path.
+        // Care is taken so that the splitStart segment and the rootnode segment are always processed.
+        LeftTupleSource lts = splitStart;
+        SegmentMemory sm = null;
+        while(true) {
+            Memory mem = wm.getNodeMemories().peekNodeMemory( lts.getId() );
+            if ( mem != null ) {
+                sm = mem.getSegmentMemory();
+            }
+
+            if (sm != null) {
+                setSegmentMemoryOnNewPath( wm, targetPMem, sm );
+                lts = ((LeftTupleSource) sm.getRootNode()); // shift lts smem root, to skip other nodes for this smem
+            }
+
+            if ( lts == rootNode ) {
+                break;
+            }
+
+            lts = lts.getLeftTupleSource();
+        }
+    }
+
+    /**
+     * This iterates to find the root node of a given Path.
+     * The root node refers to the node of the first potential smem.
+     * For main paths this is always the Lian.
+     * For subnetworks this is the start of the subnetwork.
+     * @param splitStart
+     * @param targetPMem
+     * @return
+     */
+    private static LeftTupleSource getRootNodeForPath(LeftTupleSource splitStart, PathMemory targetPMem) {
+        LeftTupleSource rootNode;
+        if (targetPMem instanceof RiaPathMemory) {
+            rootNode = ((RiaPathMemory)targetPMem).getRightInputAdapterNode().getLeftTupleSource();
+        }  else {
+            rootNode = splitStart;
+            while ( rootNode.getType() != NodeTypeEnums.LeftInputAdapterNode ) {
+                rootNode = rootNode.getLeftTupleSource();
+            }
+        }
+        return rootNode;
+    }
+
+    private static PathMemory getOuterPathPMem(InternalWorkingMemory wm, LeftTupleSinkNode sink) {
+        while ( !NodeTypeEnums.isTerminalNode(sink) && sink.getType() != NodeTypeEnums.RightInputAdaterNode) {
+            sink = ((LeftTupleSource)sink).getSinkPropagator().getLastLeftTupleSink();
+        }
+
+        return getPathMemoryForTerminalNode(wm, sink);
+    }
+
+    private static PathMemory getPathMemoryForTerminalNode(InternalWorkingMemory wm, LeftTupleSinkNode sink) {
+        PathMemory pmem;
+        if ( sink instanceof RightInputAdapterNode) {
+            pmem = ((RiaNodeMemory)wm.getNodeMemory((MemoryFactory)sink)).getRiaPathMemory();
+        } else {
+            pmem =  (PathMemory) wm.getNodeMemory((MemoryFactory)sink);
+        }
+        return pmem;
+    }
 }

@@ -16,6 +16,7 @@
 package org.drools.compiler.integrationtests.incrementalcompilation;
 
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.api.KieBase;
 import org.kie.api.io.ResourceType;
@@ -36,14 +37,12 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
 
@@ -549,7 +548,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         session.fireAllRules();
     }
 
-    @Test
+    @Test @Ignore("DROOLS-1031")
     public void testAddRemoveWithExtends() {
         final String packageName = "test_same_condition_pk" ;
         final String rule1 = "package " + packageName + ";" +
@@ -580,7 +579,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         assertTrue(session.fireAllRules() == 0);
     }
 
-    @Test
+    @Test @Ignore("DROOLS-1031")
     public void testRuleWithExtendsModifyParent() {
         final String packageName = "test_same_condition_pk" ;
         final String rule1 = "package " + packageName + ";" +
