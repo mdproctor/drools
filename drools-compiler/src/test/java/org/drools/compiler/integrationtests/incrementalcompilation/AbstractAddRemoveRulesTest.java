@@ -26,10 +26,8 @@ import org.kie.internal.io.ResourceFactory;
 import org.kie.internal.runtime.StatefulKnowledgeSession;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -105,6 +103,7 @@ public abstract class AbstractAddRemoveRulesTest {
             insertGlobalsIntoSession(session, additionalGlobals);
         }
         insertFactsIntoSession(session, facts);
+
         final KieBase base = session.getKieBase();
         if (deleteAfterFirstFire) {
             session.fireAllRules();
