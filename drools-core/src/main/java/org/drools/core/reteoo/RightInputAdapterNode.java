@@ -119,7 +119,7 @@ public class RightInputAdapterNode extends ObjectSource
         RiaNodeMemory rianMem = new RiaNodeMemory();
 
         RiaPathMemory pmem = new RiaPathMemory(this);
-        AbstractTerminalNode.initPathMemory(pmem, getLeftTupleSource(), getStartTupleSource(), wm, null );
+        AbstractTerminalNode.initPathMemory(pmem, this, getStartTupleSource(), wm, null );
         rianMem.setRiaPathMemory(pmem);
         
         return rianMem;

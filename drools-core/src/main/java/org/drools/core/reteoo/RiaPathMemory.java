@@ -29,7 +29,7 @@ public class RiaPathMemory extends PathMemory {
     }
 
     public RightInputAdapterNode getRightInputAdapterNode() {
-        return (RightInputAdapterNode) getNetworkNode();
+        return (RightInputAdapterNode) getPathEndNode();
     }
 
     public void doLinkRule(InternalWorkingMemory wm) {

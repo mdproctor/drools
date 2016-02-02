@@ -55,6 +55,7 @@ import org.drools.core.reteoo.TimerNode.TimerNodeMemory;
 import org.drools.core.rule.constraint.QueryNameConstraint;
 import org.drools.core.util.Iterator;
 import org.drools.core.util.ObjectHashMap.ObjectEntry;
+import org.kie.api.definition.rule.Rule;
 
 public class SegmentUtilities {
 
@@ -444,38 +445,46 @@ public class SegmentUtilities {
         }
     }
 
-    public static boolean parentInSameSegment(LeftTupleSource lt, RuleImpl removingRule) {
-        LeftTupleSource parentLt = lt.getLeftTupleSource();
+
+    public static boolean parentInSameSegment(LeftTupleSink child, Rule removingRule) {
+        LeftTupleSource parentLt = child.getLeftTupleSource();
+        return parentInSameSegmentAsChild(parentLt, removingRule );
+    }
+
+
+    public static boolean parentInSameSegment(LeftTupleSource child, Rule removingRule) {
+        LeftTupleSource parentLt = child.getLeftTupleSource();
+        return parentInSameSegmentAsChild(parentLt, removingRule );
+    }
+
+    public static boolean parentInSameSegmentAsChild(LeftTupleSource parentLt, Rule removingRule) {
         if (parentLt == null) {
             return false;
         }
-        int size = parentLt.getSinkPropagator().size();
+        LeftTupleSinkPropagator sinkPropagator = parentLt.getSinkPropagator();
 
-        if (removingRule != null && size == 2 && parentLt.isAssociatedWith( removingRule )) {
-            // looks like a split, but one of the branches may be removed.
-
-            LeftTupleSink first = parentLt.getSinkPropagator().getFirstLeftTupleSink();
-            if (first.getAssociationsSize() == first.getAssociationsSize( removingRule )) {
-                return true;
-            }
-
-            LeftTupleSink last = parentLt.getSinkPropagator().getLastLeftTupleSink();
-            return last.getAssociationsSize() == last.getAssociationsSize(removingRule);
-        } else {
-            return size == 1;
+        if (removingRule == null) {
+            return sinkPropagator.size() == 1;
         }
 
-        // comments out for now, as the optimization to preserve subnetwork segments down one side is troublesome.
-        //        LeftTupleSource parent = lt.getLeftTupleSource();
-        //        if ( parent != null && ( parent.getSinkPropagator().size() == 1 ||
-        //               // same segment, if it's a subnetwork split and we are on the non subnetwork side of the split
-        //             ( parent.getSinkPropagator().size() == 2 &&
-        //               NodeTypeEnums.isBetaNode( lt ) &&
-        //               ((BetaNode)lt).isRightInputIsRiaNode() ) ) ) {
-        //            return true;
-        //        } else {
-        //            return false;
-        //        }
+        if (sinkPropagator.size() == 1) {
+            return true;
+        }
+
+        // we know the sink size is creater than 1 and that there is a removingRule that needs to be ignored.
+        int count = 0;
+        for (LeftTupleSink sink : sinkPropagator.getSinks()) {
+            int associatedRuleSize =sink.getAssociatedRuleSize();
+            if ( !(associatedRuleSize == 1 && sink.isAssociatedWith( removingRule )) ) {
+                count++;
+                if ( count > 1 ) {
+                    // There is more than one sink that is not for the removing rule
+                    return false;
+                }
+            }
+
+        }
+        return true;
     }
 
     public static ObjectTypeNode getQueryOtn(LeftTupleSource lts) {

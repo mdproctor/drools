@@ -961,7 +961,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 when\n" +
+                "rule R1 salience 2when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
@@ -972,7 +972,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 \n" +
+                "rule R2 salience 1\n" +
                 "when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
@@ -989,7 +989,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 when\n" +
+                "rule R1 salience 2 when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
@@ -1001,8 +1001,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 \n" +
-                "when \n" +
+                "rule R2 salience 1 when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
@@ -1018,7 +1017,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 when\n" +
+                "rule R1 salience 2 when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
@@ -1029,8 +1028,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 \n" +
-                "when \n" +
+                "rule R2 salience 1 when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    Integer()\n" +
@@ -1047,7 +1045,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                        "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                        "global java.util.List list\n" +
-                       "rule R1 when\n" +
+                       "rule R1 salience 2 when\n" +
                        "    $s : String()\n" +
                        "    Integer()\n" +
                        "    exists( Integer() and Integer() )\n" +
@@ -1058,8 +1056,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                        "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                        "global java.util.List list\n" +
-                       "rule R2 \n" +
-                       "when \n" +
+                       "rule R2 salience 1 when \n" +
                        "    $s : String()\n" +
                        "    Integer()\n" +
                        "    exists( Integer() and Integer() )\n" +

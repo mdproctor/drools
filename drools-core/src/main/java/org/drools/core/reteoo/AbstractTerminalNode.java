@@ -34,6 +34,7 @@ import org.drools.core.spi.PropagationContext;
 import org.drools.core.util.bitmask.AllSetBitMask;
 import org.drools.core.util.bitmask.BitMask;
 import org.drools.core.util.bitmask.EmptyBitMask;
+import org.kie.api.definition.rule.Rule;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -138,22 +139,19 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
 
     public PathMemory createMemory(RuleBaseConfiguration config, InternalWorkingMemory wm) {
         PathMemory pmem = new PathMemory(this);
-        initPathMemory(pmem, getLeftTupleSource(), null, wm, null );
+        initPathMemory(pmem, this, null, wm, null );
         return pmem;
     }
 
     /**
      * Creates and return the node memory
      */
-    public static void initPathMemory(PathMemory pmem, LeftTupleSource tupleSource, LeftTupleSource startTupleSource, InternalWorkingMemory wm, RuleImpl removingRule) {
+    public static void initPathMemory(PathMemory pmem, LeftTupleSink endNode, LeftTupleSource startTupleSource, InternalWorkingMemory wm, Rule removingRule) {
         int counter = 1;
         long allLinkedTestMask = 0;
 
-
-        int size = tupleSource.getSinkPropagator().size();
-        if ( size > 2 ) {
-            counter++;
-        } else if ( size == 2 && ( removingRule == null || !tupleSource.isAssociatedWith( removingRule )  ) ) {
+        LeftTupleSource tupleSource = endNode.getLeftTupleSource();
+        if ( !SegmentUtilities.parentInSameSegment(endNode, removingRule)) {
             counter++;
         }
 
