@@ -19,7 +19,6 @@ import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.Memory;
 import org.drools.core.common.MemoryFactory;
 import org.drools.core.common.NetworkNode;
-import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.core.reteoo.AccumulateNode.AccumulateMemory;
 import org.drools.core.reteoo.AlphaNode;
@@ -35,6 +34,7 @@ import org.drools.core.reteoo.ExistsNode;
 import org.drools.core.reteoo.FromNode;
 import org.drools.core.reteoo.LeftInputAdapterNode;
 import org.drools.core.reteoo.LeftInputAdapterNode.LiaNodeMemory;
+import org.drools.core.reteoo.LeftTupleNode;
 import org.drools.core.reteoo.LeftTupleSink;
 import org.drools.core.reteoo.LeftTupleSinkNode;
 import org.drools.core.reteoo.LeftTupleSinkPropagator;
@@ -445,14 +445,7 @@ public class SegmentUtilities {
         }
     }
 
-
-    public static boolean parentInSameSegment(LeftTupleSink child, Rule removingRule) {
-        LeftTupleSource parentLt = child.getLeftTupleSource();
-        return parentInSameSegmentAsChild(parentLt, removingRule );
-    }
-
-
-    public static boolean parentInSameSegment(LeftTupleSource child, Rule removingRule) {
+    public static boolean parentInSameSegment( LeftTupleNode child, Rule removingRule ) {
         LeftTupleSource parentLt = child.getLeftTupleSource();
         return parentInSameSegmentAsChild(parentLt, removingRule );
     }

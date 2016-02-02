@@ -183,7 +183,7 @@ public class AddRemoveRule {
                             smems[childSmem.getPos()] = childSmem;
                             smemsToNotify.add(childSmem);
                         }
-                        correctMemoryOnSplitsChanged( parent, wm );
+                        correctMemoryOnSplitsChanged( parent, null, wm );
                     }
 
                     insertFacts( (LeftTupleSink) child, wm);
@@ -237,7 +237,7 @@ public class AddRemoveRule {
 
              removeNewPaths(wm, smemsToNotify, nodeToSegmentMap, tnms.subjectPmems);
 
-             if ( tnms.subjectPmem.getRuleAgendaItem() != null && tnms.subjectPmem.getRuleAgendaItem().isQueued() ) {
+             if ( tnms.subjectPmem != null && tnms.subjectPmem.getRuleAgendaItem() != null && tnms.subjectPmem.getRuleAgendaItem().isQueued() ) {
                  tnms.subjectPmem.getRuleAgendaItem().dequeue();
              }
 
@@ -271,7 +271,7 @@ public class AddRemoveRule {
                 while (true) {
                     if (prevSmemIndex < prevSmems.length-1 && isSplit(node)) {
                         if (isNewSplit(rule, node)) {
-                            correctMemoryOnSplitsChanged( node, wm );
+                            correctMemoryOnSplitsChanged( node, rule, wm );
 
                             prevSmemIndex++; // need to merge next segment
                             smemSplitAdjustAmount++; // all later Segments must be adjusted
@@ -454,9 +454,9 @@ public class AddRemoveRule {
         }
     }
 
-    private static void correctMemoryOnSplitsChanged( LeftTupleSource splitStart, InternalWorkingMemory wm ) {
+    private static void correctMemoryOnSplitsChanged( LeftTupleSource splitStart, Rule removingRule, InternalWorkingMemory wm ) {
         if ( splitStart.getType() == NodeTypeEnums.UnificationNode) {
-            ((QueryElementNode.QueryElementNodeMemory) wm.getNodeMemory( (MemoryFactory) splitStart )).correctMemoryOnSinksChanged();
+            ((QueryElementNode.QueryElementNodeMemory) wm.getNodeMemory( (MemoryFactory) splitStart )).correctMemoryOnSinksChanged(removingRule);
         }
     }
 
