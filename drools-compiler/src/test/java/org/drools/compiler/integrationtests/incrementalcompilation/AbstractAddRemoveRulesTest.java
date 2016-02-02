@@ -66,7 +66,7 @@ public abstract class AbstractAddRemoveRulesTest {
 
         for ( int i = 1; i < drls.length; i++) {
             drl = drls[i];
-            final KnowledgeBuilder kbuilder2 = createKnowledgeBuilder(kSession.getKieBase(), drl);
+            final KnowledgeBuilder kbuilder2 = createKnowledgeBuilder(null, drl);
             kSession.getKieBase().addKnowledgePackages(kbuilder2.getKnowledgePackages());
         }
 
@@ -112,6 +112,7 @@ public abstract class AbstractAddRemoveRulesTest {
             base.removeRule(PKG_NAME_TEST, "R2");
             session.fireAllRules();
         }
+        System.out.println( resultsList.toString() );
 
         base.removeRule(PKG_NAME_TEST, "R1");
         session.fireAllRules();
