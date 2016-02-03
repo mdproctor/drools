@@ -308,15 +308,14 @@ public class SegmentUtilities {
               return; // this can happen when multiple threads are trying to initialize the segment
         }
         for (LeftTupleSinkNode sink = sinkProp.getFirstLeftTupleSink(); sink != null; sink = sink.getNextLeftTupleSinkNode()) {
-            Memory memory = wm.getNodeMemory((MemoryFactory) sink);
-
-            SegmentMemory childSmem = createChildSegment(wm, sink, memory);
+            SegmentMemory childSmem = createChildSegment(wm, sink);
             childSmem.setPos( smem.getPos()+1 );
             smem.add(childSmem);
         }
     }
 
-    public static SegmentMemory createChildSegment(InternalWorkingMemory wm, LeftTupleSink sink, Memory memory) {
+    public static SegmentMemory createChildSegment(InternalWorkingMemory wm, LeftTupleSink sink) {
+        Memory memory = wm.getNodeMemory((MemoryFactory) sink);
         if (!(NodeTypeEnums.isTerminalNode(sink) || sink.getType() == NodeTypeEnums.RightInputAdaterNode)) {
             if (memory.getSegmentMemory() == null) {
                 SegmentUtilities.createSegmentMemory((LeftTupleSource) sink, wm);
@@ -339,7 +338,8 @@ public class SegmentUtilities {
         } else {
             pmem = ((RiaNodeMemory) memory).getRiaPathMemory();
         }
-        pmem.setSegmentMemory(pmem.getSegmentMemories().length - 1, childSmem);
+        childSmem.setPos( pmem.getSegmentMemories().length - 1 );
+        pmem.setSegmentMemory(childSmem.getPos(), childSmem);
         pmem.setSegmentMemory(childSmem);
         childSmem.addPathMemory( pmem );
 
@@ -392,7 +392,9 @@ public class SegmentUtilities {
                     RiaNodeMemory riaMem = (RiaNodeMemory) wm.getNodeMemory((MemoryFactory) sink);
                     PathMemory pmem = riaMem.getRiaPathMemory();
                     smem.addPathMemory( pmem );
-                    pmem.setSegmentMemory(smem.getPos(), smem);
+                    if (smem.getPos() < pmem.getSegmentMemories().length) {
+                        pmem.setSegmentMemory( smem.getPos(), smem );
+                    }
 
                     if (fromPrototype) {
                         ObjectSink[] nodes = ((RightInputAdapterNode) sink).getSinkPropagator().getSinks();
@@ -415,12 +417,16 @@ public class SegmentUtilities {
             } else if (NodeTypeEnums.isTerminalNode(sink)) {
                 PathMemory pmem = (PathMemory) wm.getNodeMemory((MemoryFactory) sink);
                 smem.addPathMemory(pmem);
-                pmem.setSegmentMemory(smem.getPos(), smem);
-                if (smem.isSegmentLinked()) {
-                    // not's can cause segments to be linked, and the rules need to be notified for evaluation
-                    smem.notifyRuleLinkSegment(wm);
+                // this terminal segment could have been created during a rule removal with the only purpose to be merged
+                // with the former one and in this case doesn't have to be added to the the path memory
+                if (smem.getPos() < pmem.getSegmentMemories().length) {
+                    pmem.setSegmentMemory( smem.getPos(), smem );
+                    if (smem.isSegmentLinked()) {
+                        // not's can cause segments to be linked, and the rules need to be notified for evaluation
+                        smem.notifyRuleLinkSegment(wm);
+                    }
+                    checkEagerSegmentCreation(sink.getLeftTupleSource(), wm, nodeTypesInSegment);
                 }
-                checkEagerSegmentCreation(sink.getLeftTupleSource(), wm, nodeTypesInSegment);
             }
         }
         return nodeTypesInSegment;
