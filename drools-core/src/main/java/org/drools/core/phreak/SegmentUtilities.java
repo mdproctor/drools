@@ -73,8 +73,7 @@ public class SegmentUtilities {
             }
 
             // find segment root
-            while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode &&
-                   SegmentUtilities.parentInSameSegment(tupleSource, null)) {
+            while (!SegmentUtilities.isRootNode(tupleSource, null)) {
                 tupleSource = tupleSource.getLeftTupleSource();
             }
 
@@ -165,7 +164,7 @@ public class SegmentUtilities {
             int ruleSegmentPosMask = 1;
             int counter = 0;
             while (pathRoot.getType() != NodeTypeEnums.LeftInputAdapterNode) {
-                if (!SegmentUtilities.parentInSameSegment(pathRoot, null)) {
+                if (SegmentUtilities.isRootNode(pathRoot, null)) {
                     // for each new found segment, increase the mask bit position
                     ruleSegmentPosMask = ruleSegmentPosMask << 1;
                     counter++;
@@ -428,7 +427,7 @@ public class SegmentUtilities {
     }
 
     private static int checkSegmentBoundary(LeftTupleSource lt, InternalWorkingMemory wm, int nodeTypesInSegment) {
-        if ( !parentInSameSegment( lt, null ) )  {
+        if ( !isRootNode( lt, null ) )  {
             // we are in a new child segment
             checkEagerSegmentCreation(lt.getLeftTupleSource(), wm, nodeTypesInSegment);
             nodeTypesInSegment = 0;
@@ -445,45 +444,71 @@ public class SegmentUtilities {
         }
     }
 
-    public static boolean parentInSameSegment( LeftTupleNode child, Rule removingRule ) {
-        LeftTupleSource parentLt = child.getLeftTupleSource();
-        return parentInSameSegmentAsChild(parentLt, removingRule );
-    }
+    /**
+     * Returns whether the node is the root of a segment.
+     * Lians are always the root of a segment.
+     *
+     * node cannot be null.
+     *
+     * The result should discount any removingRule. That means it gives you the result as
+     * if the rule had already been removed from the network.
+     * @param node
+     * @param removingRule
+     * @return
+     */
+    public static boolean isRootNode(LeftTupleNode node, Rule removingRule) {
+        if (node.getType() == NodeTypeEnums.LeftInputAdapterNode) {
+            return true;
+        }
 
-    public static boolean parentInSameSegmentAsChild(LeftTupleNode parentNode, Rule removingRule) {
-        if ( NodeTypeEnums.isLeftTupleSource(parentNode)) {
-            return parentInSameSegmentAsChild((LeftTupleSource) parentNode, removingRule);
+        LeftTupleNode parent = node.getLeftTupleSource();
+        if ( isTipNode(parent, removingRule) ) {
+            return true;
         }
         return false;
     }
-    public static boolean parentInSameSegmentAsChild(LeftTupleSource parentLt, Rule removingRule) {
-        if (parentLt == null) {
-            return false;
+
+    /**
+     * Returns whether the node is the tip of a segment.
+     * EndNodes (rtn and rian) are always the tip of a segment.
+     *
+     * node cannot be null.
+     *
+     * The result should discount any removingRule. That means it gives you the result as
+     * if the rule had already been removed from the network.
+     * @param node
+     * @param removingRule
+     * @return
+     */
+    public static boolean isTipNode(LeftTupleNode node, Rule removingRule) {
+        if (NodeTypeEnums.isEndNode(node)) {
+            return true;
         }
-        LeftTupleSinkPropagator sinkPropagator = parentLt.getSinkPropagator();
+        LeftTupleSinkPropagator sinkPropagator = ((LeftTupleSource)node).getSinkPropagator();
+
 
         if (removingRule == null) {
-            return sinkPropagator.size() == 1;
+            return sinkPropagator.size() > 1;
         }
 
         if (sinkPropagator.size() == 1) {
-            return true;
+            return false;
         }
 
         // we know the sink size is creater than 1 and that there is a removingRule that needs to be ignored.
         int count = 0;
-        for (LeftTupleSink sink : sinkPropagator.getSinks()) {
-            int associatedRuleSize =sink.getAssociatedRuleSize();
+        for ( LeftTupleSinkNode sink = sinkPropagator.getFirstLeftTupleSink(); sink != null; sink = sink.getNextLeftTupleSinkNode() )  {
+            int associatedRuleSize = sink.getAssociatedRuleSize();
             if ( !(associatedRuleSize == 1 && sink.isAssociatedWith( removingRule )) ) {
                 count++;
                 if ( count > 1 ) {
                     // There is more than one sink that is not for the removing rule
-                    return false;
+                    return true;
                 }
             }
-
         }
-        return true;
+
+        return false;
     }
 
     public static ObjectTypeNode getQueryOtn(LeftTupleSource lts) {
