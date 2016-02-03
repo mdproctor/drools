@@ -151,7 +151,7 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
         long allLinkedTestMask = 0;
 
         LeftTupleSource tupleSource = endNode.getLeftTupleSource();
-        if ( !SegmentUtilities.parentInSameSegment(endNode, removingRule)) {
+        if ( SegmentUtilities.isRootNode(endNode, removingRule)) {
             counter++;
         }
 
@@ -187,7 +187,7 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
                 }
             }
 
-            if ( !SegmentUtilities.parentInSameSegment( tupleSource, removingRule ) ) {
+            if ( SegmentUtilities.isRootNode( tupleSource, removingRule ) ) {
                 updateBitInNewSegment = true; // allow bit to be set for segment
                 allLinkedTestMask = allLinkedTestMask << 1;
                 counter++;

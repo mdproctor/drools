@@ -685,14 +685,14 @@ public class QueryElementNode extends LeftTupleSource
 
         public void correctMemoryOnSinksChanged(Rule removingRule) {
             if (resultLeftTuples instanceof QueryTupleSets ) {
-                if (SegmentUtilities.parentInSameSegmentAsChild( node, removingRule )) {
+                if (!SegmentUtilities.isTipNode( node, removingRule )) {
                     // a sink has been removed and now there is no longer a split
                     TupleSetsImpl<LeftTuple> newTupleSets = new TupleSetsImpl<LeftTuple>();
                     this.resultLeftTuples.addTo( newTupleSets );
                     this.resultLeftTuples = newTupleSets;
                 }
             } else {
-                if (node.getSinkPropagator().size() > 1) {
+                if (SegmentUtilities.isTipNode( node, removingRule )) {
                     // a sink has been added and now there is a split
                     TupleSetsImpl<LeftTuple> newTupleSets = new QueryTupleSets();
                     this.resultLeftTuples.addTo( newTupleSets );

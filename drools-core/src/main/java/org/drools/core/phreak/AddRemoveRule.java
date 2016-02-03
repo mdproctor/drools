@@ -340,7 +340,7 @@ public class AddRemoveRule {
 
     private static boolean isNewSplit(Rule rule, LeftTupleNode node) {
         if ( node != null && isSplit( node ) ) {
-            return SegmentUtilities.parentInSameSegmentAsChild(node, rule);
+            return !SegmentUtilities.isTipNode(node, rule);
         } else {
             return false;
         }
