@@ -450,6 +450,12 @@ public class SegmentUtilities {
         return parentInSameSegmentAsChild(parentLt, removingRule );
     }
 
+    public static boolean parentInSameSegmentAsChild(LeftTupleNode parentNode, Rule removingRule) {
+        if ( NodeTypeEnums.isLeftTupleSource(parentNode)) {
+            return parentInSameSegmentAsChild((LeftTupleSource) parentNode, removingRule);
+        }
+        return false;
+    }
     public static boolean parentInSameSegmentAsChild(LeftTupleSource parentLt, Rule removingRule) {
         if (parentLt == null) {
             return false;
