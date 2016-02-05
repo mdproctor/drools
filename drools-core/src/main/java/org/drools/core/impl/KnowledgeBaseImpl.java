@@ -1409,28 +1409,12 @@ public class KnowledgeBaseImpl
         segmentProtos.put(tupleSource.getId(), smem.asPrototype());
     }
 
-    public void invalidateSegmentPrototype(LeftTupleNode tupleSource, boolean ruleRemoved) {
-        if (segmentProtos.isEmpty() || (ruleRemoved && tupleSource.getAssociationsSize() < 2)) {
-            return;
-        }
-        if (ruleRemoved) {
-            while ( tupleSource.getLeftTupleSource() != null ) {
-                tupleSource = tupleSource.getLeftTupleSource();
-            }
-        }
-        internalInvalidateSegmentPrototype(tupleSource);
+    public boolean hasSegmentPrototypes() {
+        return !segmentProtos.isEmpty();
     }
 
-    private void internalInvalidateSegmentPrototype(LeftTupleNode node) {
-        segmentProtos.remove(node.getId());
-        if ( NodeTypeEnums.isLeftTupleSource(node)) {
-            LeftTupleSinkPropagator sinkProp = ((LeftTupleSource)node).getSinkPropagator();
-            for (LeftTupleSinkNode sink = (LeftTupleSinkNode) sinkProp.getFirstLeftTupleSink(); sink != null; sink = sink.getNextLeftTupleSinkNode()) {
-                if (sink instanceof LeftTupleSource) {
-                    internalInvalidateSegmentPrototype((LeftTupleNode) sink);
-                }
-            }
-        }
+    public void invalidateSegmentPrototype(LeftTupleNode rootNode) {
+        segmentProtos.remove(rootNode.getId());
     }
 
     public SegmentMemory createSegmentFromPrototype(InternalWorkingMemory wm, LeftTupleSource tupleSource) {
