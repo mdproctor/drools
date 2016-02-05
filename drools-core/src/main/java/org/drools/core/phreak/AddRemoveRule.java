@@ -68,6 +68,10 @@ public class AddRemoveRule {
         // TODO Can this be made lighter, do we need to iterate up to tip.
         kBase.invalidateSegmentPrototype(firstSplit, false);
 
+        if (wms.length == 0) {
+            return;
+        }
+
         PathEndNodes pathEndNodes = getPathEndNodes((LeftTupleSource) firstSplit, tn, null);
 
         // Insert the facts for the new paths. This will iterate each new path from EndNode to the splitStart - but will not process the splitStart itself (as tha already exist).
@@ -231,6 +235,10 @@ public class AddRemoveRule {
 
         // TODO Can this be made lighter, do we need to iterate up to tip.
         kBase.invalidateSegmentPrototype(firstSplit, false);
+
+        if (wms.length == 0) {
+            return;
+        }
 
         PathEndNodes pathEndNodes = getPathEndNodes((LeftTupleSource) firstSplit, tn, null);
 
