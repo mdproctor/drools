@@ -61,18 +61,16 @@ public class AddRemoveRule {
             log.trace("Adding Rule {}", tn.getRule().getName());
         }
 
-        RuleImpl rule = tn.getRule();
+        boolean hasProtos = kBase.hasSegmentPrototypes();
+        boolean hasWms = wms.length > 0;
 
-        LeftTupleNode firstSplit = getNetworkSplitPoint(tn, rule);
-
-        // TODO Can this be made lighter, do we need to iterate up to tip.
-        kBase.invalidateSegmentPrototype(firstSplit, false);
-
-        if (wms.length == 0) {
+        if (!hasProtos && !hasWms) {
             return;
         }
 
-        PathEndNodes pathEndNodes = getPathEndNodes((LeftTupleSource) firstSplit, tn, null);
+        RuleImpl rule = tn.getRule();
+        LeftTupleNode firstSplit = getNetworkSplitPoint(tn, rule);
+        PathEndNodes pathEndNodes = getPathEndNodes(kBase, (LeftTupleSource) firstSplit, tn, null, hasProtos, hasWms);
 
         // Insert the facts for the new paths. This will iterate each new path from EndNode to the splitStart - but will not process the splitStart itself (as tha already exist).
         // It does not matter that the prior segments have not yet been processed for splitting, as this will only apply for branches of paths that did not exist before
@@ -230,17 +228,16 @@ public class AddRemoveRule {
             log.trace("Removing Rule {}", tn.getRule().getName());
         }
 
-        RuleImpl      rule       = tn.getRule();
-        LeftTupleNode firstSplit = getNetworkSplitPoint(tn, rule);
+        boolean hasProtos = kBase.hasSegmentPrototypes();
+        boolean hasWms = wms.length > 0;
 
-        // TODO Can this be made lighter, do we need to iterate up to tip.
-        kBase.invalidateSegmentPrototype(firstSplit, false);
-
-        if (wms.length == 0) {
+        if (!hasProtos && !hasWms) {
             return;
         }
 
-        PathEndNodes pathEndNodes = getPathEndNodes((LeftTupleSource) firstSplit, tn, null);
+        RuleImpl      rule       = tn.getRule();
+        LeftTupleNode firstSplit = getNetworkSplitPoint(tn, rule);
+        PathEndNodes pathEndNodes = getPathEndNodes(kBase, (LeftTupleSource) firstSplit, tn, null, hasProtos, hasWms);
 
         for (InternalWorkingMemory wm : wms) {
             processLeftTuples(firstSplit, wm, false, tn.getRule());
@@ -1335,32 +1332,49 @@ public class AddRemoveRule {
         List<PathMemory> otherPmems   = new ArrayList<PathMemory>();
     }
 
-    public static PathEndNodes getPathEndNodes(LeftTupleSource lt,
+    public static PathEndNodes getPathEndNodes(InternalKnowledgeBase kBase,
+                                               LeftTupleSource lt,
                                                TerminalNode tn,
-                                               Rule removingRule) {
+                                               Rule removingRule,
+                                               boolean hasProtos,
+                                               boolean hasWms) {
         PathEndNodes endNodes = new PathEndNodes();
         endNodes.subjectEndNode = (PathEndNode) tn;
         endNodes.subjectEndNodes.add((PathEndNode) tn);
-        if (SegmentUtilities.isTipNode(lt, removingRule)) {
+        if (hasWms && SegmentUtilities.isTipNode(lt, removingRule)) {
             endNodes.subjectSplit = lt;
             endNodes.subjectSplits.add(lt);
         }
 
-        collectPathEndNodes(lt, endNodes, tn, removingRule);
+        if (hasProtos) {
+            LeftTupleSource node = lt;
+            while (!SegmentUtilities.isRootNode(node, null)) {
+                node = node.getLeftTupleSource();
+            }
+            kBase.invalidateSegmentPrototype( node );
+        }
+
+        collectPathEndNodes(kBase, lt, endNodes, tn, removingRule, hasProtos, hasWms);
 
         return endNodes;
     }
 
-    private static void collectPathEndNodes(LeftTupleSource lt,
+    private static void collectPathEndNodes(InternalKnowledgeBase kBase,
+                                            LeftTupleSource lt,
                                             PathEndNodes endNodes,
                                             TerminalNode tn,
-                                            Rule removingRule) {
+                                            Rule removingRule,
+                                            boolean hasProtos,
+                                            boolean hasWms) {
         for (LeftTupleSink sink : lt.getSinkPropagator().getSinks()) {
             if (sink == tn) {
                 continue;
             }
+            if (hasProtos && SegmentUtilities.isRootNode(sink, null)) {
+                kBase.invalidateSegmentPrototype( sink );
+            }
             if (NodeTypeEnums.isLeftTupleSource(sink)) {
-                if (SegmentUtilities.isTipNode(sink, removingRule)) {
+                if (hasWms && SegmentUtilities.isTipNode(sink, removingRule)) {
                     if (isUnsharedSinkForRule(tn.getRule(), sink)) {
                         endNodes.subjectSplits.add(sink);
                     } else {
@@ -1368,7 +1382,9 @@ public class AddRemoveRule {
                     }
                 }
 
-                collectPathEndNodes((LeftTupleSource) sink, endNodes, tn, removingRule);
+                collectPathEndNodes(kBase, (LeftTupleSource) sink, endNodes, tn, removingRule, hasProtos, hasWms);
+            } else if (!hasWms) {
+                continue;
             } else if (NodeTypeEnums.isTerminalNode(sink)) {
                 endNodes.otherEndNodes.add((PathEndNode) sink);
             } else if (NodeTypeEnums.RightInputAdaterNode == sink.getType()) {
