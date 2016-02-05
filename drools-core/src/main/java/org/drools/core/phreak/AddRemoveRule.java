@@ -70,7 +70,7 @@ public class AddRemoveRule {
 
         RuleImpl rule = tn.getRule();
         LeftTupleNode firstSplit = getNetworkSplitPoint(tn, rule);
-        PathEndNodes pathEndNodes = getPathEndNodes(kBase, (LeftTupleSource) firstSplit, tn, null, hasProtos, hasWms);
+        PathEndNodes pathEndNodes = getPathEndNodes(kBase, (LeftTupleSource) firstSplit, tn, rule, null, hasProtos, hasWms);
 
         // Insert the facts for the new paths. This will iterate each new path from EndNode to the splitStart - but will not process the splitStart itself (as tha already exist).
         // It does not matter that the prior segments have not yet been processed for splitting, as this will only apply for branches of paths that did not exist before
@@ -237,7 +237,7 @@ public class AddRemoveRule {
 
         RuleImpl      rule       = tn.getRule();
         LeftTupleNode firstSplit = getNetworkSplitPoint(tn, rule);
-        PathEndNodes pathEndNodes = getPathEndNodes(kBase, (LeftTupleSource) firstSplit, tn, null, hasProtos, hasWms);
+        PathEndNodes pathEndNodes = getPathEndNodes(kBase, (LeftTupleSource) firstSplit, tn, rule, rule, hasProtos, hasWms);
 
         for (InternalWorkingMemory wm : wms) {
             processLeftTuples(firstSplit, wm, false, tn.getRule());
@@ -306,12 +306,10 @@ public class AddRemoveRule {
                     SegmentMemory sm2 = prevSmems[prevSmemIndex];
 
                     if (sm1 != null && sm2 == null) {
-                        sm2 = node instanceof LeftTupleSource ?
-                              SegmentUtilities.createSegmentMemory((LeftTupleSource) node, wm) :
-                              SegmentUtilities.createChildSegment(wm, (LeftTupleSink) node);
+                        sm2 = SegmentUtilities.createChildSegment(wm, (LeftTupleSink) node);
                         sm1.add(sm2);
                     } else if (sm1 == null && sm2 != null) {
-                        sm1 = SegmentUtilities.createSegmentMemory((LeftTupleSource) findRootSegmentNode(nodes, smemIndex - 1), wm);
+                        sm1 = SegmentUtilities.createSegmentMemory((LeftTupleSource) parentNode, wm);
                         sm1.add(sm2);
                     }
 
@@ -1332,12 +1330,13 @@ public class AddRemoveRule {
         List<PathMemory> otherPmems   = new ArrayList<PathMemory>();
     }
 
-    public static PathEndNodes getPathEndNodes(InternalKnowledgeBase kBase,
-                                               LeftTupleSource lt,
-                                               TerminalNode tn,
-                                               Rule removingRule,
-                                               boolean hasProtos,
-                                               boolean hasWms) {
+    private static PathEndNodes getPathEndNodes(InternalKnowledgeBase kBase,
+                                                LeftTupleSource lt,
+                                                TerminalNode tn,
+                                                Rule processedRule,
+                                                Rule removingRule,
+                                                boolean hasProtos,
+                                                boolean hasWms) {
         PathEndNodes endNodes = new PathEndNodes();
         endNodes.subjectEndNode = (PathEndNode) tn;
         endNodes.subjectEndNodes.add((PathEndNode) tn);
@@ -1347,14 +1346,10 @@ public class AddRemoveRule {
         }
 
         if (hasProtos) {
-            LeftTupleSource node = lt;
-            while (!SegmentUtilities.isRootNode(node, null)) {
-                node = node.getLeftTupleSource();
-            }
-            kBase.invalidateSegmentPrototype( node );
+            invalidateRootNode( kBase, lt );
         }
 
-        collectPathEndNodes(kBase, lt, endNodes, tn, removingRule, hasProtos, hasWms);
+        collectPathEndNodes(kBase, lt, endNodes, tn, processedRule, removingRule, hasProtos, hasWms, hasProtos && isNewSplit( processedRule, lt ));
 
         return endNodes;
     }
@@ -1363,15 +1358,26 @@ public class AddRemoveRule {
                                             LeftTupleSource lt,
                                             PathEndNodes endNodes,
                                             TerminalNode tn,
+                                            Rule processedRule,
                                             Rule removingRule,
                                             boolean hasProtos,
-                                            boolean hasWms) {
+                                            boolean hasWms,
+                                            boolean isBelowNewSplit) {
         for (LeftTupleSink sink : lt.getSinkPropagator().getSinks()) {
             if (sink == tn) {
                 continue;
             }
-            if (hasProtos && SegmentUtilities.isRootNode(sink, null)) {
-                kBase.invalidateSegmentPrototype( sink );
+            if (hasProtos) {
+                if (isBelowNewSplit) {
+                    if (SegmentUtilities.isRootNode(sink, null)) {
+                        kBase.invalidateSegmentPrototype( sink );
+                    }
+                } else {
+                    isBelowNewSplit = isNewSplit( processedRule, sink );
+                    if (isBelowNewSplit) {
+                        invalidateRootNode( kBase, sink );
+                    }
+                }
             }
             if (NodeTypeEnums.isLeftTupleSource(sink)) {
                 if (hasWms && SegmentUtilities.isTipNode(sink, removingRule)) {
@@ -1382,7 +1388,7 @@ public class AddRemoveRule {
                     }
                 }
 
-                collectPathEndNodes(kBase, (LeftTupleSource) sink, endNodes, tn, removingRule, hasProtos, hasWms);
+                collectPathEndNodes(kBase, (LeftTupleSource) sink, endNodes, tn, processedRule, removingRule, hasProtos, hasWms, isBelowNewSplit);
             } else if (!hasWms) {
                 continue;
             } else if (NodeTypeEnums.isTerminalNode(sink)) {
@@ -1398,6 +1404,13 @@ public class AddRemoveRule {
                 throw new RuntimeException("Error: Unknown Node. Defensive programming test..");
             }
         }
+    }
+
+    private static void invalidateRootNode( InternalKnowledgeBase kBase, LeftTupleNode lt ) {
+        while (!SegmentUtilities.isRootNode( lt, null )) {
+            lt = lt.getLeftTupleSource();
+        }
+        kBase.invalidateSegmentPrototype( lt );
     }
 
     private static class PathEndNodes {
