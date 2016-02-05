@@ -23,11 +23,7 @@ import org.drools.core.common.RuleBasePartitionId;
 import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.factmodel.traits.TraitRegistry;
-import org.drools.core.reteoo.EntryPointNode;
-import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.Rete;
-import org.drools.core.reteoo.ReteooBuilder;
-import org.drools.core.reteoo.SegmentMemory;
+import org.drools.core.reteoo.*;
 import org.drools.core.rule.InvalidPatternException;
 import org.drools.core.rule.TypeDeclaration;
 import org.drools.core.spi.FactHandleFactory;
@@ -117,7 +113,7 @@ public interface InternalKnowledgeBase extends KnowledgeBase {
 
     InternalWorkingMemory[] getWorkingMemories();
 
-    void invalidateSegmentPrototype(LeftTupleSource tupleSource, boolean ruleRemoved);
+    void invalidateSegmentPrototype(LeftTupleNode tupleSource, boolean ruleRemoved);
     SegmentMemory createSegmentFromPrototype(InternalWorkingMemory wm, LeftTupleSource tupleSource);
     SegmentMemory.Prototype getSegmentPrototype(SegmentMemory segment);
 
