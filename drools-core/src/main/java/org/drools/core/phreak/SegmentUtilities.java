@@ -433,7 +433,7 @@ public class SegmentUtilities {
     }
 
     private static int checkSegmentBoundary(LeftTupleSource lt, InternalWorkingMemory wm, int nodeTypesInSegment) {
-        if ( !isRootNode( lt, null ) )  {
+        if ( isRootNode( lt, null ) )  {
             // we are in a new child segment
             checkEagerSegmentCreation(lt.getLeftTupleSource(), wm, nodeTypesInSegment);
             nodeTypesInSegment = 0;
