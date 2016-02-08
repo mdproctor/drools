@@ -344,8 +344,6 @@ public class AddRuleTest {
         assertNull( sm.getStagedLeftTuples().getInsertFirst() );
         assertEquals(4, list.size() );
 
-        System.out.println( list );
-
         assertEquals("r1", ((Match) list.get(0)).getRule().getName());
         assertEquals( "r1", ((Match)list.get(1)).getRule().getName() );
         assertEquals( "r2", ((Match)list.get(2)).getRule().getName() );
@@ -379,6 +377,7 @@ public class AddRuleTest {
 
 
         wm.fireAllRules();
+        System.out.println(list);
         assertEquals( 5, list.size() );
 
         assertEquals("r1", ((Match) list.get(0)).getRule().getName());
@@ -515,6 +514,7 @@ public class AddRuleTest {
 
     @Test
     public void testSplitOnCreatedSegment() throws Exception {
+        // this test splits D1 and D2 on the later add rule
         KnowledgeBase kbase1 =          buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) D(1;) D(2;) E(1;) E(2;)\n" );
         kbase1.addKnowledgePackages( buildKnowledgePackage("r2", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) D(1;) D(2;) E(1;) E(2;)\n") );
         kbase1.addKnowledgePackages( buildKnowledgePackage("r3", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) D(1;) D(2;)\n") );
@@ -526,11 +526,13 @@ public class AddRuleTest {
 
         wm.insert(new D(1));
         wm.insert(new D(2));
+        wm.insert(new D(3));
         wm.flushPropagations();
 
         RuleTerminalNode rtn1 = getRtn( "org.kie.r1", kbase1 );
 
         PathMemory pm1 = (PathMemory) wm.getNodeMemory(rtn1);
+        assertEquals( 2, pm1.getLinkedSegmentMask() );
         SegmentMemory[] smems = pm1.getSegmentMemories();
         assertEquals(4, smems.length);
         assertNull( smems[0]);
@@ -539,10 +541,12 @@ public class AddRuleTest {
         SegmentMemory sm = smems[1];
         assertEquals( 1, sm.getPos() );
         assertEquals( 2, sm.getSegmentPosMaskBit() );
-        assertEquals( 2, pm1.getLinkedSegmentMask() );
+
 
         kbase1.addKnowledgePackages( buildKnowledgePackage("r5", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) D(1;) D(3;)\n") );
+        wm.fireAllRules();
 
+        assertEquals( 6, pm1.getLinkedSegmentMask() );
         smems = pm1.getSegmentMemories();
         assertEquals(5, smems.length);
         assertNull( smems[0]);
@@ -551,26 +555,25 @@ public class AddRuleTest {
         sm = smems[1];
         assertEquals( 1, sm.getPos() );
         assertEquals( 2, sm.getSegmentPosMaskBit() );
-        assertEquals( 6, pm1.getLinkedSegmentMask() );
 
         sm = smems[2];
         assertEquals( 2, sm.getPos() );
         assertEquals( 4, sm.getSegmentPosMaskBit() );
-        assertEquals( 6, pm1.getLinkedSegmentMask() );
 
         RuleTerminalNode rtn5 = getRtn( "org.kie.r5", kbase1 );
         PathMemory pm5 = (PathMemory) wm.getNodeMemory(rtn5);
+        assertEquals( 6, pm5.getLinkedSegmentMask() );
+
         smems = pm5.getSegmentMemories();
         assertEquals(3, smems.length);
         assertNull( smems[0]);
         sm = smems[1];
         assertEquals( 1, sm.getPos() );
         assertEquals( 2, sm.getSegmentPosMaskBit() );
-        assertEquals( 6, pm5.getLinkedSegmentMask() );
+
         sm = smems[2];
         assertEquals( 2, sm.getPos() );
         assertEquals( 4, sm.getSegmentPosMaskBit() );
-        assertEquals( 6, pm5.getLinkedSegmentMask() );
     }
 
 
