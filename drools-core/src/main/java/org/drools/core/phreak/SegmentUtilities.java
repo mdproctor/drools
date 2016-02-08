@@ -316,7 +316,7 @@ public class SegmentUtilities {
 
     public static SegmentMemory createChildSegment(InternalWorkingMemory wm, LeftTupleSink sink) {
         Memory memory = wm.getNodeMemory((MemoryFactory) sink);
-        if (!(NodeTypeEnums.isTerminalNode(sink) || sink.getType() == NodeTypeEnums.RightInputAdaterNode)) {
+        if (!NodeTypeEnums.isEndNode(sink)) {
             if (memory.getSegmentMemory() == null) {
                 SegmentUtilities.createSegmentMemory((LeftTupleSource) sink, wm);
             }
