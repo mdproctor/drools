@@ -2080,7 +2080,7 @@ public class IncrementalCompilationTest extends CommonTestMethodBase {
         Rete rete = ( (InternalKnowledgeBase) (InternalKnowledgeBase) ksession.getKieBase() ).getRete();
         EntryPointNode entryPointNode = rete.getEntryPointNodes().values().iterator().next();
         for (ObjectTypeNode otns : entryPointNode.getObjectTypeNodes().values()) {
-            assertEquals( 0, otns.getSinkPropagator().getSinks().length );
+            assertEquals( 0, otns.getObjectSinkPropagator().getSinks().length );
         }
     }
 

@@ -75,7 +75,7 @@ public class RemoveRuleTest {
         wm.setGlobal("list", list);
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
 
         LiaNodeMemory lm = ( LiaNodeMemory ) wm.getNodeMemory(liaNode);
         SegmentMemory sm = lm.getSegmentMemory();
@@ -177,7 +177,7 @@ public class RemoveRuleTest {
         wm.fireAllRules();
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
         JoinNode bNode = (JoinNode) liaNode.getSinkPropagator().getFirstLeftTupleSink();
 
         JoinNode c1Node = (JoinNode) bNode.getSinkPropagator().getFirstLeftTupleSink();
@@ -240,7 +240,7 @@ public class RemoveRuleTest {
         wm.fireAllRules();
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
         JoinNode bNode = (JoinNode) liaNode.getSinkPropagator().getFirstLeftTupleSink();
 
         EvalConditionNode e1 = (EvalConditionNode) bNode.getSinkPropagator().getFirstLeftTupleSink();
@@ -307,7 +307,7 @@ public class RemoveRuleTest {
         assertEquals( 17, countNodeMemories(wm.getNodeMemories()));
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
         JoinNode b1Node = (JoinNode) liaNode.getSinkPropagator().getFirstLeftTupleSink();
         JoinNode b2Node = (JoinNode) liaNode.getSinkPropagator().getLastLeftTupleSink();
         JoinNode c1Node = (JoinNode) b1Node.getSinkPropagator().getLastLeftTupleSink();

@@ -62,7 +62,7 @@ public class NodePositionInPathTest {
         for ( ObjectTypeNode otn : rete.getObjectTypeNodes() ) {
             Class<?> otnType = ( (ClassObjectType) otn.getObjectType() ).getClassType();
             if ( Integer.class == otnType ) {
-                liaNode = (LeftInputAdapterNode)otn.getSinkPropagator().getSinks()[0];
+                liaNode = (LeftInputAdapterNode)otn.getObjectSinkPropagator().getSinks()[0];
             }
         }
 

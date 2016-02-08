@@ -389,4 +389,8 @@ public class RightInputAdapterNode extends ObjectSource
         }
         return pathNodes;
     }
+
+    public LeftTupleSinkPropagator getSinkPropagator() {
+        return EmptyLeftTupleSinkAdapter.getInstance();
+    }
 }

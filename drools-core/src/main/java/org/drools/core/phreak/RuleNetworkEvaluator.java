@@ -609,7 +609,7 @@ public class RuleNetworkEvaluator {
                             TupleSets<LeftTuple> srcTuples,
                             RightInputAdapterNode riaNode) {
 
-        ObjectSink[] sinks = riaNode.getSinkPropagator().getSinks();
+        ObjectSink[] sinks = riaNode.getObjectSinkPropagator().getSinks();
 
         BetaNode betaNode = (BetaNode) sinks[0];
         BetaMemory bm;

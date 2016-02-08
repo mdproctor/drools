@@ -294,7 +294,7 @@ public class ReteooBuilder
     private void updateLeafSet(BaseNode baseNode, NodeSet leafSet) {
         if ( baseNode.getType() == NodeTypeEnums.AlphaNode ) {
             ((AlphaNode) baseNode).resetInferredMask();
-            for ( ObjectSink sink : ((AlphaNode) baseNode).getSinkPropagator().getSinks() ) {
+            for ( ObjectSink sink : ((AlphaNode) baseNode).getObjectSinkPropagator().getSinks() ) {
                 if ( ((BaseNode)sink).isInUse() ) {
                     updateLeafSet( ( BaseNode ) sink, leafSet );
                 }

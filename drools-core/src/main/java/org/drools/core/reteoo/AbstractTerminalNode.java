@@ -146,7 +146,7 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
     /**
      * Creates and return the node memory
      */
-    public static void initPathMemory(PathMemory pmem, LeftTupleSink endNode, LeftTupleSource startTupleSource, InternalWorkingMemory wm, Rule removingRule) {
+    public static void initPathMemory(PathMemory pmem, LeftTupleNode endNode, LeftTupleSource startTupleSource, InternalWorkingMemory wm, Rule removingRule) {
         int counter = 1;
         long allLinkedTestMask = 0;
 
@@ -297,5 +297,9 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
             pathNodes = getPathNodes( this );
         }
         return pathNodes;
+    }
+
+    public LeftTupleSinkPropagator getSinkPropagator() {
+        return EmptyLeftTupleSinkAdapter.getInstance();
     }
 }
