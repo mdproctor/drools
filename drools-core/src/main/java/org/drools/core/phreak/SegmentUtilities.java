@@ -138,7 +138,7 @@ public class SegmentUtilities {
                             smem.getNodeMemories().add( riaPmem );
 
                             RightInputAdapterNode rian = ( RightInputAdapterNode ) sink;
-                            ObjectSink[] nodes = rian.getSinkPropagator().getSinks();
+                            ObjectSink[] nodes = rian.getObjectSinkPropagator().getSinks();
                             for ( ObjectSink node : nodes ) {
                                 if ( NodeTypeEnums.isLeftTupleSource(node) )  {
                                     createSegmentMemory( (LeftTupleSource) node, wm );
@@ -397,7 +397,7 @@ public class SegmentUtilities {
                     }
 
                     if (fromPrototype) {
-                        ObjectSink[] nodes = ((RightInputAdapterNode) sink).getSinkPropagator().getSinks();
+                        ObjectSink[] nodes = ((RightInputAdapterNode) sink).getObjectSinkPropagator().getSinks();
                         for ( ObjectSink node : nodes ) {
                             // check if the SegmentMemory has been already created by the BetaNode and if so avoid to build it twice
                             if ( NodeTypeEnums.isLeftTupleSource(node) && wm.getNodeMemory((MemoryFactory) node).getSegmentMemory() == null )  {
@@ -406,7 +406,7 @@ public class SegmentUtilities {
                         }
                     } else if ( ( pmem.getAllLinkedMaskTest() & ( 1L << pmem.getSegmentMemories().length ) ) == 0 ) {
                         // must eagerly initialize child segment memories
-                        ObjectSink[] nodes = ((RightInputAdapterNode) sink).getSinkPropagator().getSinks();
+                        ObjectSink[] nodes = ((RightInputAdapterNode) sink).getObjectSinkPropagator().getSinks();
                         for ( ObjectSink node : nodes ) {
                             if ( NodeTypeEnums.isLeftTupleSource(node) )  {
                                 createSegmentMemory( (LeftTupleSource) node, wm );
@@ -532,13 +532,13 @@ public class SegmentUtilities {
     }
 
     public static LeftInputAdapterNode getQueryLiaNode(String queryName, ObjectTypeNode queryOtn) {
-        if (queryOtn.getSinkPropagator() instanceof CompositeObjectSinkAdapter) {
-            CompositeObjectSinkAdapter sink = (CompositeObjectSinkAdapter) queryOtn.getSinkPropagator();
+        if (queryOtn.getObjectSinkPropagator() instanceof CompositeObjectSinkAdapter) {
+            CompositeObjectSinkAdapter sink = (CompositeObjectSinkAdapter) queryOtn.getObjectSinkPropagator();
             if (sink.getHashableSinks() != null) {
                 for (AlphaNode alphaNode = (AlphaNode) sink.getHashableSinks().getFirst(); alphaNode != null; alphaNode = (AlphaNode) alphaNode.getNextObjectSinkNode()) {
                     QueryNameConstraint nameConstraint = (QueryNameConstraint) alphaNode.getConstraint();
                     if (queryName.equals(nameConstraint.getQueryName())) {
-                        return (LeftInputAdapterNode) alphaNode.getSinkPropagator().getSinks()[0];
+                        return (LeftInputAdapterNode) alphaNode.getObjectSinkPropagator().getSinks()[0];
                     }
                 }
             }
@@ -548,16 +548,16 @@ public class SegmentUtilities {
                 AlphaNode alphaNode = (AlphaNode) entry.getValue();
                 QueryNameConstraint nameConstraint = (QueryNameConstraint) alphaNode.getConstraint();
                 if (queryName.equals(nameConstraint.getQueryName())) {
-                    return (LeftInputAdapterNode) alphaNode.getSinkPropagator().getSinks()[0];
+                    return (LeftInputAdapterNode) alphaNode.getObjectSinkPropagator().getSinks()[0];
                 }
             }
         } else {
-            AlphaNode alphaNode = (AlphaNode) queryOtn.getSinkPropagator().getSinks()[0];
+            AlphaNode alphaNode = (AlphaNode) queryOtn.getObjectSinkPropagator().getSinks()[0];
             QueryNameConstraint nameConstraint = (QueryNameConstraint) alphaNode.getConstraint();
             if (queryName.equals(nameConstraint.getQueryName())) {
-                return (LeftInputAdapterNode) alphaNode.getSinkPropagator().getSinks()[0];
+                return (LeftInputAdapterNode) alphaNode.getObjectSinkPropagator().getSinks()[0];
             }
-            return (LeftInputAdapterNode) queryOtn.getSinkPropagator().getSinks()[0];
+            return (LeftInputAdapterNode) queryOtn.getObjectSinkPropagator().getSinks()[0];
         }
 
         throw new RuntimeException("Unable to find query '" + queryName + "'");

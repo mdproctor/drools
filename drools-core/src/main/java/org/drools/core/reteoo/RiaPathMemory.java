@@ -33,11 +33,11 @@ public class RiaPathMemory extends PathMemory {
     }
 
     public void doLinkRule(InternalWorkingMemory wm) {
-        getRightInputAdapterNode().getSinkPropagator().doLinkRiaNode( wm );
+        getRightInputAdapterNode().getObjectSinkPropagator().doLinkRiaNode( wm );
     }
         
     public void doUnlinkRule(InternalWorkingMemory wm) {
-        getRightInputAdapterNode().getSinkPropagator().doUnlinkRiaNode( wm );
+        getRightInputAdapterNode().getObjectSinkPropagator().doUnlinkRiaNode( wm );
     }
     
     public short getNodeType() {
@@ -46,7 +46,7 @@ public class RiaPathMemory extends PathMemory {
 
     private void updateRuleTerminalNodes() {
         terminalNodeNames = new ArrayList<String>();
-        for ( ObjectSink osink : getRightInputAdapterNode().getSinkPropagator().getSinks() ) {
+        for ( ObjectSink osink : getRightInputAdapterNode().getObjectSinkPropagator().getSinks() ) {
             for ( LeftTupleSink ltsink : ((BetaNode)osink).getSinkPropagator().getSinks() )  {
                 findAndAddTN(ltsink, terminalNodeNames);
             }

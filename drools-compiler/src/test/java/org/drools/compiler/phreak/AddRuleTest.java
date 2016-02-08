@@ -73,7 +73,7 @@ public class AddRuleTest {
         wm.setGlobal("list", list);
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
 
         LiaNodeMemory lm = ( LiaNodeMemory ) wm.getNodeMemory(liaNode);
         SegmentMemory sm = lm.getSegmentMemory();
@@ -108,7 +108,7 @@ public class AddRuleTest {
         wm.setGlobal("list", list);
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
 
         LiaNodeMemory lm = ( LiaNodeMemory ) wm.getNodeMemory(liaNode);
         SegmentMemory sm = lm.getSegmentMemory();
@@ -155,7 +155,7 @@ public class AddRuleTest {
         kbase1.addKnowledgePackages( buildKnowledgePackage("r2", "   a : A() B() C(2;) D() E()\n") );
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
         JoinNode bNode = (JoinNode) liaNode.getSinkPropagator().getFirstLeftTupleSink();
 
         JoinNode c1Node = (JoinNode) bNode.getSinkPropagator().getFirstLeftTupleSink();
@@ -216,7 +216,7 @@ public class AddRuleTest {
         kbase1.addKnowledgePackages( buildKnowledgePackage("r2", "   a:A() B() eval(1==1) eval(1==1) C(2;) \n") );
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
         JoinNode bNode = (JoinNode) liaNode.getSinkPropagator().getFirstLeftTupleSink();
 
         EvalConditionNode e1 = (EvalConditionNode) bNode.getSinkPropagator().getFirstLeftTupleSink();
@@ -282,7 +282,7 @@ public class AddRuleTest {
         kbase1.addKnowledgePackages( buildKnowledgePackage("r2", "   a : A() B(2;) C() D() E()\n") );
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
-        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getSinkPropagator().getSinks()[0];
+        LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
         JoinNode bNode1 = (JoinNode) liaNode.getSinkPropagator().getFirstLeftTupleSink();
         JoinNode bNode2 = (JoinNode) liaNode.getSinkPropagator().getLastLeftTupleSink();
 
@@ -331,7 +331,7 @@ public class AddRuleTest {
         kbase1.addKnowledgePackages( buildKnowledgePackage("r2", "   A() B() C() D() E()\n") );
 
         ObjectTypeNode eotn = getObjectTypeNode(kbase1, E.class );
-        JoinNode eNode = (JoinNode) eotn.getSinkPropagator().getSinks()[0];
+        JoinNode eNode = (JoinNode) eotn.getObjectSinkPropagator().getSinks()[0];
         RuleTerminalNode rtn = ( RuleTerminalNode ) eNode.getSinkPropagator().getLastLeftTupleSink();
 
         PathMemory pm = (PathMemory) wm.getNodeMemory(rtn);
