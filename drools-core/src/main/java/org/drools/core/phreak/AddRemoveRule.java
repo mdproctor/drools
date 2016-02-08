@@ -135,6 +135,8 @@ public class AddRemoveRule {
                         prevSmemIndex++;
                         smems[smemIndex] = prevSmems[prevSmemIndex];
                         if ( smems[smemIndex] != null && smemSplitAdjustAmount > 0 && visitedSegments.add(smems[smemIndex])) {
+                            smemsToNotify.add(smems[smemIndex]);
+                            smems[smemIndex].unlinkSegment(wm);
                             correctSegmentMemoryAfterSplitOnAdd(smems[smemIndex], smemSplitAdjustAmount);
                         }
                     } else {
@@ -169,8 +171,8 @@ public class AddRemoveRule {
                 root = ((RightInputAdapterNode) tipNode).getStartTupleSource();
             }
 
-            NetworkNode     child  = tipNode;
-            LeftTupleSource parent = tipNode.getLeftTupleSource();
+            LeftTupleNode     child  = tipNode;
+            LeftTupleNode parent = tipNode.getLeftTupleSource();
 
             SegmentMemory[] smems = pmem.getSegmentMemories();
             while (true) {
@@ -183,7 +185,7 @@ public class AddRemoveRule {
                     if (mem != null && mem.getSegmentMemory() != null) {
                         SegmentMemory sm = mem.getSegmentMemory();
                         if (sm.getFirst() != null) {
-                            SegmentMemory childSmem = SegmentUtilities.createChildSegment(wm, (LeftTupleSink) child);
+                            SegmentMemory childSmem = SegmentUtilities.createChildSegment(wm, child);
                             sm.add(childSmem);
                             smems[childSmem.getPos()] = childSmem;
                             smemsToNotify.add(childSmem);
@@ -197,10 +199,11 @@ public class AddRemoveRule {
                         SegmentMemory sm = mem.getSegmentMemory();
                         sm.addPathMemory(pmem);
                         pmem.setSegmentMemory(sm.getPos(), sm);
+                        sm.notifyRuleLinkSegment(wm, pmem);
                     }
                 }
 
-                if (parent == root) {
+                if (parent == null) {
                     break;
                 }
 
@@ -299,17 +302,18 @@ public class AddRemoveRule {
                             SegmentMemory sm1 = smems[smemIndex];
                             SegmentMemory sm2 = prevSmems[prevSmemIndex];
                             if (sm1 != null && sm2 == null) {
-                                sm2 = SegmentUtilities.createChildSegment(wm, (LeftTupleSink) node);
+                                sm2 = SegmentUtilities.createChildSegment(wm,node);
                                 sm1.add(sm2);
                             } else if (sm1 == null && sm2 != null) {
-                                sm1 = SegmentUtilities.createChildSegment(wm, (LeftTupleSink) parentNode);
+                                sm1 = SegmentUtilities.createChildSegment(wm, parentNode);
                                 sm1.add(sm2);
                             }
 
                             if (sm1 != null && sm2 != null) {
                                 mergeSegment(sm1, sm2);
+                                smemsToNotify.add(sm1);
+                                sm1.unlinkSegment(wm);
                             }
-                            smemsToNotify.add(sm1);
                         }
                         smemSplitAdjustAmount++;
                     }
@@ -498,7 +502,7 @@ public class AddRemoveRule {
     private static void insertFacts(PathEndNodes endNodes, InternalWorkingMemory[] wms) {
         int index = 0;
         if ( endNodes.subjectSplit != null ) {
-            index = endNodes.subjectSplit.getPositionInPath();
+            index = endNodes.subjectSplit.getPositionInPath() + 1; // must be +1 otherwise it will propagate existing data, as subjectSplit is the split node in the existing network
         }
         Set<LeftTupleNode> visited = new HashSet<>();
 

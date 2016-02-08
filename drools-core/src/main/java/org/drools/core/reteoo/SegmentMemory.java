@@ -178,9 +178,13 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         if (isSegmentLinked()) {
             for (int i = 0, length = pathMemories.size(); i < length; i++) {
                 // do not use foreach, don't want Iterator object creation
-                pathMemories.get(i).linkSegment(segmentPosMaskBit, wm);
+                notifyRuleLinkSegment(wm, pathMemories.get(i));
             }
         }
+    }
+
+    public void notifyRuleLinkSegment(InternalWorkingMemory wm, PathMemory pmem) {
+        pmem.linkSegment(segmentPosMaskBit, wm);
     }
 
     public void unlinkNode(long mask,
@@ -210,6 +214,14 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
                     pathMemories.get(i).doLinkRule(wm);
                 }
             }
+        }
+    }
+
+    public void unlinkSegment(InternalWorkingMemory wm) {
+        for (int i = 0, length = pathMemories.size(); i < length; i++) {
+            // do not use foreach, don't want Iterator object creation
+            pathMemories.get(i).unlinkedSegment(segmentPosMaskBit,
+                                                wm);
         }
     }
 

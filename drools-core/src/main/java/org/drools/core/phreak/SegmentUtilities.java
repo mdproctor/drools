@@ -314,26 +314,26 @@ public class SegmentUtilities {
         }
     }
 
-    public static SegmentMemory createChildSegment(InternalWorkingMemory wm, LeftTupleSink sink) {
-        Memory memory = wm.getNodeMemory((MemoryFactory) sink);
-        if (!NodeTypeEnums.isEndNode(sink)) {
+    public static SegmentMemory createChildSegment(InternalWorkingMemory wm, LeftTupleNode node) {
+        Memory memory = wm.getNodeMemory((MemoryFactory) node);
+        if (!NodeTypeEnums.isEndNode(node)) {
             if (memory.getSegmentMemory() == null) {
-                SegmentUtilities.createSegmentMemory((LeftTupleSource) sink, wm);
+                SegmentUtilities.createSegmentMemory((LeftTupleSource) node, wm);
             }
         } else {
             // RTNS and RiaNode's have their own segment, if they are the child of a split.
             if (memory.getSegmentMemory() == null) {
-                createChildSegmentForTerminalNode( sink, memory );
+                createChildSegmentForTerminalNode( node, memory );
             }
         }
         return memory.getSegmentMemory();
     }
 
-    public static SegmentMemory createChildSegmentForTerminalNode( LeftTupleSink sink, Memory memory ) {
-        SegmentMemory childSmem = new SegmentMemory( sink); // rtns or riatns don't need a queue
+    public static SegmentMemory createChildSegmentForTerminalNode( LeftTupleNode node, Memory memory ) {
+        SegmentMemory childSmem = new SegmentMemory( node); // rtns or riatns don't need a queue
 
         PathMemory pmem;
-        if ( NodeTypeEnums.isTerminalNode( sink )) {
+        if ( NodeTypeEnums.isTerminalNode( node )) {
             pmem = (PathMemory) memory;
         } else {
             pmem = ((RiaNodeMemory) memory).getRiaPathMemory();
@@ -343,7 +343,7 @@ public class SegmentUtilities {
         pmem.setSegmentMemory(childSmem);
         childSmem.addPathMemory( pmem );
 
-        childSmem.setTipNode(sink);
+        childSmem.setTipNode(node);
         return childSmem;
     }
 
