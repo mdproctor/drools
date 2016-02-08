@@ -62,13 +62,7 @@ import org.kie.api.definition.rule.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AddRemoveRule {
 
@@ -103,6 +97,8 @@ public class AddRemoveRule {
 
 
         for (InternalWorkingMemory wm : wms) {
+            wm.flushPropagations();
+
             if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
                 // rule added with no sharing
                 insertLiaFacts(firstSplit, wm);
@@ -261,27 +257,37 @@ public class AddRemoveRule {
         PathEndNodes pathEndNodes = getPathEndNodes(kBase, firstSplit, tn, rule, hasProtos, hasWms);
 
         for (InternalWorkingMemory wm : wms) {
+            wm.flushPropagations();
+
             processLeftTuples(firstSplit, wm, false, tn.getRule());
+
 
             PathEndNodeMemories tnms = getPathEndMemories(wm, pathEndNodes, true);
 
-            for (PathMemory pmem : tnms.pmemsToBeFlushed) {
-                flushStagedTuples(firstSplit, pmem, wm);
+            if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
+                if ( tnms.subjectPmem != null ) {
+                    flushStagedTuples(firstSplit, tnms.subjectPmem, wm);
+                }
+            } else {
+
+                for (PathMemory pmem : tnms.pmemsToBeFlushed) {
+                    flushStagedTuples(firstSplit, pmem, wm);
+                }
+
+                Map<PathMemory, SegmentMemory[]> prevSmemsLookup = reInitPathMemories(wm, tnms.otherPmems, rule);
+
+                // must collect all visited SegmentMemories, for link notification
+                Set<SegmentMemory> smemsToNotify = removeExistingPaths(rule, prevSmemsLookup, tnms.otherPmems, wm);
+
+                removeNewPaths(wm, tnms.subjectPmems);
+
+                notifySegments(smemsToNotify, wm);
             }
-
-            Map<PathMemory, SegmentMemory[]> prevSmemsLookup = reInitPathMemories(wm, tnms.otherPmems, rule);
-
-            // must collect all visited SegmentMemories, for link notification
-            Set<SegmentMemory> smemsToNotify = removeExistingPaths(rule, prevSmemsLookup, tnms.otherPmems, wm);
-
-            removeNewPaths(wm, tnms.subjectPmems);
 
             if (tnms.subjectPmem != null && tnms.subjectPmem.getRuleAgendaItem() != null && tnms.subjectPmem.getRuleAgendaItem().isQueued()) {
                 // SubjectPmem can be null, if it was never initialized
                 tnms.subjectPmem.getRuleAgendaItem().dequeue();
             }
-
-            notifySegments(smemsToNotify, wm);
         }
     }
 
