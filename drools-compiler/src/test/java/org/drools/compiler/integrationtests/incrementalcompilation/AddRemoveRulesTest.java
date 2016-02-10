@@ -961,7 +961,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 salience 2when\n" +
+                "rule R1 salience 2 when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +

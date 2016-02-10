@@ -1736,7 +1736,8 @@ public class BackwardChainingTest extends CommonTestMethodBase {
                       notMemory.getRightTupleMemory().size() );
     }
 
-    @Test(timeout = 10000)
+    //@Test(timeout = 10000)
+    @Test()
     public void testDynamicRulesWithSharing() throws IOException,
                                              ClassNotFoundException {
         String str = "" +

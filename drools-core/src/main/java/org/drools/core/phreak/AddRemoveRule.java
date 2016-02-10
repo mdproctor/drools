@@ -137,7 +137,7 @@ public class AddRemoveRule {
             LeftTupleNode[] nodes = pmem.getPathEndNode().getPathNodes();
 
             SegmentMemory[] prevSmems = prevSmemsLookup.get(pmem);
-            SegmentMemory[] smems     = pmem.getSegmentMemories();
+            SegmentMemory[] smems     =  pmem.getSegmentMemories();
 
             LeftTupleNode node                  = null;
             int           prevSmemIndex         = 0;
@@ -268,6 +268,7 @@ public class AddRemoveRule {
                 if ( tnms.subjectPmem != null ) {
                     flushStagedTuples(firstSplit, tnms.subjectPmem, wm);
                 }
+                removeNewPaths(wm,  tnms.subjectPmems);
             } else {
 
                 for (PathMemory pmem : tnms.pmemsToBeFlushed) {
@@ -300,7 +301,10 @@ public class AddRemoveRule {
             LeftTupleNode[] nodes = pmem.getPathEndNode().getPathNodes();
 
             SegmentMemory[] prevSmems = prevSmemsLookup.get(pmem);
-            SegmentMemory[] smems     = pmem.getSegmentMemories();
+
+            // we need a different array as creating SegmentMemories puts them into the pmem segment array, which is incorrect.
+            // So store in a different array and then copy back.
+            SegmentMemory[] smems     = new SegmentMemory[ pmem.getSegmentMemories().length ];
 
             LeftTupleNode node                  = null;
             int           prevSmemIndex         = 0;
@@ -348,7 +352,9 @@ public class AddRemoveRule {
                     }
                 }
             } while (!NodeTypeEnums.isEndNode(node));
+            System.arraycopy(smems, 0, pmem.getSegmentMemories(), 0, smems.length);
         }
+
         return smemsToNotify;
     }
 
@@ -726,7 +732,9 @@ public class AddRemoveRule {
                             childSmem = smem.getFirst();
                         }
 
-                        visitChild(lt.getFirstChild(), childSmem, insert, wm, rule);
+                        for ( LeftTuple child = lt.getFirstChild(); child != null; child =  child.getHandleNext() ) {
+                            visitChild(child, childSmem, insert, wm, rule);
+                        }
                     }
 
                 } else if (!insert) {
