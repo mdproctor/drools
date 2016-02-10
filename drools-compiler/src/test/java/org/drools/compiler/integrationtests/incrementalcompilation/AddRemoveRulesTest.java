@@ -47,80 +47,80 @@ import static org.junit.Assert.*;
 public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
 
     public String ruleNormal1 = "rule 'rn1' "+
-                                "when "+
-                                "$c : Counter(id==1)"+
-                                "then "+
-                                "System.out.println('RN1 fired!!!'); \n"+
-                                " end ";
+            "when "+
+            "$c : Counter(id==1)"+
+            "then "+
+            "System.out.println('RN1 fired!!!'); \n"+
+            " end ";
 
     public String ruleNormal2 = "rule 'rn2' "+
-                                "when "+
-                                "$c : Counter(id==1)"+
-                                "then "+
-                                "System.out.println('RN2 fired!!!'); \n"+
-                                " end ";
+            "when "+
+            "$c : Counter(id==1)"+
+            "then "+
+            "System.out.println('RN2 fired!!!'); \n"+
+            " end ";
 
     public String ruleNormal3 = "rule 'rn3' "+
-                                "when "+
-                                "$c : Counter(id==1)"+
-                                "then "+
-                                "System.out.println('RN3 + fired!!!'); \n"+
-                                " end ";
+            "when "+
+            "$c : Counter(id==1)"+
+            "then "+
+            "System.out.println('RN3 + fired!!!'); \n"+
+            " end ";
 
 
     String rule = "rule 'test' "+
-                  "when "+
-                  "$c : Counter(id==1)"+
-                  "eval(Integer.parseInt(\"5\")==$c.getId()) \n"+
-                  "eval(Integer.parseInt(\"10\")>5) "+
-                  "then "+
-                  "System.out.println('TEST 1 fired!!!');"+
-                  "end ";
+            "when "+
+            "$c : Counter(id==1)"+
+            "eval(Integer.parseInt(\"5\")==$c.getId()) \n"+
+            "eval(Integer.parseInt(\"10\")>5) "+
+            "then "+
+            "System.out.println('TEST 1 fired!!!');"+
+            "end ";
 
     public String rule2 = "rule 'test2' "+
-                          "when "+
-                          "$c : Counter(id==2)"+
-                          "eval(Integer.parseInt(\"10\")==$c.getId()) \n"+
-                          "eval(Integer.parseInt(\"20\")>10) "+
-                          "then "+
-                          "System.out.println('TEST 2 fired!!!'); \n"+
-                          " end ";
+            "when "+
+            "$c : Counter(id==2)"+
+            "eval(Integer.parseInt(\"10\")==$c.getId()) \n"+
+            "eval(Integer.parseInt(\"20\")>10) "+
+            "then "+
+            "System.out.println('TEST 2 fired!!!'); \n"+
+            " end ";
 
     public String rule3 = "rule 'test3' "+
-                          "when "+
-                          "$c : Counter(id==3)"+
-                          "eval(Integer.parseInt(\"15\")==$c.getId()) \n"+
-                          "eval(Integer.parseInt(\"30\")>20) "+
-                          "then "+
-                          "System.out.println('TEST 2 fired!!!'); \n"+
-                          " end ";
+            "when "+
+            "$c : Counter(id==3)"+
+            "eval(Integer.parseInt(\"15\")==$c.getId()) \n"+
+            "eval(Integer.parseInt(\"30\")>20) "+
+            "then "+
+            "System.out.println('TEST 2 fired!!!'); \n"+
+            " end ";
 
     public String rule4 = "rule 'test4' "+
-                          "when "+
-                          "$c : Counter(id==4)"+
-                          "eval(Integer.parseInt(\"20\")==$c.getId()) \n"+
-                          "eval(Integer.parseInt(\"40\")>30) "+
-                          "then "+
-                          "System.out.println('TEST 2 fired!!!'); \n"+
-                          " end ";
+            "when "+
+            "$c : Counter(id==4)"+
+            "eval(Integer.parseInt(\"20\")==$c.getId()) \n"+
+            "eval(Integer.parseInt(\"40\")>30) "+
+            "then "+
+            "System.out.println('TEST 2 fired!!!'); \n"+
+            " end ";
 
     public String rule5 = "rule 'test5' "+
-                          "when "+
-                          "$c : Counter(id==5)"+
-                          "eval(Integer.parseInt(\"25\")==$c.getId()) \n"+
-                          "eval(Integer.parseInt(\"50\")>40) "+
-                          "then "+
-                          "System.out.println('TEST 2 fired!!!'); \n"+
-                          " end ";
+            "when "+
+            "$c : Counter(id==5)"+
+            "eval(Integer.parseInt(\"25\")==$c.getId()) \n"+
+            "eval(Integer.parseInt(\"50\")>40) "+
+            "then "+
+            "System.out.println('TEST 2 fired!!!'); \n"+
+            " end ";
 
     public String rule6 = "rule 'test6' "+
-                          "when "+
-                          "$c : Counter(id==6)"+
-                          "eval(Integer.parseInt(\"30\")==$c.getId()) \n"+
-                          "eval(Integer.parseInt(\"60\")>50) "+
-                          "then "+
-                          "System.out.println('TEST 2 fired!!!'); \n"+
-                          " end ";
+            "when "+
+            "$c : Counter(id==6)"+
+            "eval(Integer.parseInt(\"30\")==$c.getId()) \n"+
+            "eval(Integer.parseInt(\"60\")>50) "+
+            "then "+
+            "System.out.println('TEST 2 fired!!!'); \n"+
+            " end ";
 
 
 
@@ -128,16 +128,16 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
 
     public String getPrefix() {
         return "package " + PKG_NAME_TEST + " \n"+
-               "import java.util.Map;\n"+
-               "import java.util.HashMap;\n"+
-               "import org.slf4j.Logger;\n"+
-               "import java.util.Date;\n"+
+                "import java.util.Map;\n"+
+                "import java.util.HashMap;\n"+
+                "import org.slf4j.Logger;\n"+
+                "import java.util.Date;\n"+
 
-               "declare Counter \n"+
-               "@role(event)\n"+
-               " id : int \n"+
-               "\n"+
-               "end\n\n";
+                "declare Counter \n"+
+                "@role(event)\n"+
+                " id : int \n"+
+                "\n"+
+                "end\n\n";
     }
 
     private boolean loadRule(final String rule)  {
@@ -210,42 +210,42 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     public void testAddRemoveFromKB() {
         // DROOLS-328
         final String drl = "\n" +
-                     "rule A\n" +
-                     "  when\n" +
-                     "    Double() from entry-point \"AAA\"\n" +
-                     "  then\n" +
-                     "  end\n" +
-                     "\n" +
-                     "rule B\n" +
-                     "  when\n" +
-                     "    Boolean()\n" +
-                     "    Float()\n" +
-                     "  then\n" +
-                     "  end\n" +
-                     "\n" +
-                     "\n" +
-                     "rule C\n" +
-                     "  when\n" +
-                     "  then\n" +
-                     "    insertLogical( new Float( 0.0f ) );\n" +
-                     "  end\n" +
-                     "\n" +
-                     "\n" +
-                     "rule D\n" +
-                     "  when\n" +
-                     "    Byte( )\n" +
-                     "    String( )\n" +
-                     "  then\n" +
-                     "  end\n" +
-                     "\n" +
-                     "\n" +
-                     "rule E\n" +
-                     "  when\n" +
-                     "    Float()\n" +
-                     "  then\n" +
-                     "    insertLogical( \"foo\" );\n" +
-                     "  end\n" +
-                     "";
+                "rule A\n" +
+                "  when\n" +
+                "    Double() from entry-point \"AAA\"\n" +
+                "  then\n" +
+                "  end\n" +
+                "\n" +
+                "rule B\n" +
+                "  when\n" +
+                "    Boolean()\n" +
+                "    Float()\n" +
+                "  then\n" +
+                "  end\n" +
+                "\n" +
+                "\n" +
+                "rule C\n" +
+                "  when\n" +
+                "  then\n" +
+                "    insertLogical( new Float( 0.0f ) );\n" +
+                "  end\n" +
+                "\n" +
+                "\n" +
+                "rule D\n" +
+                "  when\n" +
+                "    Byte( )\n" +
+                "    String( )\n" +
+                "  then\n" +
+                "  end\n" +
+                "\n" +
+                "\n" +
+                "rule E\n" +
+                "  when\n" +
+                "    Float()\n" +
+                "  then\n" +
+                "    insertLogical( \"foo\" );\n" +
+                "  end\n" +
+                "";
 
 
         final KnowledgeBuilder kbuilder = createKnowledgeBuilder(null, drl);
@@ -264,14 +264,14 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     public void testAddRemoveDeletingFact() {
         // DROOLS-328
         final String drl = "\n" +
-                     "rule B\n" +
-                     "  when\n" +
-                     "    Boolean()\n" +
-                     "    Float()\n" +
-                     "  then\n" +
-                     "  end\n" +
-                     "\n" +
-                     "";
+                "rule B\n" +
+                "  when\n" +
+                "    Boolean()\n" +
+                "    Float()\n" +
+                "  then\n" +
+                "  end\n" +
+                "\n" +
+                "";
 
         final KnowledgeBuilder kbuilder = createKnowledgeBuilder(null, drl);
         final KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
@@ -289,36 +289,36 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     @Test
     public void testAddRemoveWithPartialSharing() {
         final String drl = "package org.drools.test; \n" +
-                     "\n" +
-                     "declare A end \n" +
-                     "declare B end \n" +
-                     "declare C end \n" +
-                     "declare D end \n" +
-                     "" +
-                     "rule Init \n" +
-                     "  when\n" +
-                     "  then\n" +
-                     "    insert( new A() ); \n" +
-                     "    insert( new B() ); \n" +
-                     "  end\n" +
-                     "" +
-                     "rule One\n" +
-                     "  when\n" +
-                     "    A()\n" +
-                     "    B()\n" +
-                     "    C()\n" +
-                     "  then\n" +
-                     "  end\n" +
-                     "\n" +
-                     "rule Two\n" +
-                     "  when\n" +
-                     "    A()\n" +
-                     "    B()\n" +
-                     "    D()\n" +
-                     "  then\n" +
-                     "  end\n" +
-                     "\n" +
-                     "";
+                "\n" +
+                "declare A end \n" +
+                "declare B end \n" +
+                "declare C end \n" +
+                "declare D end \n" +
+                "" +
+                "rule Init \n" +
+                "  when\n" +
+                "  then\n" +
+                "    insert( new A() ); \n" +
+                "    insert( new B() ); \n" +
+                "  end\n" +
+                "" +
+                "rule One\n" +
+                "  when\n" +
+                "    A()\n" +
+                "    B()\n" +
+                "    C()\n" +
+                "  then\n" +
+                "  end\n" +
+                "\n" +
+                "rule Two\n" +
+                "  when\n" +
+                "    A()\n" +
+                "    B()\n" +
+                "    D()\n" +
+                "  then\n" +
+                "  end\n" +
+                "\n" +
+                "";
 
         final KnowledgeBuilder kbuilder = createKnowledgeBuilder(null, drl);
         final KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
@@ -333,53 +333,53 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     }
 
     private String simpleRuleInTestPackage = "package org.drools.test; \n" +
-                                             "global java.util.List list; \n" +
-                                             "rule \"Later\" " +
-                                             "when " +
-                                             "   $s : String( ) " +
-                                             "then " +
-                                             "   System.out.println( \"ok\" ); " +
-                                             "   list.add( \"ok\" ); \n" +
-                                             "end ";
+            "global java.util.List list; \n" +
+            "rule \"Later\" " +
+            "when " +
+            "   $s : String( ) " +
+            "then " +
+            "   System.out.println( \"ok\" ); " +
+            "   list.add( \"ok\" ); \n" +
+            "end ";
 
     @Test
     public void testAddRemoveWithReloadInSamePackage_4Rules() {
         final String drl = "package org.drools.test;\n" +
 
-                     "declare Fakt enabled : boolean end \n" +
+                "declare Fakt enabled : boolean end \n" +
 
-                     "rule Build1\n" +
-                     "when\n" +
-                     "    Fakt( enabled == true )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build1\n" +
+                "when\n" +
+                "    Fakt( enabled == true )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule Build2\n" +
-                     "when\n" +
-                     "    Fakt( enabled == true )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build2\n" +
+                "when\n" +
+                "    Fakt( enabled == true )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule Mark \n" +
-                     "salience 9999\n" +
-                     "when\n" +
-                     "then\n" +
-                     "    insertLogical( new Fakt( true ) );\n" +
-                     "end\n" +
+                "rule Mark \n" +
+                "salience 9999\n" +
+                "when\n" +
+                "then\n" +
+                "    insertLogical( new Fakt( true ) );\n" +
+                "end\n" +
 
-                     "rule Build3 \n" +
-                     "when\n" +
-                     "    Fakt( enabled == true ) \n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build3 \n" +
+                "when\n" +
+                "    Fakt( enabled == true ) \n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule Build4 \n" +
-                     "when\n" +
-                     "    Fakt( enabled == true )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build4 \n" +
+                "when\n" +
+                "    Fakt( enabled == true )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "";
+                "";
 
         testAddRemoveWithReloadInSamePackage(drl);
     }
@@ -388,34 +388,34 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     public void testAddRemoveWithReloadInSamePackage_3Rules() {
         final String drl = "package org.drools.test;\n" +
 
-                     "declare Fakt enabled : boolean end \n" +
+                "declare Fakt enabled : boolean end \n" +
 
-                     "rule Build1\n" +
-                     "when\n" +
-                     "    Fakt( enabled == true )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build1\n" +
+                "when\n" +
+                "    Fakt( enabled == true )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule Build2\n" +
-                     "when\n" +
-                     "    Fakt( enabled == true )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build2\n" +
+                "when\n" +
+                "    Fakt( enabled == true )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule Mark \n" +
-                     "salience 9999\n" +
-                     "when\n" +
-                     "then\n" +
-                     "    insertLogical( new Fakt( true ) );\n" +
-                     "end\n" +
+                "rule Mark \n" +
+                "salience 9999\n" +
+                "when\n" +
+                "then\n" +
+                "    insertLogical( new Fakt( true ) );\n" +
+                "end\n" +
 
-                     "rule Build3 \n" +
-                     "when\n" +
-                     "    Fakt( enabled == true ) \n" +
-                     "then\n" +
-                     "end\n" +
+                "rule Build3 \n" +
+                "when\n" +
+                "    Fakt( enabled == true ) \n" +
+                "then\n" +
+                "end\n" +
 
-                     "";
+                "";
 
         testAddRemoveWithReloadInSamePackage(drl);
     }
@@ -425,33 +425,33 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     public void testAddRemoveWithReloadInSamePackage_EntryPoints() {
         final String drl = "package org.drools.test; \n" +
 
-                     "rule \"Input_X\"\n" +
-                     "when\n" +
-                     "    Double() from entry-point \"A\"\n" +
-                     "    not String( )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"Input_X\"\n" +
+                "when\n" +
+                "    Double() from entry-point \"A\"\n" +
+                "    not String( )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule \"Input_Y\"\n" +
-                     "when\n" +
-                     "    Double() from entry-point \"A\"\n" +
-                     "    not Float( )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"Input_Y\"\n" +
+                "when\n" +
+                "    Double() from entry-point \"A\"\n" +
+                "    not Float( )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule \"OverrideInput_Temp\"\n" +
-                     "when\n" +
-                     "    Double() from entry-point \"A\"\n" +
-                     "    Float( )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"OverrideInput_Temp\"\n" +
+                "when\n" +
+                "    Double() from entry-point \"A\"\n" +
+                "    Float( )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule \"Zero\"\n" +
-                     "when\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"Zero\"\n" +
+                "when\n" +
+                "then\n" +
+                "end\n" +
 
-                     "";
+                "";
 
         testAddRemoveWithReloadInSamePackage(drl);
     }
@@ -460,39 +460,39 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     public void testAddRemoveWithReloadInSamePackage_EntryPointsVariety() {
         final String drl = "package org.drools.test; \n" +
 
-                     "rule \"Input_X\"\n" +
-                     "when\n" +
-                     "    Double() \n" +
-                     "    not String( )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"Input_X\"\n" +
+                "when\n" +
+                "    Double() \n" +
+                "    not String( )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule \"Input_Y\"\n" +
-                     "when\n" +
-                     "    Double() from entry-point \"A\"\n" +
-                     "    not Float( )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"Input_Y\"\n" +
+                "when\n" +
+                "    Double() from entry-point \"A\"\n" +
+                "    not Float( )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule \"OverrideInput_Temp\"\n" +
-                     "when\n" +
-                     "    Double() from entry-point \"A\"\n" +
-                     "    Float( )\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"OverrideInput_Temp\"\n" +
+                "when\n" +
+                "    Double() from entry-point \"A\"\n" +
+                "    Float( )\n" +
+                "then\n" +
+                "end\n" +
 
-                     "rule \"Zero\"\n" +
-                     "when\n" +
-                     "then\n" +
-                     "end\n" +
+                "rule \"Zero\"\n" +
+                "when\n" +
+                "then\n" +
+                "end\n" +
 
-                     "";
+                "";
 
         testAddRemoveWithReloadInSamePackage(drl);
     }
 
     private void testAddRemoveWithReloadInSamePackage(final String drl) {
-        final StatefulKnowledgeSession knowledgeSession = buildSessionInTwoSteps(drl, simpleRuleInTestPackage);
+        final StatefulKnowledgeSession knowledgeSession = buildSessionInSteps(drl, simpleRuleInTestPackage);
         final List list = new ArrayList();
         knowledgeSession.setGlobal("list", list);
 
@@ -505,13 +505,13 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     public void testRemoveWithDuplicatedCondition() {
         final String packageName = "test_same_condition_pk" ;
         final String rule = "package " + packageName + ";" +
-                      "rule 'test_same_condition' \n" +
-                      "when \n" +
-                      " String(this == \"1\") \n" +
-                      " String(this == \"1\") \n" +
-                      "then \n" +
-                      "System.out.println('test same condition rule'); \n"+
-                      "end";
+                "rule 'test_same_condition' \n" +
+                "when \n" +
+                " String(this == \"1\") \n" +
+                " String(this == \"1\") \n" +
+                "then \n" +
+                "System.out.println('test same condition rule'); \n"+
+                "end";
         final KnowledgeBuilder kbuilder = createKnowledgeBuilder(null, rule);
         final KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         kbase.addKnowledgePackages( kbuilder.getKnowledgePackages() );
@@ -523,23 +523,23 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String packageName = "test_same_condition_pk" ;
         final String packageName2 = "test_same_condition_pk_2" ;
         final String rule1 = "package " + packageName + ";" +
-                       "import java.util.Map; \n" +
-                       "rule 'test_same_condition' \n" +
-                       "when \n" +
-                       " Map(this['name'] == 'Michael') \n" +
-                       "then \n" +
-                       "System.out.println('test same condition rule'); \n"+
-                       "end";
+                "import java.util.Map; \n" +
+                "rule 'test_same_condition' \n" +
+                "when \n" +
+                " Map(this['name'] == 'Michael') \n" +
+                "then \n" +
+                "System.out.println('test same condition rule'); \n"+
+                "end";
         final String rule2 = "package " + packageName2 + ";" +
-                       "import java.util.Map; \n" +
-                       "rule 'test_same_condition_2' \n" +
-                       "when \n" +
-                       " Map(this['name'] == 'Michael') \n" +
-                       " Map(this['test'] == '1') \n" +
-                       "then \n" +
-                       "System.out.println('test same condition rule 2'); \n"+
-                       "end";
-        final StatefulKnowledgeSession session = buildSessionInTwoSteps( rule1, rule2 );
+                "import java.util.Map; \n" +
+                "rule 'test_same_condition_2' \n" +
+                "when \n" +
+                " Map(this['name'] == 'Michael') \n" +
+                " Map(this['test'] == '1') \n" +
+                "then \n" +
+                "System.out.println('test same condition rule 2'); \n"+
+                "end";
+        final StatefulKnowledgeSession session = buildSessionInSteps( rule1, rule2 );
         session.getKieBase().removeKnowledgePackage(packageName);
         session.fireAllRules();
         final Map<String, Object> fact = new HashMap<String, Object>();
@@ -568,7 +568,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                 "then \n" +
                 "System.out.println('Child rule!'); \n"+
                 "end";
-        final StatefulKnowledgeSession session = buildSessionInTwoSteps( rule1, rule2);
+        final StatefulKnowledgeSession session = buildSessionInSteps( rule1, rule2);
         session.fireAllRules();
         final Map<String, Object> fact = new HashMap<String, Object>();
         fact.put("name", "Michael");
@@ -609,7 +609,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                 "then \n" +
                 "System.out.println('Child rule!'); \n"+
                 "end";
-        final StatefulKnowledgeSession session = buildSessionInTwoSteps( rule1, rule2);
+        final StatefulKnowledgeSession session = buildSessionInSteps( rule1, rule2);
         session.fireAllRules();
 
         final KnowledgeBuilder kbuilder2 = createKnowledgeBuilder(session.getKieBase(), rule1modified);
@@ -628,14 +628,14 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         // DROOLS-891
         final String packageName = "test";
         final String rule1 = "package " + packageName + ";" +
-                       "import java.util.Map; \n" +
-                       "rule 'rule1' \n" +
-                       "when \n" +
-                       " Map(this['type'] == 'Goods' && this['brand'] == 'a') \n" +
-                       " Map(this['type'] == 'Goods' && this['category'] == 'b') \n" +
-                       "then \n" +
-                       "System.out.println('test rule 1'); \n"+
-                       "end";
+                "import java.util.Map; \n" +
+                "rule 'rule1' \n" +
+                "when \n" +
+                " Map(this['type'] == 'Goods' && this['brand'] == 'a') \n" +
+                " Map(this['type'] == 'Goods' && this['category'] == 'b') \n" +
+                "then \n" +
+                "System.out.println('test rule 1'); \n"+
+                "end";
 
         final KnowledgeBuilder kbuilder = createKnowledgeBuilder(null, rule1);
         final KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
@@ -651,27 +651,27 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String packageName = "pk1";
         final String packageName2 = "pk2";
         final String rule1 = "package " + packageName + ";" +
-                       "import java.util.Map; \n" +
-                       "rule 'rule1' \n" +
-                       "when \n" +
-                       " Map(this['type'] == 'Goods' ) \n" +
-                       " Map(this['x'] == 'y'  ) \n" +
-                       " Map(this['type'] == 'Juice'  ) \n" +
-                       " Map(this['kind'] == 'Stuff'  ) \n" +
-                       "then \n" +
-                       "System.out.println('test rule 1'); \n"+
-                       "end";
+                "import java.util.Map; \n" +
+                "rule 'rule1' \n" +
+                "when \n" +
+                " Map(this['type'] == 'Goods' ) \n" +
+                " Map(this['x'] == 'y'  ) \n" +
+                " Map(this['type'] == 'Juice'  ) \n" +
+                " Map(this['kind'] == 'Stuff'  ) \n" +
+                "then \n" +
+                "System.out.println('test rule 1'); \n"+
+                "end";
 
         final String rule2 = "package " + packageName2 + ";" +
-                       "import java.util.Map; \n" +
-                       "rule 'rule2' \n" +
-                       "when \n" +
-                       " Map(this['type'] == 'Goods' ) \n" +
-                       " Map(this['x'] == 'y'  ) \n" +
-                       " Map(this['type'] == 'Juice'  ) \n" +
-                       "then \n" +
-                       "System.out.println('test  rule 2'); \n"+
-                       "end";
+                "import java.util.Map; \n" +
+                "rule 'rule2' \n" +
+                "when \n" +
+                " Map(this['type'] == 'Goods' ) \n" +
+                " Map(this['x'] == 'y'  ) \n" +
+                " Map(this['type'] == 'Juice'  ) \n" +
+                "then \n" +
+                "System.out.println('test  rule 2'); \n"+
+                "end";
 
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("type", "Goods");
@@ -701,18 +701,18 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2Name = "rule2";
 
         final String rule1 = "rule " + rule1Name + " \n " +
-                       "when \n" +
-                       " eval(true) \n" +
-                       "then \n" +
-                       "System.out.println('test rule 1'); \n"+
-                       "end";
+                "when \n" +
+                " eval(true) \n" +
+                "then \n" +
+                "System.out.println('test rule 1'); \n"+
+                "end";
 
         final String rule2 = "rule " + rule2Name + " \n " +
-                       "when \n" +
-                       "  eval(true) \n" +
-                       "then \n" +
-                       "System.out.println('test rule 2'); \n"+
-                       "end";
+                "when \n" +
+                "  eval(true) \n" +
+                "then \n" +
+                "System.out.println('test rule 2'); \n"+
+                "end";
 
         final StatelessKnowledgeSession statelessSession = base.newStatelessKnowledgeSession();
 
@@ -730,22 +730,22 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2Name = "rule2";
 
         final String rule1 =  "rule " + rule1Name + " \n" +
-                        "when \n" +
-                        " Map(  this['type'] == 'Goods'  )" +
-                        " and " +
-                        " Map(  this['type'] == 'Cinema'  )" +
-                        "then \n" +
-                        " System.out.println('test in rule1'); \n"+
-                        "end";
+                "when \n" +
+                " Map(  this['type'] == 'Goods'  )" +
+                " and " +
+                " Map(  this['type'] == 'Cinema'  )" +
+                "then \n" +
+                " System.out.println('test in rule1'); \n"+
+                "end";
 
         final String rule2 =  "rule " + rule2Name + " \n" +
-                        "when \n" +
-                        " Map(  this['type'] == 'Goods'  )" +
-                        " and " +
-                        " Map(  this['type'] == 'Cinema'  )" +
-                        "then \n" +
-                        " System.out.println('test in rule2'); \n"+
-                        "end";
+                "when \n" +
+                " Map(  this['type'] == 'Goods'  )" +
+                " and " +
+                " Map(  this['type'] == 'Cinema'  )" +
+                "then \n" +
+                " System.out.println('test in rule2'); \n"+
+                "end";
 
         final Map<String, Object> fact = new HashMap<String, Object>();
         fact.put("type", "Cinema");
@@ -771,22 +771,22 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule2Name = rule1Name;
 
         final String rule1 = "package " + packageName + ";" +
-                       "rule " + rule1Name + " \n" +
-                       "when \n" +
-                       " String( ) \n" +
-                       "then \n" +
-                       " System.out.println('test in rule1'); \n"+
-                       "end";
+                "rule " + rule1Name + " \n" +
+                "when \n" +
+                " String( ) \n" +
+                "then \n" +
+                " System.out.println('test in rule1'); \n"+
+                "end";
 
         final String rule2 = "package " + packageName2 + ";" +
-                       "rule " + rule2Name + " \n" +
-                       "when \n" +
-                       " Long( ) \n" +
-                       "then \n" +
-                       " System.out.println('test in rule2'); \n"+
-                       "end";
+                "rule " + rule2Name + " \n" +
+                "when \n" +
+                " Long( ) \n" +
+                "then \n" +
+                " System.out.println('test in rule2'); \n"+
+                "end";
 
-        final StatefulKnowledgeSession session = buildSessionInTwoSteps( rule1, rule2 );
+        final StatefulKnowledgeSession session = buildSessionInSteps( rule1, rule2 );
         session.getKieBase().removeKnowledgePackage(packageName);
         session.getKieBase().removeKnowledgePackage(packageName2);
         session.insert(new String());
@@ -798,16 +798,16 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String packageName = "pk1";
 
         final String rule1 = "package " + packageName + ";" +
-                       "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
-                       "rule R1 when\n" +
-                       "    $s : String()\n" +
-                       "    Integer()\n" +
-                       "    exists Integer() from globalInt.get()\n" +
-                       "then\n" +
-                       "end\n";
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "rule R1 when\n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists Integer() from globalInt.get()\n" +
+                "then\n" +
+                "end\n";
 
 
-        final StatefulKnowledgeSession session = buildSessionInTwoSteps( rule1 );
+        final StatefulKnowledgeSession session = buildSessionInSteps( rule1 );
 
         session.setGlobal( "globalInt", new AtomicInteger(0) );
         session.insert( 1 );
@@ -820,66 +820,9 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     @Test
     public void testRemoveExistsPopulatedByInitialFact() {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
-                       "global java.util.List list\n" +
-                       "rule R1 when\n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "then\n" +
-                       " list.add('R1'); \n" +
-                       "end\n";
-
-        final String rule2 = "package " + PKG_NAME_TEST + ";" +
-                       "global java.util.List list\n" +
-                       "rule R2 \n" +
-                       "when \n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "    String()" +
-                       "then \n" +
-                       " list.add('R2'); \n" +
-                       "end";
-
-        final List<Object> facts = new ArrayList<Object>(2);
-        facts.add(1);
-        facts.add("1");
-
-        testRemoveWithSplitStartGeneral(rule1, rule2, facts, false, "[R1]", null);
-    }
-
-    @Test
-    public void testAddSplitInSubnetwork() {
-        final String rule1 = "package " + PKG_NAME_TEST + ";" +
-                       "global java.util.List list\n" +
-                       "rule R1 when\n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "then\n" +
-                       " list.add('R1'); \n" +
-                       "end\n";
-
-        final String rule2 = "package " + PKG_NAME_TEST + ";" +
-                       "global java.util.List list\n" +
-                       "rule R2 \n" +
-                       "when \n" +
-                       "    exists( Integer() and String() )\n" +
-                       "    String()" +
-                       "then \n" +
-                       " list.add('R2'); \n" +
-                       "end";
-
-        final List<Object> facts = new ArrayList<Object>(2);
-        facts.add(1);
-        facts.add("1");
-        testRemoveWithSplitStartGeneral(rule1, rule2, facts, false, "[R1]", null);
-
-    }
-
-    @Test
-    public void testRemoveWithSplitStartAtLianAndFollowedBySubNetworkWithSharing() {
-        final String rule1 = "package " + PKG_NAME_TEST + ";" +
-                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
                 "rule R1 when\n" +
-                "    $s : String()\n" +
-                "    Integer()\n" +
-                "    exists Integer() from globalInt.get()\n" +
+                "    exists( Integer() and Integer() )\n" +
                 "then\n" +
                 " list.add('R1'); \n" +
                 "end\n";
@@ -888,13 +831,70 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                 "global java.util.List list\n" +
                 "rule R2 \n" +
                 "when \n" +
-                "    $s1 : String()\n" +
-                "    $s2 : String()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    String()" +
                 "then \n" +
                 " list.add('R2'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        final List<TestOperation> testPlan =
+                AddRemoveTestBuilder.createInsertFactsRemoveFireTestPlan(
+                        rule1, rule2, AddRemoveTestBuilder.getDefaultFacts());
+        runAddRemoveTest(testPlan, null);
+
+    }
+
+    @Test
+    public void testAddSplitInSubnetwork() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.List list\n" +
+                "rule R1 when\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "then\n" +
+                " list.add('R1'); \n" +
+                "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.List list\n" +
+                "rule R2 \n" +
+                "when \n" +
+                "    exists( Integer() and String() )\n" +
+                "    String()" +
+                "then \n" +
+                " list.add('R2'); \n" +
+                "end";
+
+        final List<TestOperation> testPlan =
+                AddRemoveTestBuilder.createInsertFactsRemoveFireTestPlan(
+                        rule1, rule2, AddRemoveTestBuilder.getDefaultFacts());
+        runAddRemoveTest(testPlan, null);
+    }
+
+    @Test
+    public void testRemoveWithSplitStartAtLianAndFollowedBySubNetworkWithSharing() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists Integer() from globalInt.get()\n" +
+                "then\n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
+                "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.List list\n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
+                "    $s1 : String()\n" +
+                "    $s2 : String()\n" +
+                "then \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
+                "end";
+
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
     @Test
@@ -903,28 +903,29 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 when\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists Integer() from globalInt.get()\n" +
                 "then\n" +
-                " list.add('R1'); \n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
                 "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 \n" +
+                "rule " + RULE2_NAME + " \n" +
                 "when \n" +
                 "    $s : String()\n" +
                 "    exists Integer() from globalInt.get()\n" +
                 "    Integer()\n" +
                 "    String()\n" +
                 "then \n" +
-                " list.add('R2'); \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
     @Test
@@ -933,27 +934,28 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 when\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists Integer() from globalInt.get()\n" +
                 "then\n" +
-                " list.add('R1'); \n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
                 "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 \n" +
+                "rule " + RULE2_NAME + " \n" +
                 "when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    String()\n" +
                 "then \n" +
-                " list.add('R2'); \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
     @Test
@@ -961,27 +963,28 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 salience 2 when\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "then\n" +
-                " list.add('R1'); \n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
                 "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 salience 1\n" +
+                "rule " + RULE2_NAME + " \n" +
                 "when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "then \n" +
-                " list.add('R2'); \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
     @Test
@@ -989,27 +992,29 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 salience 2 when\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "then\n" +
-                " list.add('R1'); \n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
                 "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 salience 1 when \n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "then \n" +
-                " list.add('R2'); \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
     @Test
@@ -1017,129 +1022,123 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R1 salience 2 when\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "then\n" +
-                " list.add('R1'); \n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
                 "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                 "global java.util.List list\n" +
-                "rule R2 salience 1 when \n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
                 "    $s : String()\n" +
                 "    Integer()\n" +
                 "    Integer()\n" +
                 "    exists( Integer() and Integer() )\n" +
                 "then \n" +
-                " list.add('R2'); \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
     @Test
     public void testRemoveWithSplitStartAfterSubnetwork() {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
-                       "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
-                       "global java.util.List list\n" +
-                       "rule R1 salience 2 when\n" +
-                       "    $s : String()\n" +
-                       "    Integer()\n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "then\n" +
-                       " list.add('R1'); \n" +
-                       "end\n";
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "then\n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
+                "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
-                       "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
-                       "global java.util.List list\n" +
-                       "rule R2 salience 1 when \n" +
-                       "    $s : String()\n" +
-                       "    Integer()\n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "    String()\n" +
-                       "then \n" +
-                       " list.add('R2'); \n" +
-                       "end";
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
+                "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2);
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
     }
 
-    private void testRemoveWithSplitStartBasicTestSet(final String rule1, final String rule2) {
+    @Test
+    public void testRemoveWithSplitStartAfterSubnetwork3Rules() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "then\n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
+                "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
+                "end";
+
+        final String rule3 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE3_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and exists(Integer() and Integer()))\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE3_NAME + "'); \n" +
+                "end";
+
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1, rule2, rule3})
+                .addOperation(TestOperationType.INSERT_FACTS, new Object[] {1, 2, "1"})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
+                .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});
 
         final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
         additionalGlobals.put("globalInt", new AtomicInteger(0));
 
-        final List<Object> facts = new ArrayList<Object>(2);
-        facts.add(1);
-        facts.add("1");
-
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2, facts, additionalGlobals);
+        runAddRemoveTest(builder.build(), additionalGlobals);
     }
 
-    /*
-    @Test
-    public void testIsNewSplitWithSubNetworks() {
-        String rule1 = "package " + packageName + ";\n" +
-                       "global java.util.List list;\n" +
-                       "rule R1 when\n" +
-                       "    $s : String()\n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "then\n" +
-                       " list.add('R1'); \n" +
-                       "end\n";
+    private void testRemoveWithSplitStartBasicTestSet(final String rule1, final String rule2,
+            final String rule1Name, final String rule2Name) {
 
-        String rule2 = "package " + packageName + ";\n" +
-                       "global java.util.List list;\n" +
-                       "rule R2 when\n" +
-                       "    $s : String()\n" +
-                       "    exists( Integer() and Integer() )\n" +
-                       "    String()\n" +
-                       "then \n" +
-                       "     list.add('R2'); \n" +
-                       "end";
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+        additionalGlobals.put("globalInt", new AtomicInteger(0));
 
-        List list = new ArrayList();
-
-        // check with subnetwork added first
-        StatefulKnowledgeSession session = buildSessionInTwoSteps( rule1 );
-        base = session.getKieBase();
-
-        BaseNode[] nodes = ((KnowledgeBaseImpl)base).getReteooBuilder().getTerminalNodes( packageName + ".R1" );
-        RuleImpl r1 = (RuleImpl) base.getRule( packageName, "R1" );
-        LeftTupleSource splitStartNode = AddRemoveRule.getNetworkSplitPoint( (TerminalNode)nodes[0] );
-        assertTrue( AddRemoveRule.isNewSplit(r1, splitStartNode) );
-
-        addRuleToEngineWithoutPrefix( rule2 );
-        RuleImpl r2 = (RuleImpl) base.getRule(packageName, "R2");
-        nodes = ((KnowledgeBaseImpl)base).getReteooBuilder().getTerminalNodes(packageName + ".R2");
-        splitStartNode = AddRemoveRule.getNetworkSplitPoint((TerminalNode)nodes[0]);
-        assertFalse( AddRemoveRule.isNewSplit(r2, splitStartNode) );
-
-        // check with subnetwork added last
-        session = buildSessionInTwoSteps( rule2 );
-        base = session.getKieBase();
-
-        nodes = ((KnowledgeBaseImpl)base).getReteooBuilder().getTerminalNodes(packageName + ".R2");
-        r2 = (RuleImpl) base.getRule(packageName, "R2");
-        splitStartNode = AddRemoveRule.getNetworkSplitPoint((TerminalNode)nodes[0]);
-        assertFalse( AddRemoveRule.isNewSplit(r2, splitStartNode) );
-
-        addRuleToEngineWithoutPrefix( rule1 );
-        r1 = (RuleImpl) base.getRule(packageName, "R1");
-        nodes = ((KnowledgeBaseImpl)base).getReteooBuilder().getTerminalNodes(packageName + ".R1");
-        splitStartNode = AddRemoveRule.getNetworkSplitPoint((TerminalNode)nodes[0]);
-        assertTrue( AddRemoveRule.isNewSplit(r1, splitStartNode) );
+        runAddRemoveTests(rule1, rule2, rule1Name, rule2Name, new Object[] {1, 2, "1"}, additionalGlobals);
     }
-
-    public void addRuleToEngineWithoutPrefix(String rule)  {
-        KnowledgeBuilder builder = KnowledgeBuilderFactory.newKnowledgeBuilder(base);
-        builder.add( ResourceFactory.newReaderResource( new StringReader( rule ) ), ResourceType.DRL);
-        Collection<KnowledgePackage> pkgs = this.buildKnowledge(builder);
-        this.addKnowledgeToBase(pkgs);
-    }
-*/
 }
