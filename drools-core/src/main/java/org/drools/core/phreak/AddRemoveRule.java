@@ -440,6 +440,7 @@ public class AddRemoveRule {
 
 
     private static void removeNewPaths(InternalWorkingMemory wm, List<PathMemory> pmems) {
+        Set<Integer> visitedNodes = new HashSet<Integer>();
         for (PathMemory pmem : pmems) {
             LeftTupleSink tipNode = (LeftTupleSink) pmem.getPathEndNode();
 
@@ -457,12 +458,14 @@ public class AddRemoveRule {
                     // If the parent has other child SegmentMemorys then it must create a new child SegmentMemory
                     // If the parent is a query node, then it's internal data structure needs changing
                     // all right input data must be propagated
-                    Memory mem = wm.getNodeMemories().peekNodeMemory(parent.getId());
-                    if (mem != null && mem.getSegmentMemory() != null) {
-                        SegmentMemory sm = mem.getSegmentMemory();
-                        if (sm.getFirst() != null) {
-                            SegmentMemory childSm = wm.getNodeMemories().peekNodeMemory(child.getId()).getSegmentMemory();
-                            sm.remove(childSm);
+                    if (!visitedNodes.contains( child.getId() )) {
+                        Memory mem = wm.getNodeMemories().peekNodeMemory( parent.getId() );
+                        if ( mem != null && mem.getSegmentMemory() != null ) {
+                            SegmentMemory sm = mem.getSegmentMemory();
+                            if ( sm.getFirst() != null ) {
+                                SegmentMemory childSm = wm.getNodeMemories().peekNodeMemory( child.getId() ).getSegmentMemory();
+                                sm.remove( childSm );
+                            }
                         }
                     }
                 } else {
@@ -480,35 +483,12 @@ public class AddRemoveRule {
                     break;
                 }
 
+                visitedNodes.add(child.getId());
                 child = parent;
                 parent = parent.getLeftTupleSource();
             }
         }
     }
-
-
-
-//    private static void removeNewPaths(InternalWorkingMemory wm, List<PathMemory> pmems) {
-//        for (PathMemory pmem : pmems) {
-//            LeftTupleSink tipNode = (LeftTupleSink) pmem.getPathEndNode();
-//
-//            LeftTupleNode node = tipNode;
-//
-//            while (node != null) {
-//                if (node.getAssociatedRuleSize() == 1 && NodeTypeEnums.isBetaNode(node)) {
-//                    // If this is a beta node, it'll delete all the right input data
-//                    deleteRightInputData((LeftTupleSink) node, wm);
-//                } else if (node.getAssociatedRuleSize() > 1) {
-//                    Memory mem = wm.getNodeMemories().peekNodeMemory(node.getId());
-//                    if (mem != null && mem.getSegmentMemory() != null) {
-//                        mem.getSegmentMemory().removePathMemory(pmem);
-//                    }
-//
-//                    node = node.getLeftTupleSource();
-//                }
-//            }
-//        }
-//    }
 
     private static boolean isSplit(LeftTupleNode node) {
         return isSplit(node, null);
