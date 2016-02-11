@@ -27,6 +27,7 @@ import org.kie.internal.runtime.StatefulKnowledgeSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -120,9 +121,11 @@ public abstract class AbstractAddRemoveRulesTest {
                     final Set<String> expectedResultsSet = new HashSet<String>();
                     expectedResultsSet.addAll(Arrays.asList((String[])testOperationParameter));
                     if (expectedResultsSet.size() > 0) {
-                        assertTrue(createTestFailMessage(testOperations, index), resultsList.size() > 0);
+                        assertTrue(createTestFailMessage(testOperations, index, expectedResultsSet, resultsList),
+                                resultsList.size() > 0);
                     }
-                    assertTrue(createTestFailMessage(testOperations, index), expectedResultsSet.containsAll(resultsList));
+                    assertTrue(createTestFailMessage(testOperations, index, expectedResultsSet, resultsList),
+                            expectedResultsSet.containsAll(resultsList));
                     resultsList.clear();
                     break;
                 case INSERT_FACTS:
@@ -185,14 +188,27 @@ public abstract class AbstractAddRemoveRulesTest {
         }
     }
 
-    private String createTestFailMessage(final List<TestOperation> testOperations, final int operationIndex) {
+    private String createTestFailMessage(final List<TestOperation> testOperations, final int operationIndex,
+            final Collection<String> expectedResults, final Collection<String> actualResults) {
         final StringBuilder messageBuilder = new StringBuilder();
         final String lineSeparator = System.getProperty("line.separator");
-        messageBuilder.append("Test failed on " + operationIndex + "th operation! Operations:" + lineSeparator);
+        messageBuilder.append("Test failed on " + operationIndex + ". operation! Operations:" + lineSeparator);
+        int index = 1;
         for (TestOperation testOperation : testOperations) {
-            messageBuilder.append(testOperation.toString());
+            messageBuilder.append(index + ". " + testOperation.toString());
             messageBuilder.append(lineSeparator);
+            index++;
         }
+        messageBuilder.append("Expected results: " + lineSeparator + "[");
+        for (String expectedResult : expectedResults) {
+            messageBuilder.append(expectedResult + " ");
+        }
+        messageBuilder.append("]" + lineSeparator);
+        messageBuilder.append("Actual results: " + lineSeparator + "[");
+        for (String actualResult : actualResults) {
+            messageBuilder.append(actualResult + " ");
+        }
+        messageBuilder.append("]" + lineSeparator);
         return messageBuilder.toString();
     }
 }
