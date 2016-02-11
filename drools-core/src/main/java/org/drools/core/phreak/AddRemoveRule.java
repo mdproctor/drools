@@ -1277,7 +1277,7 @@ public class AddRemoveRule {
             invalidateRootNode( kBase, lt );
         }
 
-        collectPathEndNodes(kBase, lt, endNodes, tn, processedRule, hasProtos, hasWms, hasProtos && isSplit(lt, processedRule));
+        collectPathEndNodes(kBase, lt, endNodes, tn, processedRule, hasProtos, hasWms, hasProtos && isSplit(lt));
 
         return endNodes;
     }
@@ -1300,7 +1300,7 @@ public class AddRemoveRule {
                         kBase.invalidateSegmentPrototype( sink );
                     }
                 } else {
-                    isBelowNewSplit = isSplit(sink, processedRule);
+                    isBelowNewSplit = isSplit(sink);
                     if (isBelowNewSplit) {
                         invalidateRootNode( kBase, sink );
                     }
