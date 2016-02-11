@@ -774,7 +774,9 @@ public class AddRemoveRule {
                     FastIterator it = bm.getLeftTupleMemory().fullFastIterator();
                     Tuple        lt = BetaNode.getFirstTuple(bm.getLeftTupleMemory(), it);
                     for (; lt != null; lt = (LeftTuple) it.next(lt)) {
-                        visitChild(lt.getFirstChild(), childSmem, insert, wm, rule);
+                        for ( LeftTuple childLt = lt.getFirstChild(); childLt != null ; childLt = childLt.getHandleNext() ) {
+                            visitChild(childLt, childSmem, insert, wm, rule);
+                        }
                     }
                 }
                 return;
@@ -828,8 +830,6 @@ public class AddRemoveRule {
     private static void visitChild(LeftTuple lt, SegmentMemory smem, boolean insert, InternalWorkingMemory wm, Rule rule) {
         LeftTuple prevLt = null;
         for (; lt != null; lt = lt.getPeer()) {
-            boolean ltWasDeleted = false;
-
             if (lt.getTupleSink().isAssociatedWith(rule)) {
                 if (lt.getTupleSink().getAssociatedRuleSize() > 1) {
 
@@ -847,9 +847,15 @@ public class AddRemoveRule {
                     }
 
                 } else if (!insert) {
+                    LeftTuple lt2 = null;
+                    if ( lt.getPeer() != null && lt.getPeer().getTupleSink().isAssociatedWith(rule) && lt.getPeer().getTupleSink().getAssociatedRuleSize() == 1 ) {
+                        // this LT is associated with a peer, due to subnetwork, so process together.
+                        lt2 = lt.getPeer();
+                    }
+
                     // this sink is not shared and is associated with the rule being removed delete it's children
-                    deletePeerLeftTuple(lt, prevLt, smem);
-                    ltWasDeleted = true;
+                    deletePeerLeftTuple(lt, lt2, prevLt, smem);
+                    break; // only one rule is deleted at a time, we know there are no more peers to delete so break.
                 }
             } else if (insert) {
                 // There are more sinks after this peer LT, but there is no additional peer, so create it
@@ -864,10 +870,8 @@ public class AddRemoveRule {
                 // will go null when it reaches an LT for a newly added sink, as these need to be initialised
                 smem = smem.getNext();
             }
-            if (!ltWasDeleted) {
-                // if the lt was deleted, the prevLt is still the prevLt
-                prevLt = lt;
-            }
+
+            prevLt = lt;
         }
     }
 
@@ -897,7 +901,32 @@ public class AddRemoveRule {
         }
     }
 
-    private static void deletePeerLeftTuple(LeftTuple lt, LeftTuple prevLt, SegmentMemory smem) {
+    private static void deletePeerLeftTuple(LeftTuple lt, LeftTuple lt2, LeftTuple prevLt, SegmentMemory smem) {
+        stageTuple(lt, smem);
+        if ( lt2 != null ) {
+            // lt2 exists if there is a subnetwork, and both LTs must be processed as pair.
+            stageTuple(lt2, smem.getNext());
+        }
+
+        deleteLeftTuple(lt, lt2, prevLt);
+
+//        if (prevLt == null) {
+//            // the first sink is being removed, which is the first peer. The next peer must be set as the first peer.
+//            if (lt.getPeer() != null) {
+//                deleteLeftTuple(lt, prevLt);
+//
+//            } else {
+//                // no peers to support this, so remove completely.
+//                lt.unlinkFromLeftParent();
+//                lt.unlinkFromRightParent();
+//            }
+//        } else {
+//            // mid or end LeftTuple peer is being removed
+//            prevLt.setPeer(lt.getPeer());
+//        }
+    }
+
+    private static void stageTuple(LeftTuple lt, SegmentMemory smem) {
         switch (lt.getStagedType()) {
             case LeftTuple.INSERT: {
                 // insert was never propagated, thus has no children, does not need to be staged.
@@ -915,90 +944,101 @@ public class AddRemoveRule {
                 // do nothing, leave it staged for delete, added for documention help
             }
         }
-
-        if (prevLt == null) {
-            // the first sink is being removed, which is the first peer. The next peer must be set as the first peer.
-            if (lt.getPeer() != null) {
-                deleteLeftTuple(lt);
-
-            } else {
-                // no peers to support this, so remove completely.
-                lt.unlinkFromLeftParent();
-                lt.unlinkFromRightParent();
-            }
-        } else {
-            // mid or end LeftTuple peer is being removed
-            prevLt.setPeer(lt.getPeer());
-        }
     }
 
-    private static void deleteLeftTuple(LeftTuple oldLt) {
-        LeftTuple newLt    = oldLt.getPeer();
-        boolean   isHandle = oldLt.getLeftParent() == null;
+    private static void deleteLeftTuple(LeftTuple removingLt, LeftTuple removingLt2, LeftTuple prevLt) {
+        // only the first LT in a peer chain is hooked into left and right parents or the FH.
+        // If the first LT is being remove, those hooks need to be shifted to the next peer,
+        // or nulled if there is no next peer.
+        // When there is a subnetwork, it needs to shift to the peer of the next lt.
+        // if it is not the first LT in the peer chain, leftParent and rightParent are null.
+        // And the previous peer will need to point to the peer after removingLt, or removingLt2 if it exists.
 
-        LeftTuple leftPrevious = oldLt.getHandlePrevious();
-        LeftTuple leftNext     = oldLt.getHandleNext();
+        boolean isFirstLt = prevLt == null; // is this the first LT in a peer chain chain
+        LeftTuple nextLt    = (removingLt2 == null ) ? removingLt.getPeer() : removingLt2.getPeer(); // if there is a subnetwork, skip to the peer after that
 
-        LeftTuple rightPrevious = oldLt.getRightParentPrevious();
-        LeftTuple rightNext     = oldLt.getRightParentNext();
-
-
-        InternalFactHandle fh          = oldLt.getFactHandle();
-        LeftTuple          leftParent  = oldLt.getLeftParent();
-        RightTuple         rightParent = oldLt.getRightParent();
-
-        newLt.setLeftParent(oldLt.getLeftParent());
-        newLt.setRightParent(oldLt.getRightParent());
-
-        // replace left
-        if (leftPrevious == null && leftNext == null) {
-            // no other tuples, simply replace
-            if (isHandle) {
-                fh.removeLeftTuple(oldLt);
-                fh.addFirstLeftTuple(newLt);
-            } else {
-                oldLt.unlinkFromLeftParent();
-                leftParent.setFirstChild(newLt);
-                leftParent.setLastChild(newLt);
-            }
-        } else if (leftNext != null) {
-            // replacing first
-            newLt.setHandleNext(leftNext);
-            leftNext.setHandlePrevious(newLt);
-            if (isHandle) {
-                fh.setFirstLeftTuple(newLt);
-            } else {
-                leftParent.setFirstChild(newLt);
-            }
+        if( !isFirstLt ) {
+            // This LT is not the first tuple in a peer chain. So just correct the peer chain linked list
+            prevLt.setPeer( nextLt );
         } else {
-            // replacing last
-            newLt.setHandlePrevious(leftPrevious);
-            leftPrevious.setHandleNext(newLt);
-            if (isHandle) {
-                fh.setLastLeftTuple(newLt);
-            } else {
-                leftParent.setLastChild(newLt);
-            }
-        }
+            boolean   isRootLt = (isFirstLt && removingLt.getLeftParent() == null); // is the LT for the LIAN, if so we need to process the FH too.
+            InternalFactHandle fh = removingLt.getFactHandle();
 
-        // replace right
-        if (rightParent != null) {
-            // LiaNode LeftTuples have no right parents
-            if (rightPrevious == null && rightNext == null) {
-                // no other tuples, simply replace
-                oldLt.unlinkFromRightParent();
-                rightParent.setFirstChild(newLt);
-                rightParent.setLastChild(newLt);
-            } else if (rightNext != null) {
-                // replacing first
-                newLt.setRightParentNext(rightNext);
-                rightNext.setRightParentPrevious(newLt);
-                rightParent.setFirstChild(newLt);
-            } else {
-                // replacing last
-                newLt.setRightParentPrevious(rightPrevious);
-                rightPrevious.setRightParentNext(newLt);
-                rightParent.setLastChild(newLt);
+            // This is the first LT in a peer chain. Only this LT is hooked into the left and right parent LT and RT and
+            // if it's the root (form the lian) it will be hooked itno the FH.
+            LeftTuple leftPrevious = removingLt.getHandlePrevious();
+            LeftTuple leftNext     = removingLt.getHandleNext();
+
+            LeftTuple rightPrevious = removingLt.getRightParentPrevious();
+            LeftTuple rightNext     = removingLt.getRightParentNext();
+
+            LeftTuple          leftParent  = removingLt.getLeftParent();
+            RightTuple         rightParent = removingLt.getRightParent();
+
+            // This tuple is the first peer and thus is linked into the left parent LT.
+            if (nextLt!=null ) {
+                nextLt.setFactHandle(removingLt.getFactHandle());
+                nextLt.setLeftParent(leftParent);
+
+                // correct the linked list
+                if (leftPrevious != null) {
+                    nextLt.setHandlePrevious(leftPrevious);
+                    leftPrevious.setHandleNext(nextLt);
+                }
+
+                if (leftNext != null) {
+                    nextLt.setHandleNext(leftNext);
+                    leftNext.setHandlePrevious(nextLt);
+                }
+            }
+
+            // correct the parent's first/last references
+            // if nextLT is null, it's ok for parent's reference to be null
+            if (leftParent!=null) {
+                if (leftParent.getFirstChild() == removingLt) {
+                    leftParent.setFirstChild(nextLt);
+                }
+
+                if (leftParent.getLastChild() == removingLt) {
+                    leftParent.setLastChild(nextLt);
+                }
+            } else if ( isRootLt ) {
+                if (fh.getFirstLeftTuple() == removingLt) {
+                    fh.setFirstLeftTuple(nextLt);
+                }
+
+                if (fh.getLastLeftTuple() == removingLt) {
+                    fh.setLastLeftTuple(nextLt);
+                }
+            }
+
+
+            if ( rightParent != null ) {
+                if (nextLt!=null ) {
+                    // This tuple is the first peer and thus is linked into the right parent RT.
+                    nextLt.setRightParent(rightParent);
+
+                    // correct the linked list
+                    if (rightPrevious != null) {
+                        nextLt.setRightParentPrevious(rightPrevious);
+                        rightPrevious.setRightParentNext(nextLt);
+                    }
+
+                    if (rightNext != null) {
+                        nextLt.setRightParentNext(rightNext);
+                        rightNext.setRightParentPrevious(nextLt);
+                    }
+                }
+
+                // correct the parent's first/last references
+                // if nextLT is null, it's ok for parent's reference to be null
+                if (rightParent.getFirstChild() == removingLt) {
+                    rightParent.setFirstChild(nextLt);
+                }
+
+                if (rightParent.getLastChild() == removingLt) {
+                    rightParent.setLastChild(nextLt);
+                }
             }
         }
     }
