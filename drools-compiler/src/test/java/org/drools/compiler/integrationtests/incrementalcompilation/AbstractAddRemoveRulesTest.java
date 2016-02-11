@@ -164,7 +164,7 @@ public abstract class AbstractAddRemoveRulesTest {
 
     private void addRulesToSession(final StatefulKnowledgeSession session, final String[] drls) {
         for (String drl : drls) {
-            final KnowledgeBuilder kbuilder2 = createKnowledgeBuilder(null, drl);
+            final KnowledgeBuilder kbuilder2 = createKnowledgeBuilder(session.getKieBase(), drl);
             session.getKieBase().addKnowledgePackages(kbuilder2.getKnowledgePackages());
         }
     }
@@ -192,10 +192,12 @@ public abstract class AbstractAddRemoveRulesTest {
             final Collection<String> expectedResults, final Collection<String> actualResults) {
         final StringBuilder messageBuilder = new StringBuilder();
         final String lineSeparator = System.getProperty("line.separator");
-        messageBuilder.append("Test failed on " + operationIndex + "th operation! Operations:" + lineSeparator);
+        messageBuilder.append("Test failed on " + operationIndex + ". operation! Operations:" + lineSeparator);
+        int index = 1;
         for (TestOperation testOperation : testOperations) {
-            messageBuilder.append(testOperation.toString());
+            messageBuilder.append(index + ". " + testOperation.toString());
             messageBuilder.append(lineSeparator);
+            index++;
         }
         messageBuilder.append("Expected results: " + lineSeparator + "[");
         for (String expectedResult : expectedResults) {

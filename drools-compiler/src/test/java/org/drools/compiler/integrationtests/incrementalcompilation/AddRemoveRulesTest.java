@@ -1181,10 +1181,10 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                 .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME})
                 .addOperation(TestOperationType.ADD_RULES, new String[]{rule2})
                 .addOperation(TestOperationType.FIRE_RULES)
-                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE2_NAME})
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
                 .addOperation(TestOperationType.ADD_RULES, new String[]{rule3})
                 .addOperation(TestOperationType.FIRE_RULES)
-                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE3_NAME})
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
                 .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
                 .addOperation(TestOperationType.FIRE_RULES)
                 .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});

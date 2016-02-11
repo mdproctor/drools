@@ -90,6 +90,25 @@ public class AddRemoveTestBuilder {
                 .addOperation(TestOperationType.INSERT_FACTS, facts)
                 .addOperation(TestOperationType.FIRE_RULES)
                 .addOperation(TestOperationType.CHECK_RESULTS, new String[]{rule1Name, rule2Name})
+                .addOperation(TestOperationType.REMOVE_RULES, new String[]{rule1Name})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{})
+                .addOperation(TestOperationType.REMOVE_RULES, new String[]{rule2Name})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule1})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{rule1Name})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule2})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{rule1Name, rule2Name});
+        testPlan.add(builder.build());
+
+        builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1, rule2})
+                .addOperation(TestOperationType.INSERT_FACTS, facts)
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{rule1Name, rule2Name})
                 .addOperation(TestOperationType.REMOVE_RULES, new String[]{rule2Name})
                 .addOperation(TestOperationType.FIRE_RULES)
                 .addOperation(TestOperationType.CHECK_RESULTS, new String[]{})
