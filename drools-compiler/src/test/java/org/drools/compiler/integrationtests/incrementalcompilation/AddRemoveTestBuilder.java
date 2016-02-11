@@ -40,7 +40,7 @@ public class AddRemoveTestBuilder {
         final List<List<TestOperation>> testPlan = new ArrayList<List<TestOperation>>();
 
         // Session with rules -> Insert facts -> Fire -> Check results -> Remove rule(s) -> Fire -> Check results
-        //testPlan.addAll(createInsertFactsFireRulesRemoveRulesTestPlan(rule1, rule2, rule1Name, rule2Name, facts));
+        testPlan.addAll(createInsertFactsFireRulesRemoveRulesTestPlan(rule1, rule2, rule1Name, rule2Name, facts));
         // Same with reverted rules
         testPlan.addAll(createInsertFactsFireRulesRemoveRulesTestPlan(rule2, rule1, rule2Name, rule1Name, facts));
 
@@ -70,7 +70,7 @@ public class AddRemoveTestBuilder {
                 .addOperation(TestOperationType.REMOVE_RULES, new String[]{rule1Name, rule2Name})
                 .addOperation(TestOperationType.FIRE_RULES)
                 .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});
-        //testPlan.add(builder.build());
+        testPlan.add(builder.build());
 
         builder = new AddRemoveTestBuilder();
         builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1, rule2})
@@ -83,7 +83,7 @@ public class AddRemoveTestBuilder {
                 .addOperation(TestOperationType.REMOVE_RULES, new String[]{rule2Name})
                 .addOperation(TestOperationType.FIRE_RULES)
                 .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});
-        //testPlan.add(builder.build());
+        testPlan.add(builder.build());
 
         builder = new AddRemoveTestBuilder();
         builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1, rule2})
