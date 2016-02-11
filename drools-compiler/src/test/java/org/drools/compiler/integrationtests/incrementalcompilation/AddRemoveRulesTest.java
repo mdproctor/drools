@@ -1133,6 +1133,68 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
         runAddRemoveTest(builder.build(), additionalGlobals);
     }
 
+    @Test
+    public void testRemoveWithSplitStartAfterSubnetwork3RulesAddOneAfterAnother() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "then\n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
+                "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
+                "end";
+
+        final String rule3 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE3_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer()\n" +
+                "    exists( Integer() and exists(Integer() and Integer()))\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE3_NAME + "'); \n" +
+                "end";
+
+        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1})
+                .addOperation(TestOperationType.INSERT_FACTS, new Object[] {1, 1, "1"})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule2})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE2_NAME})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule3})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE3_NAME})
+                .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+        additionalGlobals.put("globalInt", new AtomicInteger(0));
+
+        runAddRemoveTest(builder.build(), additionalGlobals);
+    }
+
     private void testRemoveWithSplitStartBasicTestSet(final String rule1, final String rule2,
             final String rule1Name, final String rule2Name) {
 
