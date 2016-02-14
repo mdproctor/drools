@@ -86,8 +86,12 @@ public abstract class AbstractAddRemoveRulesTest {
             final String rule2Name, final Object[] facts, final Map<String, Object> additionalGlobals) {
         final List<List<TestOperation>> testPlan = AddRemoveTestBuilder.getTestPlan(rule1, rule2, rule1Name, rule2Name,
                 facts);
+        int i = 0;
         for (List<TestOperation> test : testPlan) {
-            runAddRemoveTest(test, additionalGlobals);
+            i++;
+            if ( i == 3 ) {
+                runAddRemoveTest(test, additionalGlobals);
+            }
         }
     }
 

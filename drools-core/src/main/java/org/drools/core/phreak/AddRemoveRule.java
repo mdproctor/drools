@@ -829,49 +829,50 @@ public class AddRemoveRule {
 
     private static void visitChild(LeftTuple lt, SegmentMemory smem, boolean insert, InternalWorkingMemory wm, Rule rule) {
         LeftTuple prevLt = null;
-        for (; lt != null; lt = lt.getPeer()) {
-            if (lt.getTupleSink().isAssociatedWith(rule)) {
-                if (lt.getTupleSink().getAssociatedRuleSize() > 1) {
+        LeftTupleSinkNode sink = lt.getTupleSink();
 
-                    if (lt.getFirstChild() != null) {
-                        SegmentMemory childSmem = smem; // if there is no split the child smem is same as current node
+        for ( ; sink != null; sink = sink.getNextLeftTupleSinkNode() ) {
 
-                        if (lt.getFirstChild().getPeer() != null) {
-                            // There is a network split, so must use child smem
-                            childSmem = smem.getFirst();
+            if ( lt != null ) {
+                if (lt.getTupleSink().isAssociatedWith(rule)) {
+
+                    if (lt.getTupleSink().getAssociatedRuleSize() > 1) {
+                        if (lt.getFirstChild() != null) {
+                            SegmentMemory childSmem = smem; // if there is no split the child smem is same as current node
+
+                            if ( smem.getFirst() != null && smem.getFirst().getRootNode() == lt.getFirstChild().getTupleSink() ) {
+                                // There is a network split, so must use child smem
+                                childSmem = smem.getFirst();
+                            }
+
+                            for ( LeftTuple child = lt.getFirstChild(); child != null; child =  child.getHandleNext() ) {
+                                visitChild(child, childSmem, insert, wm, rule);
+                            }
+                        }
+                    } else if (!insert) {
+                        LeftTuple lt2 = null;
+                        if ( lt.getPeer() != null && lt.getPeer().getTupleSink().isAssociatedWith(rule) && lt.getPeer().getTupleSink().getAssociatedRuleSize() == 1 ) {
+                            // this LT is associated with a peer, due to subnetwork, so process together.
+                            lt2 = lt.getPeer();
                         }
 
-                        for ( LeftTuple child = lt.getFirstChild(); child != null; child =  child.getHandleNext() ) {
-                            visitChild(child, childSmem, insert, wm, rule);
-                        }
+                        // this sink is not shared and is associated with the rule being removed delete it's children
+                        deletePeerLeftTuple(lt, lt2, prevLt, smem);
+                        break; // only one rule is deleted at a time, we know there are no more peers to delete so break.
                     }
-
-                } else if (!insert) {
-                    LeftTuple lt2 = null;
-                    if ( lt.getPeer() != null && lt.getPeer().getTupleSink().isAssociatedWith(rule) && lt.getPeer().getTupleSink().getAssociatedRuleSize() == 1 ) {
-                        // this LT is associated with a peer, due to subnetwork, so process together.
-                        lt2 = lt.getPeer();
-                    }
-
-                    // this sink is not shared and is associated with the rule being removed delete it's children
-                    deletePeerLeftTuple(lt, lt2, prevLt, smem);
-                    break; // only one rule is deleted at a time, we know there are no more peers to delete so break.
                 }
-            } else if (insert) {
-                // There are more sinks after this peer LT, but there is no additional peer, so create it
-                if ((lt.getPeer() == null && ((LeftTupleSinkNode) lt.getTupleSink()).getNextLeftTupleSinkNode() != null)) {
-                    insertPeerLeftTuple(lt, ((LeftTupleSinkNode) lt.getTupleSink()).getNextLeftTupleSinkNode(), wm);
-                    return; // must return as as just added a peer to lt, and it'll end up processing the newly added peer, which is not needed
-                }
+
+                prevLt = lt;
+                lt = lt.getPeer();
+            } else {
+                // there is a sink without a peer LT, so create the peer LT
+                prevLt = insertPeerLeftTuple(prevLt, sink, wm);
             }
-
 
             if (smem != null) {
                 // will go null when it reaches an LT for a newly added sink, as these need to be initialised
                 smem = smem.getNext();
             }
-
-            prevLt = lt;
         }
     }
 
@@ -879,12 +880,12 @@ public class AddRemoveRule {
     /**
      * Create all missing peers
      */
-    private static void insertPeerLeftTuple(LeftTuple lt, LeftTupleSinkNode node, InternalWorkingMemory wm) {
+    private static LeftTuple insertPeerLeftTuple(LeftTuple lt, LeftTupleSinkNode node, InternalWorkingMemory wm) {
         LeftInputAdapterNode.LiaNodeMemory liaMem = null;
         if ( node.getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode ) {
             liaMem = wm.getNodeMemory(((LeftInputAdapterNode) node.getLeftTupleSource()));
         }
-        for (; node != null; node = node.getNextLeftTupleSinkNode()) {
+        //for (; node != null; node = node.getNextLeftTupleSinkNode()) {
             lt = node.createPeer(lt);
             Memory memory = wm.getNodeMemories().peekNodeMemory(node.getId());
             if (memory == null || memory.getSegmentMemory() == null) {
@@ -898,7 +899,8 @@ public class AddRemoveRule {
                 // If parent is Lian, then this must be called, so that any linking or unlinking can be done.
                 LeftInputAdapterNode.doInsertSegmentMemory(wm, true, liaMem, memory.getSegmentMemory(), lt, node.getLeftTupleSource().isStreamMode());
             }
-        }
+        //}
+        return lt;
     }
 
     private static void deletePeerLeftTuple(LeftTuple lt, LeftTuple lt2, LeftTuple prevLt, SegmentMemory smem) {
@@ -909,21 +911,6 @@ public class AddRemoveRule {
         }
 
         deleteLeftTuple(lt, lt2, prevLt);
-
-//        if (prevLt == null) {
-//            // the first sink is being removed, which is the first peer. The next peer must be set as the first peer.
-//            if (lt.getPeer() != null) {
-//                deleteLeftTuple(lt, prevLt);
-//
-//            } else {
-//                // no peers to support this, so remove completely.
-//                lt.unlinkFromLeftParent();
-//                lt.unlinkFromRightParent();
-//            }
-//        } else {
-//            // mid or end LeftTuple peer is being removed
-//            prevLt.setPeer(lt.getPeer());
-//        }
     }
 
     private static void stageTuple(LeftTuple lt, SegmentMemory smem) {
