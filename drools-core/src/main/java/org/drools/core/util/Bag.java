@@ -90,6 +90,15 @@ public class Bag<T> implements Collection<T>, Serializable {
         return true;
     }
 
+    public boolean removeKey( Object o ) {
+        Counter i = map.remove(o);
+        if (i != null) {
+            size -= i.get();
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean containsAll( Collection<?> c ) {
         return map.keySet().containsAll( c );
