@@ -89,9 +89,9 @@ public abstract class AbstractAddRemoveRulesTest {
         int i = 0;
         for (List<TestOperation> test : testPlan) {
             i++;
-            if ( i == 3 ) {
+            //if ( i == 3 ) {
                 runAddRemoveTest(test, additionalGlobals);
-            }
+            //}
         }
     }
 

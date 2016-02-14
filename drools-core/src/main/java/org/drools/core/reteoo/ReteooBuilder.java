@@ -270,7 +270,6 @@ public class ReteooBuilder
         if (node == null || !node.removeAssociation( rule )) {
             return;
         }
-        System.out.println("removeNodeAssociation: " + node);
         if (node instanceof LeftTupleNode) {
             removeNodeAssociation( ((LeftTupleNode)node).getLeftTupleSource(), rule );
         }
