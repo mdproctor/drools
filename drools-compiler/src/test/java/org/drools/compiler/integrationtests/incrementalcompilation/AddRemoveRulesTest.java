@@ -1198,7 +1198,6 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
     @Test
     public void testRemoveWithSplitStartAfterSubnetwork3RulesReaddRule() {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
-                             "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                              "global java.util.List list\n" +
                              "rule " + RULE1_NAME + " \n" +
                              "when\n" +
@@ -1210,7 +1209,6 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                              "end\n";
 
         final String rule2 = "package " + PKG_NAME_TEST + ";" +
-                             "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                              "global java.util.List list\n" +
                              "rule " + RULE2_NAME + " \n" +
                              "when \n" +
@@ -1223,7 +1221,6 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                              "end";
 
         final String rule3 = "package " + PKG_NAME_TEST + ";" +
-                             "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
                              "global java.util.List list\n" +
                              "rule " + RULE3_NAME + " \n" +
                              "when \n" +
@@ -1245,10 +1242,7 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                .addOperation(TestOperationType.FIRE_RULES)
                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME});
 
-        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
-        additionalGlobals.put("globalInt", new AtomicInteger(0));
-
-        runAddRemoveTest(builder.build(), additionalGlobals);
+        runAddRemoveTest(builder.build(), new HashMap<String, Object>());
     }
 
     private void testRemoveWithSplitStartBasicTestSet(final String rule1, final String rule2,
