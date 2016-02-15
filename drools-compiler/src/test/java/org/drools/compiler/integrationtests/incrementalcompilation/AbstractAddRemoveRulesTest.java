@@ -88,10 +88,7 @@ public abstract class AbstractAddRemoveRulesTest {
                 facts);
         int i = 0;
         for (List<TestOperation> test : testPlan) {
-            i++;
-            //if ( i == 3 ) {
-                runAddRemoveTest(test, additionalGlobals);
-            //}
+            runAddRemoveTest(test, additionalGlobals);
         }
     }
 
@@ -130,6 +127,8 @@ public abstract class AbstractAddRemoveRulesTest {
                     }
                     assertTrue(createTestFailMessage(testOperations, index, expectedResultsSet, resultsList),
                             expectedResultsSet.containsAll(resultsList));
+                    assertTrue(createTestFailMessage(testOperations, index, expectedResultsSet, resultsList),
+                            resultsList.containsAll(expectedResultsSet));
                     resultsList.clear();
                     break;
                 case INSERT_FACTS:

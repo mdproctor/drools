@@ -217,7 +217,7 @@ public class AddRemoveRule {
                 if (sm2 == null) {
                     SegmentMemory sm1 = smems[smemIndex - 1];
                     correctMemoryOnSplitsChanged(parentNode, null, wm);
-                    sm2 = splitSegment(sm1, parentNode);
+                    sm2 = splitSegment(wm, sm1, parentNode);
                     nodeToSegmentMap.put(node, sm2);
                     smemsToNotify.add(sm1);
                     smemsToNotify.add(sm2);
@@ -276,25 +276,29 @@ public class AddRemoveRule {
         public void handleSplit(SegmentMemory[] prevSmems, SegmentMemory[] smems, int smemIndex, int prevSmemIndex,
                                 LeftTupleNode parentNode, LeftTupleNode node, Rule rule,
                                 Set<LeftTupleNode> visited, Set<SegmentMemory> smemsToNotify, Map<LeftTupleNode, SegmentMemory> nodeToSegmentMap, InternalWorkingMemory wm) {
-            if (visited.add(node)) {
-                correctMemoryOnSplitsChanged(parentNode, rule, wm);
+            if (visited.contains(node)) {
+                return;
+            }
 
-                SegmentMemory sm1 = smems[smemIndex];
-                SegmentMemory sm2 = prevSmems[prevSmemIndex];
-                if (sm1 != null && sm2 == null) {
-                    sm2 = SegmentUtilities.createChildSegment(wm,node);
-                    sm1.add(sm2);
-                } else if (sm1 == null && sm2 != null) {
-                    sm1 = SegmentUtilities.createChildSegment(wm, parentNode);
-                    sm1.add(sm2);
-                }
+            correctMemoryOnSplitsChanged(parentNode, rule, wm);
 
-                if (sm1 != null && sm2 != null) {
-                    mergeSegment(sm1, sm2);
-                    smemsToNotify.add(sm1);
-                    sm1.unlinkSegment(wm);
-                    sm2.unlinkSegment(wm);
-                }
+            SegmentMemory sm1 = smems[smemIndex];
+            SegmentMemory sm2 = prevSmems[prevSmemIndex];
+
+            if (sm1 != null && sm2 == null) {
+                sm2 = SegmentUtilities.createChildSegment(wm,node);
+                sm1.add(sm2);
+            } else if (sm1 == null && sm2 != null) {
+                sm1 = SegmentUtilities.createChildSegment(wm, parentNode);
+                sm1.add(sm2);
+            }
+
+            if (sm1 != null && sm2 != null) {
+                mergeSegment(sm1, sm2);
+                smemsToNotify.add(sm1);
+                sm1.unlinkSegment(wm);
+                sm2.unlinkSegment(wm);
+                visited.add(node);
             }
         }
 
@@ -1055,9 +1059,11 @@ public class AddRemoveRule {
         return node;
     }
 
-    public static SegmentMemory splitSegment(SegmentMemory sm1, LeftTupleNode splitNode) {
+    public static SegmentMemory splitSegment(InternalWorkingMemory wm, SegmentMemory sm1, LeftTupleNode splitNode) {
         // create new segment, starting after split
-        SegmentMemory sm2 = new SegmentMemory(splitNode.getSinkPropagator().getFirstLeftTupleSink()); // we know there is only one sink
+        LeftTupleNode childNode = splitNode.getSinkPropagator().getFirstLeftTupleSink();
+        SegmentMemory sm2 = new SegmentMemory(childNode); // we know there is only one sink
+        wm.getNodeMemories().peekNodeMemory( childNode.getId() ).setSegmentMemory( sm2 );
 
         // Move the children of sm1 to sm2
         if (sm1.getFirst() != null) {
