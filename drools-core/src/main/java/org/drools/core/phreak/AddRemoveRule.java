@@ -909,12 +909,6 @@ public class AddRemoveRule {
     }
 
     private static void deletePeerLeftTuple(LeftTuple lt, LeftTuple lt2, LeftTuple prevLt, InternalWorkingMemory wm) {
-//        stageTuple(lt, smem);
-//        if ( lt2 != null ) {
-//            // lt2 exists if there is a subnetwork, and both LTs must be processed as pair.
-//            stageTuple(lt2, smem.getNext());
-//        }
-
         iterateLeftTuple( lt, wm);
         if ( lt2 != null ) {
             iterateLeftTuple( lt2, wm);
@@ -924,13 +918,13 @@ public class AddRemoveRule {
     }
 
     private static void iterateLeftTuple(LeftTuple lt, InternalWorkingMemory wm) {
-        for ( LeftTuple child = lt.getFirstChild(); child != null; child = child.getHandleNext() ) {
-            for ( LeftTuple peer = child; peer != null; peer = peer.getPeer() ) {
-                if (peer.getFirstChild() != null) {
+        if (NodeTypeEnums.isTerminalNode(lt.getTupleSink())) {
+            PathMemory pmem = wm.getNodeMemory((RuleTerminalNode) lt.getTupleSink());
+            PhreakRuleTerminalNode.doLeftDelete(wm, pmem.getRuleAgendaItem().getRuleExecutor(), lt);
+        } else {
+            for (LeftTuple child = lt.getFirstChild(); child != null; child = child.getHandleNext()) {
+                for (LeftTuple peer = child; peer != null; peer = peer.getPeer()) {
                     iterateLeftTuple(peer, wm);
-                } else if (NodeTypeEnums.isTerminalNode(peer.getTupleSink())) {
-                    PathMemory pmem = wm.getNodeMemory((RuleTerminalNode) peer.getTupleSink());
-                    PhreakRuleTerminalNode.doLeftDelete(wm, pmem.getRuleAgendaItem().getRuleExecutor(), peer);
                 }
             }
         }
