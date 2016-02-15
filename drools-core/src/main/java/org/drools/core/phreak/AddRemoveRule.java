@@ -752,18 +752,14 @@ public class AddRemoveRule {
                     RightTuple   rt = (RightTuple) BetaNode.getFirstTuple(bm.getRightTupleMemory(), it);
                     for (; rt != null; rt = (RightTuple) it.next(rt)) {
                         for (LeftTuple lt = rt.getBlocked(); lt != null; lt = lt.getBlockedNext()) {
-                            visitChild(lt.getFirstChild(), childSmem, insert, wm, rule);
+                            visitChild(wm, insert, rule, childSmem, it, lt);
                         }
                     }
                 } else {
                     bm = (BetaMemory) wm.getNodeMemory((MemoryFactory) node);
                     FastIterator it = bm.getLeftTupleMemory().fullFastIterator();
                     Tuple        lt = BetaNode.getFirstTuple(bm.getLeftTupleMemory(), it);
-                    for (; lt != null; lt = (LeftTuple) it.next(lt)) {
-                        for ( LeftTuple childLt = lt.getFirstChild(); childLt != null ; childLt = childLt.getHandleNext() ) {
-                            visitChild(childLt, childSmem, insert, wm, rule);
-                        }
-                    }
+                    visitChild(wm, insert, rule, childSmem, it, lt);
                 }
                 return;
             } else if (NodeTypeEnums.FromNode == node.getType()) {
@@ -821,6 +817,17 @@ public class AddRemoveRule {
                 }
 
                 lt = nextLt;
+            }
+        }
+    }
+
+    private static void visitChild(InternalWorkingMemory wm, boolean insert, Rule rule, SegmentMemory childSmem, FastIterator it, Tuple lt) {
+        for (; lt != null; lt = (LeftTuple) it.next(lt)) {
+            LeftTuple childLt = lt.getFirstChild();
+            while (childLt != null) {
+                LeftTuple nextLt = childLt.getHandleNext();
+                visitChild(childLt, childSmem, insert, wm, rule);
+                childLt = nextLt;
             }
         }
     }
