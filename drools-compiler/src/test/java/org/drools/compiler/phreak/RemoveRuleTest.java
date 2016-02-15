@@ -102,12 +102,6 @@ public class RemoveRuleTest {
         kbase.removeRule("org.kie", "r1");
 
         assertEquals( 6, countNodeMemories(nms)); // still has OTN
-
-        assertEquals( 0, bMem.getLeftTupleMemory().size() );
-        assertEquals( 0, bMem.getRightTupleMemory().size() );
-
-        assertEquals( 0, eMem.getLeftTupleMemory().size() );
-        assertEquals( 0, eMem.getRightTupleMemory().size() );
     }
 
     @Test
@@ -204,9 +198,6 @@ public class RemoveRuleTest {
 
         assertNull( sm.getFirst());
 
-        assertEquals( 0, c2Mem.getLeftTupleMemory().size() );
-        assertEquals( 0, c2Mem.getRightTupleMemory().size() );
-
         assertSame( sm, c1Mem.getSegmentMemory()); // c1SMem repoints back to original Smem
 
         wm.insert(new A(1));
@@ -269,9 +260,6 @@ public class RemoveRuleTest {
         assertEquals( 8, countNodeMemories(wm.getNodeMemories()));
 
         assertNull( sm.getFirst());
-
-        assertEquals( 0, c2Mem.getLeftTupleMemory().size() );
-        assertEquals( 0, c2Mem.getRightTupleMemory().size() );
 
         assertSame( sm, c1Mem.getSegmentMemory()); // c1SMem repoints back to original Smem
 
@@ -346,8 +334,6 @@ public class RemoveRuleTest {
 
         //SegmentMemory b2Smem =  sm.getFirst().remove();
         assertSame( b2Smem, b2Mem.getSegmentMemory());
-        assertEquals( 0, b2Mem.getLeftTupleMemory().size() );
-        assertEquals( 0, b2Mem.getRightTupleMemory().size() );
 
         wm.insert(new A(1));
         wm.fireAllRules();

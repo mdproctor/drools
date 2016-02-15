@@ -799,7 +799,10 @@ public class AddRemoveRule {
         Iterator<InternalFactHandle> it = omem.iterator();
         while (it.hasNext()) {
             InternalFactHandle fh = it.next();
-            for (LeftTuple lt = fh.getFirstLeftTuple(); lt != null; lt = lt.getHandleNext()) {
+            LeftTuple lt = fh.getFirstLeftTuple();
+            while (lt != null) {
+                LeftTuple nextLt = lt.getHandleNext();
+
                 // Each lt is for a different lian, skip any lian not associated with the rule. Need to use lt parent (souce) not child to check the lian.
                 if (lt.getTupleSource().isAssociatedWith(rule)) {
                     SegmentMemory childSmem = sm;
@@ -808,7 +811,16 @@ public class AddRemoveRule {
                         childSmem = sm.getFirst();
                     }
                     visitChild(lt, childSmem, insert, wm, rule);
+
+                    if (lt.getHandlePrevious() != null) {
+                        lt.getHandlePrevious().setHandleNext( nextLt );
+                    }
+                    if (nextLt != null) {
+                        nextLt.setHandlePrevious( lt.getHandlePrevious() );
+                    }
                 }
+
+                lt = nextLt;
             }
         }
     }
