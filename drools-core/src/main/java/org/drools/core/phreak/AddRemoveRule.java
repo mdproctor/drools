@@ -934,26 +934,6 @@ public class AddRemoveRule {
         }
     }
 
-    private static void stageTuple(LeftTuple lt, SegmentMemory smem) {
-        switch (lt.getStagedType()) {
-            case LeftTuple.INSERT: {
-                // insert was never propagated, thus has no children, does not need to be staged.
-                smem.getStagedLeftTuples().removeInsert(lt);
-                break;
-            }
-            case LeftTuple.UPDATE: {
-                smem.getStagedLeftTuples().removeUpdate(lt);
-                // don't break, so that this falls through and calls addDelete
-            }
-            case LeftTuple.NONE: {
-                smem.getStagedLeftTuples().addDelete(lt);
-            }
-            case LeftTuple.DELETE: {
-                // do nothing, leave it staged for delete, added for documention help
-            }
-        }
-    }
-
     private static void deleteLeftTuple(LeftTuple removingLt, LeftTuple removingLt2, LeftTuple prevLt) {
         // only the first LT in a peer chain is hooked into left and right parents or the FH.
         // If the first LT is being remove, those hooks need to be shifted to the next peer,
@@ -963,11 +943,11 @@ public class AddRemoveRule {
         // And the previous peer will need to point to the peer after removingLt, or removingLt2 if it exists.
 
         boolean isFirstLt = prevLt == null; // is this the first LT in a peer chain chain
-        LeftTuple nextLt    = (removingLt2 == null ) ? removingLt.getPeer() : removingLt2.getPeer(); // if there is a subnetwork, skip to the peer after that
+        LeftTuple nextPeerLt    = (removingLt2 == null ) ? removingLt.getPeer() : removingLt2.getPeer(); // if there is a subnetwork, skip to the peer after that
 
         if( !isFirstLt ) {
             // This LT is not the first tuple in a peer chain. So just correct the peer chain linked list
-            prevLt.setPeer( nextLt );
+            prevLt.setPeer( nextPeerLt );
         } else {
             boolean   isRootLt = (isFirstLt && removingLt.getLeftParent() == null); // is the LT for the LIAN, if so we need to process the FH too.
             InternalFactHandle fh = removingLt.getFactHandle();
@@ -984,19 +964,19 @@ public class AddRemoveRule {
             RightTuple         rightParent = removingLt.getRightParent();
 
             // This tuple is the first peer and thus is linked into the left parent LT.
-            if (nextLt!=null ) {
-                nextLt.setFactHandle(removingLt.getFactHandle());
-                nextLt.setLeftParent(leftParent);
+            if (nextPeerLt!=null ) {
+                nextPeerLt.setFactHandle(removingLt.getFactHandle());
+                nextPeerLt.setLeftParent(leftParent);
 
                 // correct the linked list
                 if (leftPrevious != null) {
-                    nextLt.setHandlePrevious(leftPrevious);
-                    leftPrevious.setHandleNext(nextLt);
+                    nextPeerLt.setHandlePrevious(leftPrevious);
+                    leftPrevious.setHandleNext(nextPeerLt);
                 }
 
                 if (leftNext != null) {
-                    nextLt.setHandleNext(leftNext);
-                    leftNext.setHandlePrevious(nextLt);
+                    nextPeerLt.setHandleNext(leftNext);
+                    leftNext.setHandlePrevious(nextPeerLt);
                 }
             }
 
@@ -1004,48 +984,85 @@ public class AddRemoveRule {
             // if nextLT is null, it's ok for parent's reference to be null
             if (leftParent!=null) {
                 if (leftParent.getFirstChild() == removingLt) {
-                    leftParent.setFirstChild(nextLt);
+                    if ( nextPeerLt != null ) {
+                        // if next peer exists, set it to this
+                        leftParent.setFirstChild(nextPeerLt);
+                    } else {
+                        // othrewise just shift the whole chain
+                        leftParent.setFirstChild( leftNext );
+                    }
                 }
 
                 if (leftParent.getLastChild() == removingLt) {
-                    leftParent.setLastChild(nextLt);
+                    if ( nextPeerLt != null ) {
+                        // if next peer exists, set it to this
+                        leftParent.setLastChild(nextPeerLt);
+                    } else {
+                        // othrewise just shift the whole chain
+                        leftParent.setLastChild( leftPrevious );
+                    }
                 }
             } else if ( isRootLt ) {
                 if (fh.getFirstLeftTuple() == removingLt) {
-                    fh.setFirstLeftTuple(nextLt);
+                    if ( nextPeerLt != null ) {
+                        // if next peer exists, set it to this
+                        fh.setFirstLeftTuple(nextPeerLt);
+                    } else {
+                        // othrewise just shift the whole chain
+                        fh.setFirstLeftTuple( leftNext );
+                    }
                 }
 
                 if (fh.getLastLeftTuple() == removingLt) {
-                    fh.setLastLeftTuple(nextLt);
+                    if ( nextPeerLt != null ) {
+                        // if next peer exists, set it to this
+                        fh.setLastLeftTuple(nextPeerLt);
+                    } else {
+                        // othrewise just shift the whole chain
+                        fh.setLastLeftTuple( leftPrevious );
+                    }
                 }
             }
 
 
             if ( rightParent != null ) {
-                if (nextLt!=null ) {
+                if (nextPeerLt!=null ) {
                     // This tuple is the first peer and thus is linked into the right parent RT.
-                    nextLt.setRightParent(rightParent);
+                    nextPeerLt.setRightParent(rightParent);
 
                     // correct the linked list
                     if (rightPrevious != null) {
-                        nextLt.setRightParentPrevious(rightPrevious);
-                        rightPrevious.setRightParentNext(nextLt);
+                        nextPeerLt.setRightParentPrevious(rightPrevious);
+                        rightPrevious.setRightParentNext(nextPeerLt);
                     }
 
                     if (rightNext != null) {
-                        nextLt.setRightParentNext(rightNext);
-                        rightNext.setRightParentPrevious(nextLt);
+                        nextPeerLt.setRightParentNext(rightNext);
+                        rightNext.setRightParentPrevious(nextPeerLt);
                     }
                 }
 
                 // correct the parent's first/last references
                 // if nextLT is null, it's ok for parent's reference to be null
                 if (rightParent.getFirstChild() == removingLt) {
-                    rightParent.setFirstChild(nextLt);
+                    if ( nextPeerLt != null ) {
+                        // if next peer exists, set it to this
+                        rightParent.setFirstChild(nextPeerLt);
+                    } else {
+                        // othrewise just shift the whole chain
+                        rightParent.setFirstChild( leftNext );
+                    }
                 }
 
                 if (rightParent.getLastChild() == removingLt) {
-                    rightParent.setLastChild(nextLt);
+                    rightParent.setLastChild(nextPeerLt);
+                    if ( nextPeerLt != null ) {
+                        // if next peer exists, set it to this
+                        rightParent.setLastChild(nextPeerLt);
+                    } else {
+                        // othrewise just shift the whole chain
+                        rightParent.setLastChild( leftPrevious );
+                    }
                 }
             }
         }
