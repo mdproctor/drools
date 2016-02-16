@@ -110,7 +110,10 @@ public abstract class AbstractAddRemoveRulesTest {
                     session = createNewSession((String[]) testOperationParameter, resultsList, additionalGlobals);
                     break;
                 case ADD_RULES:
-                    addRulesToSession(session, (String[]) testOperationParameter);
+                    addRulesToSession(session, (String[]) testOperationParameter, false);
+                    break;
+                case ADD_RULES_REINSERT_OLD:
+                    addRulesToSession(session, (String[]) testOperationParameter, true);
                     break;
                 case REMOVE_RULES:
                     removeRulesFromSession(session, (String[]) testOperationParameter);
@@ -165,10 +168,16 @@ public abstract class AbstractAddRemoveRulesTest {
         return session;
     }
 
-    private void addRulesToSession(final StatefulKnowledgeSession session, final String[] drls) {
+    private void addRulesToSession(final StatefulKnowledgeSession session, final String[] drls,
+            final boolean reimportAllRules) {
         for (String drl : drls) {
-            final KnowledgeBuilder kbuilder2 = createKnowledgeBuilder(session.getKieBase(), drl);
-            session.getKieBase().addKnowledgePackages(kbuilder2.getKnowledgePackages());
+            final KnowledgeBuilder kBuilder;
+            if (reimportAllRules) {
+                kBuilder = createKnowledgeBuilder(session.getKieBase(), drl);
+            } else {
+                kBuilder = createKnowledgeBuilder(null, drl);
+            }
+            session.getKieBase().addKnowledgePackages(kBuilder.getKnowledgePackages());
         }
     }
 
