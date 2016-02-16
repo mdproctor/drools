@@ -894,21 +894,21 @@ public class AddRemoveRule {
         if ( node.getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode ) {
             liaMem = wm.getNodeMemory(((LeftInputAdapterNode) node.getLeftTupleSource()));
         }
-        //for (; node != null; node = node.getNextLeftTupleSinkNode()) {
-            lt = node.createPeer(lt);
-            Memory memory = wm.getNodeMemories().peekNodeMemory(node.getId());
-            if (memory == null || memory.getSegmentMemory() == null) {
-                throw new IllegalStateException("Defensive Programming: this should not be possilbe, as the addRule code should init child segments if they are needed ");
-            }
+
+        lt = node.createPeer(lt);
+        Memory memory = wm.getNodeMemories().peekNodeMemory(node.getId());
+        if (memory == null || memory.getSegmentMemory() == null) {
+            throw new IllegalStateException("Defensive Programming: this should not be possilbe, as the addRule code should init child segments if they are needed ");
+        }
 
 
-            if ( liaMem == null) {
-                memory.getSegmentMemory().getStagedLeftTuples().addInsert(lt);
-            } else {
-                // If parent is Lian, then this must be called, so that any linking or unlinking can be done.
-                LeftInputAdapterNode.doInsertSegmentMemory(wm, true, liaMem, memory.getSegmentMemory(), lt, node.getLeftTupleSource().isStreamMode());
-            }
-        //}
+        if ( liaMem == null) {
+            memory.getSegmentMemory().getStagedLeftTuples().addInsert(lt);
+        } else {
+            // If parent is Lian, then this must be called, so that any linking or unlinking can be done.
+            LeftInputAdapterNode.doInsertSegmentMemory(wm, true, liaMem, memory.getSegmentMemory(), lt, node.getLeftTupleSource().isStreamMode());
+        }
+
         return lt;
     }
 
@@ -1291,6 +1291,9 @@ public class AddRemoveRule {
         for (LeftTupleNode node : pathEndNodes.subjectEndNodes) {
             if (node.getType() == NodeTypeEnums.RightInputAdaterNode) {
                 RiaNodeMemory riaMem = (RiaNodeMemory) wm.getNodeMemories().peekNodeMemory(node.getId());
+                if (riaMem == null && tnMems.otherPmems != null ) {
+                    riaMem = (RiaNodeMemory) wm.getNodeMemory((MemoryFactory<Memory>) node);
+                }
                 if (riaMem != null) {
                     tnMems.subjectPmems.add(riaMem.getRiaPathMemory());
                 }
