@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Tests adding and removing rules with advanced operators.
@@ -559,14 +560,144 @@ public class AddRemoveRulesAdvOperatorsTest extends AbstractAddRemoveRulesTest {
                 new Object[]{memberString, "1"}, getGlobalsMemberOf(memberString));
     }
 
-    private Object[] getFactsContains() {
-        final List<Object> facts = new ArrayList<Object>(2);
+    @Test
+    public void testAddRemoveRuleContainsExists3Rules() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
+                "    $s : String()\n" +
+                "    Integer() \n" +
+                "    java.util.Map(values() contains \"1\") \n" +
+                "    exists( Integer() and Integer() )\n" +
+                "then\n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
+                "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer() \n" +
+                "    java.util.Map(values() contains \"1\") \n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
+                "end";
+
+        final String rule3 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE3_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    java.util.Map(values() contains \"1\") \n" +
+                "    exists( Integer() and exists(Integer() and Integer()))\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE3_NAME + "'); \n" +
+                "end";
+
         Map<Object, String> mapFact = new HashMap<Object, String>(1);
         mapFact.put(new Object(), "1");
-        facts.add(mapFact);
-        facts.add("1");
 
-        return new Object[]{mapFact, "1"};
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1})
+                .addOperation(TestOperationType.INSERT_FACTS, new Object[]{mapFact, 1, "1"})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule2})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE2_NAME})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule3})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE3_NAME})
+                .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+        additionalGlobals.put("globalInt", new AtomicInteger(0));
+
+        runAddRemoveTest(builder.build(), additionalGlobals);
+    }
+
+    @Test
+    public void testAddRemoveRuleContainsExists3RulesDoubledExists() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE1_NAME + " \n" +
+                "when\n" +
+                "    $s : String()\n" +
+                "    Integer() \n" +
+                "    java.util.Map(values() contains \"1\") \n" +
+                "    exists( Integer() and Integer() )\n" +
+                "then\n" +
+                " list.add('" + RULE1_NAME + "'); \n" +
+                "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE2_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    Integer() \n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    java.util.Map(values() contains \"1\") \n" +
+                "    exists( Integer() and Integer() )\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE2_NAME + "'); \n" +
+                "end";
+
+        final String rule3 = "package " + PKG_NAME_TEST + ";" +
+                "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
+                "global java.util.List list\n" +
+                "rule " + RULE3_NAME + " \n" +
+                "when \n" +
+                "    $s : String()\n" +
+                "    java.util.Map(values() contains \"1\") \n" +
+                "    exists( Integer() and exists(Integer() and Integer()))\n" +
+                "    String()\n" +
+                "then \n" +
+                " list.add('" + RULE3_NAME + "'); \n" +
+                "end";
+
+        Map<Object, String> mapFact = new HashMap<Object, String>(1);
+        mapFact.put(new Object(), "1");
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1})
+                .addOperation(TestOperationType.INSERT_FACTS, new Object[]{mapFact, 1, "1"})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule2})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE2_NAME})
+                .addOperation(TestOperationType.ADD_RULES, new String[]{rule3})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE3_NAME})
+                .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
+                .addOperation(TestOperationType.FIRE_RULES)
+                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{});
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+        additionalGlobals.put("globalInt", new AtomicInteger(0));
+
+        runAddRemoveTest(builder.build(), additionalGlobals);
+    }
+
+    private Object[] getFactsContains() {
+        final Map<Object, String> mapFact = new HashMap<Object, String>(1);
+        mapFact.put(new Object(), "1");
+
+        return new Object[]{mapFact, 1, 2, "1"};
     }
 
     private Map<String, Object> getGlobalsMemberOf(final String memberString) {
