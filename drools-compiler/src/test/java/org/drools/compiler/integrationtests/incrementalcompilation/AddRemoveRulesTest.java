@@ -1117,7 +1117,6 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                 " list.add('" + RULE3_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
         AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
         builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1, rule2, rule3})
                 .addOperation(TestOperationType.INSERT_FACTS, new Object[] {1, 2, "1"})
@@ -1173,7 +1172,6 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                 " list.add('" + RULE3_NAME + "'); \n" +
                 "end";
 
-        testRemoveWithSplitStartBasicTestSet(rule1, rule2, RULE1_NAME, RULE2_NAME);
         AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
         builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rule1})
                 .addOperation(TestOperationType.INSERT_FACTS, new Object[] {1, 1, "1"})
