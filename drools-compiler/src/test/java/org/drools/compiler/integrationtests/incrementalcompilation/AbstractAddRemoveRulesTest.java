@@ -92,7 +92,7 @@ public abstract class AbstractAddRemoveRulesTest {
         }
     }
 
-    protected void runAddRemoveTest(final List<TestOperation> testOperations,
+    protected StatefulKnowledgeSession runAddRemoveTest(final List<TestOperation> testOperations,
             final Map<String, Object> additionalGlobals) {
 
         StatefulKnowledgeSession session = null;
@@ -142,6 +142,7 @@ public abstract class AbstractAddRemoveRulesTest {
             }
             index++;
         }
+        return session;
     }
 
     protected int getRulesCount(final KnowledgeBase kBase) {

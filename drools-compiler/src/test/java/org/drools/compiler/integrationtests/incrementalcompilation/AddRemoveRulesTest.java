@@ -16,9 +16,15 @@
 package org.drools.compiler.integrationtests.incrementalcompilation;
 
 
+import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
+import org.drools.core.common.InternalFactHandle;
+import org.drools.core.impl.KnowledgeBaseImpl;
+import org.drools.core.reteoo.LeftTuple;
+import org.drools.core.reteoo.RightTuple;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.api.KieBase;
+import org.kie.api.definition.rule.Rule;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.StatelessKieSession;
@@ -41,6 +47,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.drools.compiler.integrationtests.incrementalcompilation.IncrementalCompilationTest.rulestoMap;
 
 import static org.junit.Assert.*;
 
@@ -1241,6 +1249,401 @@ public class AddRemoveRulesTest extends AbstractAddRemoveRulesTest {
                .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE2_NAME});
 
         runAddRemoveTest(builder.build(), new HashMap<String, Object>());
+    }
+
+    String[] getRules1Pattern() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE1_NAME + " \n" +
+                             "when\n" +
+                             "    $i : Integer(this>1)\n" +
+                             "then\n" +
+                             " list.add('" + RULE1_NAME + "'); \n" +
+                             "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE2_NAME + " \n" +
+                             "when \n" +
+                             "    $i : Integer(this>2)\n" +
+                             "then \n" +
+                             " list.add('" + RULE2_NAME + "'); \n" +
+                             "end";
+
+        return new String[] { rule1, rule2 };
+    }
+
+    String[] getRules2Pattern() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE1_NAME + " \n" +
+                             "when\n" +
+                             "    $i1 : Integer(this>1)\n" +
+                             "    $i2 : Integer(this>1)\n" +
+                             "then\n" +
+                             " list.add('" + RULE1_NAME + "'); \n" +
+                             "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE2_NAME + " \n" +
+                             "when \n" +
+                             "    $i1 : Integer(this>1)\n" +
+                             "    $i2 : Integer(this>2)\n" +
+                             "then \n" +
+                             " list.add('" + RULE2_NAME + "'); \n" +
+                             "end";
+
+        return new String[] { rule1, rule2 };
+    }
+
+    @Test
+    public void testRemoveRuleChangeFHFirstLeftTuple() {
+        String[] rules = getRules1Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        assertNotNull( fh1.getFirstLeftTuple() );
+    }
+
+    @Test
+    public void testRemoveRuleChangeFHLastLeftTuple() {
+        String[] rules = getRules1Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE2_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        assertNotNull( fh1.getLastLeftTuple() );
+    }
+
+    @Test
+    public void testRemoveRightTupleThatWasFirst() {
+        String[] rules = getRules2Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        assertNotNull( fh1.getFirstRightTuple() );
+        assertSame( fh1.getFirstRightTuple() , fh1.getLastRightTuple() );
+        assertEquals( 1, fh1.getFirstRightTuple().getTupleSink().getAssociatedRuleSize() );
+        assertTrue( fh1.getFirstRightTuple().getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+    }
+
+    @Test
+    public void testRemoveRightTupleThatWasLast() {
+        String[] rules = getRules2Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE2_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        assertNotNull( fh1.getFirstRightTuple() );
+        assertSame( fh1.getFirstRightTuple() , fh1.getLastRightTuple() );
+        assertEquals( 1, fh1.getFirstRightTuple().getTupleSink().getAssociatedRuleSize() );
+        assertTrue( fh1.getFirstRightTuple().getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+    }
+
+
+    String[] getRules3Pattern() {
+        final String rule1 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE1_NAME + " \n" +
+                             "when\n" +
+                             "    $i1 : Integer(this>1)\n" +
+                             "    $i2 : Integer(this>1)\n" +
+                             "    $i3 : Integer(this>0)\n" +
+                             "then\n" +
+                             " list.add('" + RULE1_NAME + "'); \n" +
+                             "end\n";
+
+        final String rule2 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE2_NAME + " \n" +
+                             "when \n" +
+                             "    $i1 : Integer(this>1)\n" +
+                             "    $i2 : Integer(this>1)\n" +
+                             "    $i3 : Integer(this>1)\n" +
+                             "then \n" +
+                             " list.add('" + RULE2_NAME + "'); \n" +
+                             "end";
+
+        final String rule3 = "package " + PKG_NAME_TEST + ";" +
+                             "global java.util.List list\n" +
+                             "rule " + RULE3_NAME + " \n" +
+                             "when \n" +
+                             "    $i1 : Integer(this>1)\n" +
+                             "    $i2 : Integer(this>1)\n" +
+                             "    $i3 : Integer(this>2)\n" +
+                             "then \n" +
+                             " list.add('" + RULE3_NAME + "'); \n" +
+                             "end";
+
+        return new String[] { rule1, rule2, rule3 };
+    }
+
+    @Test
+    public void testRemoveChildLeftTupleThatWasFirst() {
+        String[] rules = getRules3Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        LeftTuple lt = fh1.getFirstLeftTuple().getFirstChild().getFirstChild();
+        assertSame(lt, fh1.getFirstLeftTuple().getFirstChild().getLastChild());
+        assertNull( lt.getPeer() );
+        assertEquals( 1, lt.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+    }
+
+    @Test
+    public void testRemoveChildLeftTupleThatWasLast() {
+        String[] rules = getRules3Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE2_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        LeftTuple lt = fh1.getFirstLeftTuple().getFirstChild().getFirstChild();
+        assertSame(lt, fh1.getFirstLeftTuple().getFirstChild().getLastChild());
+
+        assertNull( lt.getPeer() );
+        assertEquals( 1, lt.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+    }
+
+    @Test
+    public void testRemoveChildLeftTupleThatWasMiddle() {
+        String[] rules = getRules3Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1], rules[2]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME, RULE3_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE2_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        LeftTuple lt = fh1.getFirstLeftTuple().getFirstChild();
+        assertSame(lt, fh1.getFirstLeftTuple().getLastChild());
+        assertEquals( 1, lt.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+
+        LeftTuple peer = lt.getPeer();
+        assertEquals( 1, peer.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( peer.getTupleSink().isAssociatedWith(rulesMap.get(RULE3_NAME)));
+    }
+
+    @Test
+    public void testRemoveChildLeftTupleThatWasFirstWithMultipleData() {
+        String[] rules = getRules3Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3, 4, 5})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE1_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        InternalFactHandle  fh2 = (InternalFactHandle) ksession.getFactHandle(4);
+        InternalFactHandle  fh3 = (InternalFactHandle) ksession.getFactHandle(5);
+        LeftTuple lt1 = fh1.getFirstLeftTuple();
+
+        LeftTuple lt1_1 = lt1.getFirstChild();
+        LeftTuple lt1_2 = lt1_1.getHandleNext();
+        LeftTuple lt1_3= lt1_2.getHandleNext();
+        assertNotNull( lt1_1 );
+        assertNotNull( lt1_2 );
+        assertNotNull( lt1_3 );
+        assertSame(lt1_3, lt1.getLastChild());
+
+        assertSame(lt1_2, lt1_3.getHandlePrevious() );
+        assertSame(lt1_1, lt1_2.getHandlePrevious() );
+
+        assertEquals( 1, lt1_1.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt1_1.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+        assertNull( lt1_1.getPeer() );
+
+        assertEquals( 1, lt1_2.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt1_2.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+        assertNull( lt1_2.getPeer() );
+
+        assertEquals( 1, lt1_3.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt1_3.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+        assertNull( lt1_3.getPeer() );
+
+
+        RightTuple rt1 = fh3.getFirstRightTuple();
+        LeftTuple rt1_1 = rt1.getLastChild();
+        assertSame( lt1_1, rt1_1);
+
+        LeftTuple rt1_2 = rt1_1.getRightParentPrevious();
+        LeftTuple rt1_3 = rt1_2.getRightParentPrevious();
+
+        assertNotNull( rt1_1 );
+        assertNotNull( rt1_2 );
+        assertNotNull( rt1_3 );
+
+        assertSame(rt1_2, rt1_3.getRightParentNext() );
+        assertSame(rt1_1, rt1_2.getRightParentNext() );
+
+        assertEquals( 1, rt1_1.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( rt1_1.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+        assertNull( rt1_1.getPeer() );
+
+        assertEquals( 1, rt1_2.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( rt1_2.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+        assertNull( rt1_2.getPeer() );
+
+        assertEquals( 1, rt1_3.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( rt1_3.getTupleSink().isAssociatedWith(rulesMap.get(RULE2_NAME)));
+        assertNull( rt1_3.getPeer() );
+    }
+
+    @Test
+    public void testRemoveChildLeftTupleThatWasLastWithMultipleData() {
+        String[] rules = getRules3Pattern();
+
+        AddRemoveTestBuilder builder = new AddRemoveTestBuilder();
+        builder.addOperation(TestOperationType.CREATE_SESSION, new String[]{rules[0], rules[1]})
+               .addOperation(TestOperationType.INSERT_FACTS, new Object[] {3, 4, 5})
+               .addOperation(TestOperationType.FIRE_RULES)
+               .addOperation(TestOperationType.CHECK_RESULTS, new String[]{RULE1_NAME, RULE2_NAME})
+               .addOperation(TestOperationType.REMOVE_RULES, new String[]{RULE2_NAME})
+               .addOperation(TestOperationType.FIRE_RULES);
+
+        final Map<String, Object> additionalGlobals = new HashMap<String, Object>();
+
+        StatefulKnowledgeSession ksession = runAddRemoveTest(builder.build(), additionalGlobals);
+        Map<String, Rule>        rulesMap = rulestoMap(ksession.getKieBase());
+
+        InternalFactHandle  fh1 = (InternalFactHandle) ksession.getFactHandle(3);
+        InternalFactHandle  fh2 = (InternalFactHandle) ksession.getFactHandle(4);
+        InternalFactHandle  fh3 = (InternalFactHandle) ksession.getFactHandle(5);
+        LeftTuple lt1 = fh1.getFirstLeftTuple();
+
+        LeftTuple lt1_1 = lt1.getFirstChild();
+        LeftTuple lt1_2 = lt1_1.getHandleNext();
+        LeftTuple lt1_3= lt1_2.getHandleNext();
+        assertNotNull( lt1_1 );
+        assertNotNull( lt1_2 );
+        assertNotNull( lt1_3 );
+        assertSame(lt1_3, lt1.getLastChild());
+
+        assertSame(lt1_2, lt1_3.getHandlePrevious() );
+        assertSame(lt1_1, lt1_2.getHandlePrevious() );
+
+        assertEquals( 1, lt1_1.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt1_1.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+        assertNull( lt1_1.getPeer() );
+
+        assertEquals( 1, lt1_2.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt1_2.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+        assertNull( lt1_2.getPeer() );
+
+        assertEquals( 1, lt1_3.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( lt1_3.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+        assertNull( lt1_3.getPeer() );
+
+
+        RightTuple rt1 = fh3.getFirstRightTuple();
+        LeftTuple rt1_1 = rt1.getLastChild();
+        assertSame( lt1_1, rt1_1);
+
+        LeftTuple rt1_2 = rt1_1.getRightParentPrevious();
+        LeftTuple rt1_3 = rt1_2.getRightParentPrevious();
+
+        assertNotNull( rt1_1 );
+        assertNotNull( rt1_2 );
+        assertNotNull( rt1_3 );
+
+        assertSame(rt1_2, rt1_3.getRightParentNext() );
+        assertSame(rt1_1, rt1_2.getRightParentNext() );
+
+        assertEquals( 1, rt1_1.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( rt1_1.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+        assertNull( rt1_1.getPeer() );
+
+        assertEquals( 1, rt1_2.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( rt1_2.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+        assertNull( rt1_2.getPeer() );
+
+        assertEquals( 1, rt1_3.getTupleSink().getAssociatedRuleSize() );
+        assertTrue( rt1_3.getTupleSink().isAssociatedWith(rulesMap.get(RULE1_NAME)));
+        assertNull( rt1_3.getPeer() );
     }
 
     private void testRemoveWithSplitStartBasicTestSet(final String rule1, final String rule2,
