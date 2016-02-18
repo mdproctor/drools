@@ -102,7 +102,9 @@ public class AddRemoveRule {
             }
         }
 
-        insertFacts(pathEndNodes, wms);
+        if (hasWms) {
+            insertFacts( pathEndNodes, wms );
+        }
     }
 
     /**
@@ -624,15 +626,11 @@ public class AddRemoveRule {
     }
 
     private static void insertFacts(PathEndNodes endNodes, InternalWorkingMemory[] wms) {
-        int index = 0;
-        if ( endNodes.subjectSplit != null ) {
-            index = endNodes.subjectSplit.getPositionInPath() + 1; // must be +1 otherwise it will propagate existing data, as subjectSplit is the split node in the existing network
-        }
         Set<LeftTupleNode> visited = new HashSet<LeftTupleNode>();
 
         for ( PathEndNode endNode : endNodes.subjectEndNodes ) {
             LeftTupleNode[]  nodes = endNode.getPathNodes();
-            for ( int i = nodes.length-1; i >= index; i-- ) {
+            for ( int i = nodes.length-1; i >= 0 && nodes[i].getAssociatedRuleSize() == 1; i-- ) {
                 LeftTupleNode node = nodes[i];
                 if  ( NodeTypeEnums.isBetaNode(node)  ) {
                     if (!visited.add( node )) {
