@@ -379,6 +379,9 @@ public class AddRemoveRule {
 
 
     private static void addNewPaths(InternalWorkingMemory wm, Set<SegmentMemory> smemsToNotify, List<PathMemory> pmems) {
+        // Multiple paths may be renetrant, in the case of a second subnetwork on the same rule.
+        // Must make sure we don't duplicate the child smem, and when found, just update it with new pmem.
+        Set<LeftTupleNode> visited = new HashSet<LeftTupleNode>();
         for (PathMemory pmem : pmems) {
             LeftTupleSink tipNode = (LeftTupleSink) pmem.getPathEndNode();
 
@@ -387,7 +390,7 @@ public class AddRemoveRule {
 
             SegmentMemory[] smems = pmem.getSegmentMemories();
             while (true) {
-                if (parent != null && parent.getAssociatedRuleSize() != 1 && child.getAssociatedRuleSize() == 1) {
+                if (parent != null && parent.getAssociatedRuleSize() != 1 && child.getAssociatedRuleSize() == 1 && !visited.add(parent)) {
                     // This is the split point that the new path enters an existing path.
                     // If the parent has other child SegmentMemorys then it must create a new child SegmentMemory
                     // If the parent is a query node, then it's internal data structure needs changing

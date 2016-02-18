@@ -626,7 +626,7 @@ public class AddRemoveRulesAdvOperatorsTest extends AbstractAddRemoveRulesTest {
         runAddRemoveTest(builder.build(), additionalGlobals);
     }
 
-    @Test(timeout = 10000L)
+    @Test() //(timeout = 10000L)
     public void testAddRemoveRuleContainsExists3RulesDoubledExists() {
         final String rule1 = "package " + PKG_NAME_TEST + ";" +
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
