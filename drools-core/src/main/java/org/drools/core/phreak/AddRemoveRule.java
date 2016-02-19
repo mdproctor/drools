@@ -390,32 +390,39 @@ public class AddRemoveRule {
 
             SegmentMemory[] smems = pmem.getSegmentMemories();
             while (true) {
-                if (parent != null && parent.getAssociatedRuleSize() != 1 && child.getAssociatedRuleSize() == 1 && !visited.add(parent)) {
-                    // This is the split point that the new path enters an existing path.
-                    // If the parent has other child SegmentMemorys then it must create a new child SegmentMemory
-                    // If the parent is a query node, then it's internal data structure needs changing
-                    // all right input data must be propagated
-                    Memory mem = wm.getNodeMemories().peekNodeMemory(parent.getId());
-                    if (mem != null && mem.getSegmentMemory() != null) {
-                        SegmentMemory sm = mem.getSegmentMemory();
-                        if (sm.getFirst() != null) {
-                            SegmentMemory childSmem = SegmentUtilities.createChildSegment(wm, child);
-                            sm.add(childSmem);
-                            smems[childSmem.getPos()] = childSmem;
-                            smemsToNotify.add(childSmem);
+                if (visited.add(child)) {
+                    if ( parent != null && parent.getAssociatedRuleSize() != 1 && child.getAssociatedRuleSize() == 1 ) {
+                        // This is the split point that the new path enters an existing path.
+                        // If the parent has other child SegmentMemorys then it must create a new child SegmentMemory
+                        // If the parent is a query node, then it's internal data structure needs changing
+                        // all right input data must be propagated
+                        Memory mem = wm.getNodeMemories().peekNodeMemory( parent.getId() );
+                        if ( mem != null && mem.getSegmentMemory() != null ) {
+                            SegmentMemory sm = mem.getSegmentMemory();
+                            if ( sm.getFirst() != null ) {
+                                SegmentMemory childSmem = SegmentUtilities.createChildSegment( wm, child );
+                                sm.add( childSmem );
+                                smems[childSmem.getPos()] = childSmem;
+                                smemsToNotify.add( childSmem );
+                            }
+                            correctMemoryOnSplitsChanged( parent, null, wm );
                         }
-                        correctMemoryOnSplitsChanged(parent, null, wm);
+                    } else {
+                        Memory mem = wm.getNodeMemories().peekNodeMemory( child.getId() );
+                        // The root of each segment
+                        if ( mem != null ) {
+                            SegmentMemory sm = mem.getSegmentMemory();
+                            if ( sm != null && !sm.getPathMemories().contains( pmem ) ) {
+                                sm.addPathMemory( pmem );
+                                pmem.setSegmentMemory( sm.getPos(), sm );
+                                sm.notifyRuleLinkSegment( wm, pmem );
+                            }
+                        }
                     }
                 } else {
-                    Memory mem = wm.getNodeMemories().peekNodeMemory(child.getId());
-                    // The root of each segment
-                    if (mem != null) {
-                        SegmentMemory sm = mem.getSegmentMemory();
-                        if (sm != null && !sm.getPathMemories().contains( pmem )) {
-                            sm.addPathMemory( pmem );
-                            pmem.setSegmentMemory( sm.getPos(), sm );
-                            sm.notifyRuleLinkSegment( wm, pmem );
-                        }
+                    Memory mem = wm.getNodeMemories().peekNodeMemory( child.getId() );
+                    if ( mem != null ) {
+                        mem.getSegmentMemory().notifyRuleLinkSegment( wm, pmem );
                     }
                 }
 
