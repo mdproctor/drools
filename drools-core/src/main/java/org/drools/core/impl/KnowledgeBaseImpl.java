@@ -706,6 +706,7 @@ public class KnowledgeBaseImpl
             @Override
             public void run() {
                 internalAddPackages(clonedPkgs);
+                reteooBuilder.initRules();
             }
         });
     }
@@ -1199,7 +1200,7 @@ public class KnowledgeBaseImpl
         for (Rule newRule : newPkg.getRules()) {
             // remove the rule if it already exists
             if (pkg.getRule(newRule.getName()) != null) {
-                removeRule( pkg, pkg.getRule(newRule.getName()) );
+                removeRule( pkg.getName(), newRule.getName() );
             }
 
             pkg.addRule((RuleImpl)newRule);
@@ -1246,9 +1247,10 @@ public class KnowledgeBaseImpl
                                                              this.getConfiguration().isMultithreadEvaluation(),
                                                              this.rete,
                                                              EntryPointId.DEFAULT);
-        epn.attach();
 
         BuildContext context = new BuildContext(this, reteooBuilder.getIdGenerator());
+        epn.attach(context);
+
         context.setCurrentEntryPoint(epn.getEntryPoint());
         context.setTupleMemoryEnabled(true);
         context.setObjectTypeNodeMemoryEnabled(true);
@@ -1598,24 +1600,7 @@ public class KnowledgeBaseImpl
         enqueueModification(new Runnable() {
             @Override
             public void run() {
-                final InternalKnowledgePackage pkg = pkgs.get( packageName );
-                if (pkg == null) {
-                    throw new IllegalArgumentException( "Package name '" + packageName +
-                                                        "' does not exist for this Rule Base." );
-                }
-
-                RuleImpl rule = pkg.getRule( ruleName );
-                if (rule == null) {
-                    throw new IllegalArgumentException( "Rule name '" + ruleName +
-                                                        "' does not exist in the Package '" +
-                                                        packageName +
-                                                        "'." );
-                }
-
-                internalRemoveRule(pkg, rule);
-
-                pkg.removeRule( rule );
-                addReloadDialectDatas( pkg.getDialectRuntimeRegistry() );
+                internalRemoveRule(packageName, ruleName);
             }
         });
     }
@@ -1634,12 +1619,35 @@ public class KnowledgeBaseImpl
         });
     }
 
+    public void internalRemoveRule(String pkgName, String ruleName) {
+        final InternalKnowledgePackage pkg = pkgs.get( pkgName );
+
+        if (pkg == null) {
+            throw new IllegalArgumentException( "Package name '" + pkgName +
+                                                "' does not exist for this Rule Base." );
+        }
+
+        RuleImpl rule = pkg.getRule( ruleName );
+        if (rule == null) {
+            throw new IllegalArgumentException( "Rule name '" + ruleName +
+                                                "' does not exist in the Package '" +
+                                                pkgName +
+                                                "'." );
+        }
+
+        internalRemoveRule(pkg, rule);
+    }
+
     private void internalRemoveRule(InternalKnowledgePackage pkg, RuleImpl rule) {
         this.eventSupport.fireBeforeRuleRemoved(pkg, rule);
         this.reteooBuilder.removeRule(rule);
+
+
+        pkg.removeRule( rule );
+        addReloadDialectDatas( pkg.getDialectRuntimeRegistry() );
+
         this.eventSupport.fireAfterRuleRemoved(pkg, rule);
     }
-
     public void removeFunction( final String packageName,
                                 final String functionName ) {
         lock();
@@ -1851,22 +1859,35 @@ public class KnowledgeBaseImpl
 
     public boolean removeObjectsGeneratedFromResource(Resource resource) {
         boolean modified = false;
-        for (InternalKnowledgePackage pkg : pkgs.values()) {
-            List<RuleImpl> rulesToBeRemoved = pkg.removeRulesGeneratedFromResource(resource);
-            for (RuleImpl rule : rulesToBeRemoved) {
-                this.reteooBuilder.removeRule(rule);
+        try {
+            boolean rulesRemoved = false;
+            for (InternalKnowledgePackage pkg : pkgs.values()) {
+                List<RuleImpl> rulesToBeRemoved = pkg.removeRulesGeneratedFromResource(resource);
+                rulesRemoved = !rulesToBeRemoved.isEmpty();
+                for (RuleImpl rule : rulesToBeRemoved) {
+                    internalRemoveRule(pkg.getName(), rule.getName());
+                }
+                List<Function> functionsToBeRemoved = pkg.removeFunctionsGeneratedFromResource(resource);
+                for (Function function : functionsToBeRemoved) {
+                    removeFunction(pkg.getName(), function.getName());
+                }
+                List<Process> processesToBeRemoved = pkg.removeProcessesGeneratedFromResource(resource);
+                for (Process process : processesToBeRemoved) {
+                    removeProcess(process);
+                }
+                List<TypeDeclaration> removedTypes = pkg.removeTypesGeneratedFromResource(resource);
+                modified |= !rulesToBeRemoved.isEmpty() || !functionsToBeRemoved.isEmpty() || !processesToBeRemoved.isEmpty() || !removedTypes.isEmpty();
             }
-            List<Function> functionsToBeRemoved = pkg.removeFunctionsGeneratedFromResource(resource);
-            for (Function function : functionsToBeRemoved) {
-                removeFunction(function.getName());
+            if ( rulesRemoved ) {
+                reteooBuilder.initRules();
             }
-            List<Process> processesToBeRemoved = pkg.removeProcessesGeneratedFromResource(resource);
-            for (Process process : processesToBeRemoved) {
-                processes.remove(process.getId());
-            }
-            List<TypeDeclaration> removedTypes = pkg.removeTypesGeneratedFromResource(resource);
-            modified |= !rulesToBeRemoved.isEmpty() || !functionsToBeRemoved.isEmpty() || !processesToBeRemoved.isEmpty() || !removedTypes.isEmpty();
+        } finally {
+            unlock();
         }
         return modified;
+    }
+
+    private void removeProcess(Process process) {
+        processes.remove(process.getId());
     }
 }

@@ -405,7 +405,7 @@ public class FromNode<T extends FromNode.FromMemory> extends LeftTupleSource
         throw new UnsupportedOperationException();
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         betaConstraints.init(context, getType());
         this.leftInput.addTupleSink( this, context );
     }

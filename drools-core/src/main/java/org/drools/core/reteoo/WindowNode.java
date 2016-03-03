@@ -144,7 +144,7 @@ public class WindowNode extends ObjectSource
         return behavior.getBehaviors();
     }
 
-    public void attach(BuildContext context) {
+    public void doAttach(BuildContext context) {
         this.source.addObjectSink(this);
         if (context == null || context.getKnowledgeBase().getConfiguration().isPhreakEnabled()) {
             return;

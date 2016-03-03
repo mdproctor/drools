@@ -159,9 +159,9 @@ public class AccumulateNode extends BetaNode {
     }
 
     @Override
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.resultBinder.init( context, getType() );
-        super.attach( context );
+        super.doAttach( context );
     }
 
     protected int calculateHashCode() {

@@ -21,4 +21,12 @@ public interface PathEndNode extends LeftTupleNode {
 
     void setPathEndNodes(PathEndNode[] pathEndNodes);
     PathEndNode[] getPathEndNodes();
+
+    public void setSegmentSize(int size);
+
+    public int getSegmentSize();
+
+    public void setAllLinkedMaskTest(long allLinkedMaskTest);
+
+    public long getAllLinkedMaskTest();
 }

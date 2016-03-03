@@ -108,8 +108,6 @@ public class RuleExecutionSetImpl
         config.getComponentFactory().setHandleFactoryProvider(new Jsr94FactHandleFactory());
         kBase = (InternalKnowledgeBase) KnowledgeBaseFactory.newKnowledgeBase(config);
         kBase.addPackage( pkg );
-
-        this.kBase = kBase;
     }
 
     /**

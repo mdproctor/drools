@@ -33,6 +33,7 @@ import org.kie.api.runtime.rule.Operator;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 import java.util.List;
 
 import static org.drools.core.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
@@ -121,9 +122,9 @@ public class AlphaNode extends ObjectSource
         return NodeTypeEnums.AlphaNode;
     }
 
-    public void attach(BuildContext context) {
-        this.source.addObjectSink(this);
-    }
+    public void doAttach(BuildContext context) {
+        this.source.addObjectSink( this );
+    }   
 
     public void assertObject(final InternalFactHandle factHandle,
                              final PropagationContext context,
@@ -321,6 +322,11 @@ public class AlphaNode extends ObjectSource
 
         public int nodeHashCode() {
             return this.hashCode();
+        }
+
+        @Override
+        public Collection<Rule> getAssociatedRules() {
+            return sink.getAssociatedRules();
         }
     }
 

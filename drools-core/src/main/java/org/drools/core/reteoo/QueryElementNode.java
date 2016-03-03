@@ -55,6 +55,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class QueryElementNode extends LeftTupleSource
     implements
@@ -688,16 +689,16 @@ public class QueryElementNode extends LeftTupleSource
             return resultLeftTuples;
         }
 
-        public void correctMemoryOnSinksChanged(Rule removingRule) {
+        public void correctMemoryOnSinksChanged(Set<Rule> removingRules) {
             if (resultLeftTuples instanceof QueryTupleSets ) {
-                if (!SegmentUtilities.isTipNode( node, removingRule )) {
+                if (!SegmentUtilities.isTipNode( node, removingRules )) {
                     // a sink has been removed and now there is no longer a split
                     TupleSetsImpl<LeftTuple> newTupleSets = new TupleSetsImpl<LeftTuple>();
                     this.resultLeftTuples.addTo( newTupleSets );
                     this.resultLeftTuples = newTupleSets;
                 }
             } else {
-                if (SegmentUtilities.isTipNode( node, removingRule )) {
+                if (SegmentUtilities.isTipNode( node, removingRules )) {
                     // a sink has been added and now there is a split
                     TupleSetsImpl<LeftTuple> newTupleSets = new QueryTupleSets();
                     this.resultLeftTuples.addTo( newTupleSets );
@@ -846,7 +847,7 @@ public class QueryElementNode extends LeftTupleSource
         throw new UnsupportedOperationException();
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.leftInput.addTupleSink( this, context );
     }
 

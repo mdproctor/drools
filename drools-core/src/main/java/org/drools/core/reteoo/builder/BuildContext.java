@@ -502,4 +502,6 @@ public class BuildContext {
     public void setConsequenceName( String consequenceName ) {
         this.consequenceName = consequenceName;
     }
+
+
 }

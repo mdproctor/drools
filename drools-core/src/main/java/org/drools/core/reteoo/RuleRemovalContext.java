@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
+import java.util.Set;
 
 import org.drools.core.impl.InternalKnowledgeBase;
 import org.kie.api.definition.rule.Rule;
@@ -43,8 +44,9 @@ public class RuleRemovalContext
 
     private InternalKnowledgeBase kBase;
 
-    public RuleRemovalContext(final Rule rule) {
+    public RuleRemovalContext(final InternalKnowledgeBase kBase, final Rule rule) {
         this.rule = rule;
+        this.kBase = kBase;
     }
 
     public void readExternal(ObjectInput in) throws IOException,

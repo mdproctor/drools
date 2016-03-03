@@ -73,20 +73,7 @@ import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.phreak.SegmentUtilities;
 import org.drools.core.phreak.SynchronizedBypassPropagationList;
 import org.drools.core.phreak.SynchronizedPropagationList;
-import org.drools.core.reteoo.ClassObjectTypeConf;
-import org.drools.core.reteoo.EntryPointNode;
-import org.drools.core.reteoo.InitialFactImpl;
-import org.drools.core.reteoo.LeftInputAdapterNode;
-import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.NodeTypeEnums;
-import org.drools.core.reteoo.ObjectTypeConf;
-import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.PathMemory;
-import org.drools.core.reteoo.QueryTerminalNode;
-import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.core.reteoo.SegmentMemory;
-import org.drools.core.reteoo.TerminalNode;
+import org.drools.core.reteoo.*;
 import org.drools.core.rule.Declaration;
 import org.drools.core.rule.EntryPointId;
 import org.drools.core.runtime.impl.ExecutionResultImpl;
@@ -801,11 +788,11 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
                                                                                  null, null, handle, getEntryPoint());
 
 
-            BaseNode[] tnodes = evalQuery(queryName, queryObject, handle, pCtx);
+            PathEndNode[] tnodes = evalQuery(queryName, queryObject, handle, pCtx);
 
             List<Map<String, Declaration>> decls = new ArrayList<Map<String, Declaration>>();
             if ( tnodes != null ) {
-                for ( BaseNode node : tnodes ) {
+                for ( PathEndNode node : tnodes ) {
                     decls.add( ((QueryTerminalNode) node).getSubRule().getOuterDeclarations() );
                 }
             }
@@ -870,11 +857,11 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
         }
     }
 
-    protected BaseNode[] evalQuery(final String queryName, final DroolsQuery queryObject, final InternalFactHandle handle, final PropagationContext pCtx) {
-        return agenda.executeCallable( new Callable<BaseNode[]>() {
+    protected PathEndNode[] evalQuery(final String queryName, final DroolsQuery queryObject, final InternalFactHandle handle, final PropagationContext pCtx) {
+        return agenda.executeCallable( new Callable<PathEndNode[]>() {
             @Override
-            public BaseNode[] call() throws Exception {
-                BaseNode[] tnodes = kBase.getReteooBuilder().getTerminalNodesForQuery( queryName );
+            public PathEndNode[] call() throws Exception {
+                PathEndNode[] tnodes = kBase.getReteooBuilder().getTerminalNodesForQuery( queryName );
                 if ( tnodes == null ) {
                     throw new RuntimeException( "Query '" + queryName + "' does not exist" );
                 }

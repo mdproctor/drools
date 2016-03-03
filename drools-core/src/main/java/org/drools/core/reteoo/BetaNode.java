@@ -487,7 +487,7 @@ public abstract class BetaNode extends LeftTupleSource
         return objectTypeNode;
     }
 
-    public void attach(BuildContext context) {
+    public void doAttach(BuildContext context) {
         constraints.init(context, getType());
         setUnificationJoin();
 
@@ -551,7 +551,8 @@ public abstract class BetaNode extends LeftTupleSource
         if (rightListenedProperties != null) {
             hash += 41 * rightListenedProperties.hashCode();
         }
-        return hash + (rightInputIsPassive ? 43 : 0);
+
+        return hash;
     }
 
     @Override

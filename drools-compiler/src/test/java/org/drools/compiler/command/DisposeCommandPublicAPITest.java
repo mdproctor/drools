@@ -47,10 +47,10 @@ public class DisposeCommandPublicAPITest {
 
         kBase.addPackage(pkg);
         KieSession session = kBase.newKieSession();
-        Command dispose = KieServices.Factory.get().getCommands().newDispose();
-        session.insert("whatever");
-        session.fireAllRules();
-        session.execute(dispose);
+//        Command dispose = KieServices.Factory.get().getCommands().newDispose();
+//        session.insert("whatever");
+//        session.fireAllRules();
+//        session.execute(dispose);
         try {
             session.insert("whatever");
         } catch (Exception e) {

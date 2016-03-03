@@ -165,7 +165,7 @@ public class Rete extends ObjectSource
         return false;
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         throw new UnsupportedOperationException( "cannot call attach() from the root Rete node" );
     }
 

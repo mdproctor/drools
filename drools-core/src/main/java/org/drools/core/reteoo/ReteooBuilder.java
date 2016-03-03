@@ -24,8 +24,10 @@ import org.drools.core.common.MemoryFactory;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.InternalKnowledgeBase;
 import org.drools.core.phreak.AddRemoveRule;
+import org.drools.core.reteoo.builder.ReteooRuleBuilder;
 import org.drools.core.rule.InvalidPatternException;
 import org.drools.core.rule.WindowDeclaration;
+import org.kie.api.definition.rule.Query;
 import org.kie.api.definition.rule.Rule;
 
 import java.io.ByteArrayInputStream;
@@ -34,14 +36,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Builds the Rete-OO network for a <code>Package</code>.
@@ -57,23 +52,26 @@ public class ReteooBuilder
     private static final long           serialVersionUID = 510l;
 
     /** The RuleBase */
-    private transient InternalKnowledgeBase  kBase;
+    private transient InternalKnowledgeBase kBase;
 
-    private Map<String, BaseNode[]>     rules;
-    private Map<String, BaseNode[]>     queries;
+    private Map<String, PathEndNode[]>      rules;
+    private Map<String, PathEndNode[]>      queries;
 
-    private Map<String, WindowNode>     namedWindows;
+    private Map<String, WindowNode>         namedWindows;
 
-    private transient RuleBuilder       ruleBuilder;
+    private transient RuleBuilder        ruleBuilder;
 
-    private IdGenerator                 idGenerator;
+    private IdGenerator                  idGenerator;
+
+    Set<Rule> removingRules;
+    Set<Rule> addingRules;
+
 
     // ------------------------------------------------------------
     // Constructors
     // ------------------------------------------------------------
 
     public ReteooBuilder() {
-
     }
 
     /**
@@ -82,18 +80,80 @@ public class ReteooBuilder
      */
     public ReteooBuilder( final InternalKnowledgeBase  kBase ) {
         this.kBase = kBase;
-        this.rules = new HashMap<String, BaseNode[]>();
-        this.queries = new HashMap<String, BaseNode[]>();
+        this.rules = new HashMap<String, PathEndNode[]>();
+        this.queries = new HashMap<String, PathEndNode[]>();
         this.namedWindows = new HashMap<String, WindowNode>();
+        initTransient();
 
         //Set to 1 as Rete node is set to 0
         this.idGenerator = new IdGenerator( 1 );
         this.ruleBuilder = kBase.getConfiguration().getComponentFactory().getRuleBuilderFactory().newRuleBuilder();
     }
 
+    private void initTransient() {
+        Set<Rule> removingRules = new HashSet<Rule>();
+        Set<Rule> addingRules = new HashSet<Rule>();
+
+    }
+
+
+    public void writeExternal(ObjectOutput out) throws IOException {
+        boolean isDrools = out instanceof DroolsObjectOutputStream;
+        DroolsObjectOutputStream droolsStream;
+        ByteArrayOutputStream bytes;
+
+        if ( isDrools ) {
+            bytes = null;
+            droolsStream = (DroolsObjectOutputStream) out;
+        } else {
+            bytes = new ByteArrayOutputStream();
+            droolsStream = new DroolsObjectOutputStream( bytes );
+        }
+        droolsStream.writeObject( rules );
+        droolsStream.writeObject( queries );
+        droolsStream.writeObject( namedWindows );
+        droolsStream.writeObject( idGenerator );
+        if ( !isDrools ) {
+            droolsStream.flush();
+            droolsStream.close();
+            bytes.close();
+            out.writeInt( bytes.size() );
+            out.writeObject( bytes.toByteArray() );
+        }
+    }
+
+    public void readExternal(ObjectInput in) throws IOException,
+            ClassNotFoundException {
+        boolean isDrools = in instanceof DroolsObjectInputStream;
+        DroolsObjectInputStream droolsStream;
+        ByteArrayInputStream bytes;
+
+        if ( isDrools ) {
+            bytes = null;
+            droolsStream = (DroolsObjectInputStream) in;
+        } else {
+            bytes = new ByteArrayInputStream( (byte[]) in.readObject() );
+            droolsStream = new DroolsObjectInputStream( bytes );
+        }
+
+        this.rules = (Map<String, PathEndNode[]>) droolsStream.readObject();
+        this.queries = (Map<String, PathEndNode[]>) droolsStream.readObject();
+        this.namedWindows = (Map<String, WindowNode>) droolsStream.readObject();
+        this.idGenerator = (IdGenerator) droolsStream.readObject();
+        if ( !isDrools ) {
+            droolsStream.close();
+            bytes.close();
+        }
+
+        initTransient();
+
+    }
+
     // ------------------------------------------------------------
     // Instance methods
     // ------------------------------------------------------------
+
+
 
     /**
      * Add a <code>Rule</code> to the network.
@@ -104,13 +164,125 @@ public class ReteooBuilder
      */
     public synchronized void addRule(final RuleImpl rule) throws InvalidPatternException {
         final List<TerminalNode> terminals = this.ruleBuilder.addRule( rule,
-                                                                       this.kBase,
-                                                                       this.idGenerator );
+                                                                       kBase,
+                                                                       idGenerator );
 
-        BaseNode[] nodes = terminals.toArray( new BaseNode[terminals.size()] );
+        PathEndNode[] nodes = terminals.toArray( new PathEndNode[terminals.size()] );
         this.rules.put( rule.getFullyQualifiedName(), nodes );
         if (rule.isQuery()) {
             this.queries.put( rule.getName(), nodes );
+        }
+    }
+
+    public void initRules() {
+        List<LeftTupleNode> subjectSplits = new ArrayList<LeftTupleNode>();
+
+        Map<Integer, LeftTupleNode> convergencePoints = new HashMap<Integer, LeftTupleNode>();
+        Map<Integer, LeftTupleNode> convergencePaths = new HashMap<Integer, LeftTupleNode>();
+        if (kBase.getConfiguration().isPhreakEnabled()) {
+            for ( Rule rule : addingRules ) {
+                for (PathEndNode tn : rules.get(((RuleImpl)rule).getFullyQualifiedName())) {
+                    AddRemoveRule.getConvergence(tn, convergencePaths, convergencePoints);
+                }
+            }
+        }
+
+
+        for ( LeftTupleNode convergencePoint :  convergencePoints.values() ) {
+            Collection<Rule> rules = convergencePoint.getAssociatedRules();
+            for ( Rule rule : rules ) {
+                //initPaths(rule, convergencePoint, null, addingRules, subjectSplits);
+            }
+        }
+
+
+        //PathEndNode[] pnodes = rtn.getPathEndNodes();
+//                LeftTupleNode ltn = pnodes[0];
+//                while( ltn != null ) {
+//                    ltn = ltn.getLeftTupleSource();
+//                }
+
+        //AddRemoveRule.addRule(rtn,  kBase.getWorkingMemories(), kBase);
+
+
+//
+//        Set<Rule> stillToAdd = new HashSet<Rule>();
+//        stillToAdd.addAll(addedRules);
+//
+//
+//        Set<PathEndNode> visited = new HashSet<PathEndNode>();
+//        for ( LeftTupleNode splitNode : addedSplits ) {
+//            for ( Rule rule : splitNode.getAssociatedRules() ) {
+//                if ( removedRules.contains(rule)) {
+//                    // don't update the paths of rules being removed
+//                    continue;
+//                }
+//                addedRules.remove(rule); // we don't want to process this twice
+//
+//                initPaths((RuleImpl)rule, splitNode,visited);
+//            }
+//        }
+//
+//        for ( LeftTupleNode splitNode : removedSplits ) {
+//            for ( Rule rule : splitNode.getAssociatedRules() ) {
+//                if ( removedRules.contains(rule)) {
+//                    // don't update the paths of rules being removed
+//                    continue;
+//                }
+//                addedRules.remove(rule); // we don't want to process this twice
+//
+//                initPaths((RuleImpl)rule, splitNode,visited);
+//            }
+//        }
+//
+//        for ( Rule rule : stillToAdd ) {
+//            initPaths((RuleImpl)rule, visited);
+//        }
+
+    }
+//
+//    public static class SplitIndexEntry {
+//        List<LeftTupleNode> list = new ArrayList<LeftTupleNode>();
+//
+//    }
+//
+//    private Map<Integer, Integer> splitIndex = new HashMap<Integer, Integer>();
+//
+//    private void buildSplitIndex() {
+//        for ( LeftTupleNode splitNode : addedSplits ) {
+//            for ( LeftTupleNode parent = splitNode.getLeftTupleSource(); parent != null; parent = parent.getLeftTupleSource() ) {
+//                splitIndex.put(parent.getId(), null);
+//            }
+//        }
+//    }
+//
+//    private void initPaths(RuleImpl rule, Set<PathEndNode> visited) {
+//        initPaths(rule, null, visited);
+//    }
+//
+    private void initPaths(Rule rule, LeftTupleNode convergenceNode, Set<Rule> removingRules, Set<Rule> addingRules, List<LeftTupleNode> subjectSplits, List<PathEndNode> pathEnds) {
+        PathEndNode[] rtnNodes = rules.get(((RuleImpl)rule).getFullyQualifiedName());
+        initPaths(rtnNodes, convergenceNode, removingRules, addingRules, subjectSplits, pathEnds);
+    }
+
+    public static void initPaths( PathEndNode[] rtnNodes, LeftTupleNode convergenceNode, Set<Rule> removingRules, Set<Rule> addingRules, List<LeftTupleNode> subjectSplits, List<PathEndNode> pathEnds) {
+        for ( PathEndNode rtnNode : rtnNodes ) {
+            PathEndNode[] endNodes = rtnNode.getPathEndNodes();
+            for ( int i = endNodes.length-1; i >= 0; i--) {
+                // must initialize from the outer most subnetwork first, going inwards only. i.e. from the graph visual of right to left
+                PathEndNode   endNode = endNodes[i];
+
+                // Ensure only descendant PathEndNodes are processed, i.e. those impacted by the convergenceNode.
+                // If their descendant splits, this work subsumes those, and they need to be skipped
+                if ( convergenceNode.getPositionInPath() < endNode.getPathNodes().length && endNode.getPathNodes()[convergenceNode.getPositionInPath()] == convergenceNode ) {
+                    LeftTupleNode startLeftTupleNode = null;
+                    if (endNode.getType() == NodeTypeEnums.RightInputAdaterNode) {
+                        startLeftTupleNode = ((RightInputAdapterNode) endNode).getStartTupleSource();
+                    }
+                    pathEnds.add( endNode );
+                    ReteooRuleBuilder.initPath(endNode, startLeftTupleNode, removingRules, addingRules, subjectSplits);
+                }
+            }
         }
     }
 
@@ -136,21 +308,19 @@ public class ReteooBuilder
     public IdGenerator getIdGenerator() {
         return this.idGenerator;
     }
-
-    public synchronized BaseNode[] getTerminalNodes(final RuleImpl rule) {
-        return getTerminalNodes( rule.getFullyQualifiedName() );
+    public synchronized PathEndNode[] getTerminalNodes(final String fullyQualifiedName) {
+        return this.rules.get( fullyQualifiedName );
     }
 
-    public synchronized BaseNode[] getTerminalNodes(final String ruleName) {
-        return this.rules.get( ruleName );
+    public synchronized PathEndNode[] getTerminalNodesForQuery(final String ruleName) {
+        PathEndNode[] nodes = this.queries.get( ruleName );
+        if ( nodes == null || nodes.length == 0 ) {
+            throw new  IllegalStateException("Defensive Programming: removed some logic that shouldn't happen, so added defensive check, until we are sure it can be removed (mdp)");
+        }
+        return nodes;
     }
 
-    public synchronized BaseNode[] getTerminalNodesForQuery(final String ruleName) {
-        BaseNode[] nodes = this.queries.get( ruleName );
-        return nodes != null ? nodes : getTerminalNodes(ruleName);
-    }
-
-    public synchronized Map<String, BaseNode[]> getTerminalNodes() {
+    public synchronized Map<String, PathEndNode[]> getTerminalNodes() {
         return this.rules;
     }
 
@@ -158,10 +328,10 @@ public class ReteooBuilder
         // reset working memories for potential propagation
         InternalWorkingMemory[] workingMemories = this.kBase.getWorkingMemories();
 
-        final RuleRemovalContext context = new RuleRemovalContext( rule );
+        final RuleRemovalContext context = new RuleRemovalContext( kBase, rule );
         context.setKnowledgeBase(kBase);
 
-        for (BaseNode node : rules.remove( rule.getFullyQualifiedName() )) {
+        for (PathEndNode node : rules.remove( rule.getFullyQualifiedName() )) {
             removeTerminalNode(context, (TerminalNode) node, workingMemories);
         }
 
@@ -410,56 +580,6 @@ public class ReteooBuilder
 
         public int getLastId() {
             return this.nextId - 1;
-        }
-
-    }
-
-    public void writeExternal(ObjectOutput out) throws IOException {
-        boolean isDrools = out instanceof DroolsObjectOutputStream;
-        DroolsObjectOutputStream droolsStream;
-        ByteArrayOutputStream bytes;
-
-        if ( isDrools ) {
-            bytes = null;
-            droolsStream = (DroolsObjectOutputStream) out;
-        } else {
-            bytes = new ByteArrayOutputStream();
-            droolsStream = new DroolsObjectOutputStream( bytes );
-        }
-        droolsStream.writeObject( rules );
-        droolsStream.writeObject( queries );
-        droolsStream.writeObject( namedWindows );
-        droolsStream.writeObject( idGenerator );
-        if ( !isDrools ) {
-            droolsStream.flush();
-            droolsStream.close();
-            bytes.close();
-            out.writeInt( bytes.size() );
-            out.writeObject( bytes.toByteArray() );
-        }
-    }
-
-    public void readExternal(ObjectInput in) throws IOException,
-                                                    ClassNotFoundException {
-        boolean isDrools = in instanceof DroolsObjectInputStream;
-        DroolsObjectInputStream droolsStream;
-        ByteArrayInputStream bytes;
-
-        if ( isDrools ) {
-            bytes = null;
-            droolsStream = (DroolsObjectInputStream) in;
-        } else {
-            bytes = new ByteArrayInputStream( (byte[]) in.readObject() );
-            droolsStream = new DroolsObjectInputStream( bytes );
-        }
-
-        this.rules = (Map<String, BaseNode[]>) droolsStream.readObject();
-        this.queries = (Map<String, BaseNode[]>) droolsStream.readObject();
-        this.namedWindows = (Map<String, WindowNode>) droolsStream.readObject();
-        this.idGenerator = (IdGenerator) droolsStream.readObject();
-        if ( !isDrools ) {
-            droolsStream.close();
-            bytes.close();
         }
 
     }

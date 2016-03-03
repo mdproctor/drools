@@ -16,22 +16,11 @@
 package org.drools.core.common;
 
 import org.drools.core.impl.InternalKnowledgeBase;
+import org.drools.core.reteoo.*;
 import org.drools.core.reteoo.AccumulateNode.AccumulateContext;
 import org.drools.core.reteoo.AccumulateNode.AccumulateMemory;
-import org.drools.core.reteoo.BetaMemory;
-import org.drools.core.reteoo.BetaNode;
 import org.drools.core.reteoo.FromNode.FromMemory;
-import org.drools.core.reteoo.LeftInputAdapterNode;
-import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.LeftTupleSink;
-import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.NodeTypeEnums;
-import org.drools.core.reteoo.ObjectSource;
-import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.ObjectTypeNode.ObjectTypeNodeMemory;
-import org.drools.core.reteoo.RightTuple;
-import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.core.reteoo.TupleMemory;
 import org.drools.core.spi.Tuple;
 import org.drools.core.util.FastIterator;
 import org.drools.core.util.Iterator;
@@ -85,10 +74,10 @@ public class PhreakActivationIterator
 
 
     public static List<RuleTerminalNode> populateRuleTerminalNodes(InternalKnowledgeBase kbase, Set<RuleTerminalNode>  nodeSet) {
-        Collection<BaseNode[]> nodesWithArray = kbase.getReteooBuilder().getTerminalNodes().values();
+        Collection<PathEndNode[]> nodesWithArray = kbase.getReteooBuilder().getTerminalNodes().values();
 
-        for (BaseNode[] nodeArray : nodesWithArray) {
-            for (BaseNode node : nodeArray) {
+        for (PathEndNode[] nodeArray : nodesWithArray) {
+            for (PathEndNode node : nodeArray) {
                 if (node.getType() == NodeTypeEnums.RuleTerminalNode) {
                     nodeSet.add((RuleTerminalNode) node);
                 }

@@ -117,7 +117,7 @@ public class PropagationQueuingNode extends ObjectSource
                                 workingMemory );
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.source.addObjectSink( this );
         // this node does not require update, so nothing else to do.
     }

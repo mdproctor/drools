@@ -104,7 +104,7 @@ public class QueryRiaFixerNode extends LeftTupleSource
         this.betaNode = (BetaNode) tupleSink;
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.leftInput.addTupleSink( this, context );
         if (context == null || context.getKnowledgeBase().getConfiguration().isPhreakEnabled() ) {
             return;

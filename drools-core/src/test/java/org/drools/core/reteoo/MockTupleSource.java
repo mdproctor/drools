@@ -57,7 +57,7 @@ public class MockTupleSource extends LeftTupleSource {
         return true;
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
     }
 
     @Override

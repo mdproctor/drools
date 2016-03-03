@@ -63,6 +63,10 @@ public class RightInputAdapterNode extends ObjectSource
 
     private transient PathEndNode[] pathEndNodes;
 
+    private int segmentSize;
+
+    private long allLinkedMaskTest;
+
     public RightInputAdapterNode() {
     }
 
@@ -107,6 +111,26 @@ public class RightInputAdapterNode extends ObjectSource
         out.writeObject( previousTupleSinkNode );
         out.writeObject( nextTupleSinkNode );
         out.writeObject( startTupleSource );
+    }
+
+    @Override
+    public void setSegmentSize(int size) {
+        this.segmentSize = size;
+    }
+
+    @Override
+    public int getSegmentSize() {
+        return segmentSize;
+    }
+
+    @Override
+    public void setAllLinkedMaskTest(long allLinkedMaskTest) {
+        this.allLinkedMaskTest = allLinkedMaskTest;
+    }
+
+    @Override
+    public long getAllLinkedMaskTest() {
+        return allLinkedMaskTest;
     }
 
     @Override
@@ -179,7 +203,7 @@ public class RightInputAdapterNode extends ObjectSource
         return handle;
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.tupleSource.addTupleSink( this, context );
         if (context == null || context.getKnowledgeBase().getConfiguration().isPhreakEnabled() ) {
             return;

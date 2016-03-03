@@ -19,6 +19,7 @@ package org.drools.core.common;
 import org.kie.api.definition.rule.Rule;
 
 import java.io.Externalizable;
+import java.util.Collection;
 
 /**
  * Interface used to expose generic information on Rete nodes outside of he package. It is used
@@ -55,6 +56,8 @@ public interface NetworkNode
     int getAssociationsSize( Rule rule );
 
     boolean isAssociatedWith( Rule rule );
+
+    Collection<Rule> getAssociatedRules();
 
     boolean thisNodeEquals(final Object object);
 }

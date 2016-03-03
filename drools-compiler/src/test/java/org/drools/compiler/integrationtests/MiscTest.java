@@ -9853,7 +9853,7 @@ import static org.mockito.Mockito.*;
          ksession.fireAllRules();
      }
 
-     @Test
+     @Test() //timeout = 5000)
      public void testRemoveBigRule() throws Exception {
          // JBRULES-3496
          String str =

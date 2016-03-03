@@ -57,6 +57,8 @@ import org.drools.core.util.Iterator;
 import org.drools.core.util.ObjectHashMap.ObjectEntry;
 import org.kie.api.definition.rule.Rule;
 
+import java.util.Set;
+
 public class SegmentUtilities {
 
     /**
@@ -457,16 +459,16 @@ public class SegmentUtilities {
      * The result should discount any removingRule. That means it gives you the result as
      * if the rule had already been removed from the network.
      * @param node
-     * @param removingRule
+     * @param excludingRules
      * @return
      */
-    public static boolean isRootNode(LeftTupleNode node, Rule removingRule) {
+    public static boolean isRootNode(LeftTupleNode node, Set<Rule> excludingRules) {
         if (node.getType() == NodeTypeEnums.LeftInputAdapterNode) {
             return true;
         }
 
         LeftTupleNode parent = node.getLeftTupleSource();
-        return isTipNode( parent, removingRule );
+        return isTipNode( parent, excludingRules );
     }
 
     /**
@@ -475,20 +477,20 @@ public class SegmentUtilities {
      *
      * node cannot be null.
      *
-     * The result should discount any removingRule. That means it gives you the result as
-     * if the rule had already been removed from the network.
+     * The result should discount any removingRules. That means it gives you the result as
+     * if the rules had already been removed from the network.
      * @param node
-     * @param removingRule
+     * @param excludingRules
      * @return
      */
-    public static boolean isTipNode(LeftTupleNode node, Rule removingRule) {
+    public static boolean isTipNode(LeftTupleNode node, Set<Rule> excludingRules) {
         if (NodeTypeEnums.isEndNode(node)) {
             return true;
         }
         LeftTupleSinkPropagator sinkPropagator = node.getSinkPropagator();
 
 
-        if (removingRule == null) {
+        if (excludingRules == null) {
             return sinkPropagator.size() > 1;
         }
 
@@ -496,15 +498,16 @@ public class SegmentUtilities {
             return false;
         }
 
-        // we know the sink size is creater than 1 and that there is a removingRule that needs to be ignored.
+        // we know the sink size is greater than 1 and that there excluded rules that needs to be ignored.
         int count = 0;
         for ( LeftTupleSinkNode sink = sinkPropagator.getFirstLeftTupleSink(); sink != null; sink = sink.getNextLeftTupleSinkNode() )  {
-            int associatedRuleSize = sink.getAssociatedRuleSize();
-            if ( !(associatedRuleSize == 1 && sink.isAssociatedWith( removingRule )) ) {
-                count++;
-                if ( count > 1 ) {
-                    // There is more than one sink that is not for the removing rule
-                    return true;
+            for ( Rule rule : sink.getAssociatedRules() ) {
+                if ( !excludingRules.contains( rule ) ) {
+                    count++;
+                    if ( count > 1 ) {
+                        // There is more than 1 sink, that would still be present after excluded rules are removed
+                        return true;
+                    }
                 }
             }
         }

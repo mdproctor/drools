@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class MockRightTupleSink
@@ -90,6 +91,10 @@ public class MockRightTupleSink
         return false;
     }
 
+    public Collection<Rule> getAssociatedRules() {
+        return null;
+    }
+
     public ObjectTypeNode.Id getRightInputOtnId() {
         return null;
     }
@@ -97,4 +102,7 @@ public class MockRightTupleSink
     public boolean thisNodeEquals(final Object object) {
         return false;
     }
+
+    public int nodeHashCode() {return this.hashCode();}
+
 }

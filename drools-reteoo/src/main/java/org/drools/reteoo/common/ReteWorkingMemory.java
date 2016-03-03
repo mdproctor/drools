@@ -34,6 +34,7 @@ import org.drools.core.reteoo.LIANodePropagation;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.runtime.impl.ExecutionResultImpl;
 import org.drools.core.spi.Activation;
+import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.spi.FactHandleFactory;
 import org.drools.core.spi.PropagationContext;
 import org.drools.core.util.bitmask.BitMask;
@@ -203,10 +204,10 @@ public class ReteWorkingMemory extends StatefulKnowledgeSessionImpl {
     }
 
     @Override
-    protected BaseNode[] evalQuery(String queryName, DroolsQuery queryObject, InternalFactHandle handle, PropagationContext pCtx) {
+    protected PathEndNode[] evalQuery(String queryName, DroolsQuery queryObject, InternalFactHandle handle, PropagationContext pCtx) {
         initInitialFact();
 
-        BaseNode[] tnodes = kBase.getReteooBuilder().getTerminalNodesForQuery( queryName );
+        PathEndNode[] tnodes = kBase.getReteooBuilder().getTerminalNodesForQuery( queryName );
         // no need to call retract, as no leftmemory used.
         getEntryPointNode().assertQuery( handle,
                                          pCtx,

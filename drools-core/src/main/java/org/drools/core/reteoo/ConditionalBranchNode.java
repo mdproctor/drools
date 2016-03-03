@@ -82,7 +82,7 @@ public class ConditionalBranchNode extends LeftTupleSource implements LeftTupleS
         return branchEvaluator;
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.tupleSource.addTupleSink(this, context);
     }
 

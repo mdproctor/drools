@@ -1480,7 +1480,7 @@ public class PropertySpecificTest extends CommonTestMethodBase {
         ksession.insert(moveCommand);
         ksession.fireAllRules();
 
-        moveCommand = moveCommand = new MoveCommand();
+        moveCommand = new MoveCommand();
         moveCommand.setMove(1);
         ksession.insert(moveCommand);
         ksession.fireAllRules();

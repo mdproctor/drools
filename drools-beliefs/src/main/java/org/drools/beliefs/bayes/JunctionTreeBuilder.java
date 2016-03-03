@@ -224,7 +224,6 @@ public class JunctionTreeBuilder {
             }
         }
 
-        list.addAll( list );
         Collections.sort(list);
 
         SeparatorSet[][][] sepGraphs = new SeparatorSet[cliques.size()][][];

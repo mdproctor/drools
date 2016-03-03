@@ -382,7 +382,7 @@ public class ObjectTypeNode extends ObjectSource
     /**
      * Rete needs to know that this ObjectTypeNode has been added
      */
-    public void attach(BuildContext context) {
+    public void doAttach(BuildContext context) {
         this.source.addObjectSink(this);
 
         InternalWorkingMemory[] workingMemories = context.getWorkingMemories();

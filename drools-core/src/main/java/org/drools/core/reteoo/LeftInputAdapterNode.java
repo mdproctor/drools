@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 
 import static org.drools.core.phreak.AddRemoveRule.flushLeftTupleIfNecessary;
 import static org.drools.core.reteoo.PropertySpecificUtil.*;
@@ -150,7 +151,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         return this.objectSource;
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.objectSource.addObjectSink( this );
     }
 
@@ -665,6 +666,10 @@ public class LeftInputAdapterNode extends LeftTupleSource
 
         public boolean isAssociatedWith( Rule rule ) {
             return sink.isAssociatedWith( rule );
+        }
+
+        public Collection<Rule> getAssociatedRules() {
+            return sink.getAssociatedRules();
         }
 
         public boolean thisNodeEquals(final Object object) {

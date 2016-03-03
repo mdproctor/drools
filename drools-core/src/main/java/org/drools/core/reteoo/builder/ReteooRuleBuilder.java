@@ -19,10 +19,12 @@ package org.drools.core.reteoo.builder;
 import org.drools.core.ActivationListenerFactory;
 import org.drools.core.base.ClassObjectType;
 import org.drools.core.common.BaseNode;
+import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.UpdateContext;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.InternalKnowledgeBase;
 import org.drools.core.phreak.AddRemoveRule;
+import org.drools.core.phreak.SegmentUtilities;
 import org.drools.core.reteoo.*;
 import org.drools.core.rule.Collect;
 import org.drools.core.rule.ConditionalBranch;
@@ -43,9 +45,11 @@ import org.drools.core.rule.constraint.XpathConstraint;
 import org.drools.core.time.TemporalDependencyMatrix;
 import org.drools.core.time.impl.Timer;
 import org.kie.api.conf.EventProcessingOption;
+import org.kie.api.definition.rule.Rule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ReteooRuleBuilder implements RuleBuilder {
 
@@ -99,8 +103,8 @@ public class ReteooRuleBuilder implements RuleBuilder {
      * @throws InvalidPatternException
      */
     public List<TerminalNode> addRule( final RuleImpl rule,
-            final InternalKnowledgeBase kBase,
-            final ReteooBuilder.IdGenerator idGenerator ) throws InvalidPatternException {
+                                        final InternalKnowledgeBase kBase,
+                                        final ReteooBuilder.IdGenerator idGenerator ) throws InvalidPatternException {
         // the list of terminal nodes
         final List<TerminalNode> nodes = new ArrayList<TerminalNode>();
 
@@ -186,10 +190,6 @@ public class ReteooRuleBuilder implements RuleBuilder {
 
         setPathEndNodes(context);
 
-        if ( context.getKnowledgeBase().getConfiguration().isPhreakEnabled() ) {
-            AddRemoveRule.addRule( terminal, context.getWorkingMemories(), context.getKnowledgeBase() );
-        }
-
         // adds the terminal node to the list of nodes created/added by this sub-rule
         context.getNodes().add( baseTerminalNode );
 
@@ -199,14 +199,118 @@ public class ReteooRuleBuilder implements RuleBuilder {
         return terminal;
     }
 
+    /**
+     * Store the paths in reverse order, this represents the visual order of the graph, if you were looking at it as a tree.
+     * Where the Main is far left and the outer most subnetwork is the far right, which forms the firt split.
+     * Position 0 is the main path and 1 is the inner most subnetwork n-1 is the outer most subnetwork (i.e. the first split)
+     * @param context
+     */
     private void setPathEndNodes(BuildContext context) {
-        // Store the paths in reverse order, from the outermost (the main path) to the innermost subnetwork paths
         PathEndNode[] pathEndNodes = context.getPathEndNodes().toArray(new PathEndNode[context.getPathEndNodes().size()]);
         for ( int i = 0; i < pathEndNodes.length; i++ ) {
             PathEndNode node = context.getPathEndNodes().get(pathEndNodes.length-1-i);
             node.setPathEndNodes(pathEndNodes);
             pathEndNodes[i] = node;
         }
+    }
+
+    /**
+     * Creates and return the node memory
+     */
+    public static void initPath(PathEndNode pnode, LeftTupleNode startTupleSource, Set<Rule> removingRules, Set<Rule> addingRules, List<LeftTupleNode> subjectSplits) {
+        if ( ( removingRules != null && addingRules != null) || ( removingRules != null && addingRules != null ) ) {
+            throw new IllegalArgumentException("");
+        }
+        int counter = 1;
+        long allLinkedTestMask = 0;
+
+        boolean isSplit = false;
+        LeftTupleSource tupleSource = pnode.getLeftTupleSource();
+        if ( SegmentUtilities.isRootNode(pnode, removingRules)) {
+            counter++;
+        }
+        recordIfSplitChange(pnode, subjectSplits, addingRules, isSplit);
+        boolean wasSplit;
+
+        ConditionalBranchNode cen = getConditionalBranchNode(tupleSource); // segments after a branch CE can notify, but they cannot impact linking
+        // @TODO optimization would be to split path's into two, to avoid wasted rule evaluation for segments after the first branch CE
+
+        boolean updateBitInNewSegment = true; // Avoids more than one isBetaNode check per segment
+        boolean updateAllLinkedTest = cen == null; // if there is a CEN, do not set bit until it's reached
+        boolean subnetworkBoundaryCrossed = false;
+
+        while (  tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode ) {
+            if ( !subnetworkBoundaryCrossed &&  tupleSource.getType() == NodeTypeEnums.ConditionalBranchNode ) {
+                // start recording now we are after the BranchCE, but only if we are not outside the target
+                // subnetwork
+                updateAllLinkedTest = true;
+            }
+
+            if ( updateAllLinkedTest && updateBitInNewSegment &&
+                 NodeTypeEnums.isBetaNode( tupleSource ) &&
+                 NodeTypeEnums.AccumulateNode != tupleSource.getType()) { // accumulates can never be disabled
+                BetaNode bn = ( BetaNode) tupleSource;
+                if ( bn.isRightInputIsRiaNode() ) {
+                    updateBitInNewSegment = false;
+                    PathEndNode rian = ( PathEndNode ) bn.getRightInput();
+                    if ( rian.getAllLinkedMaskTest() == -1 ) {
+                        throw new IllegalStateException("Defensive Programming. Make sure subnetworks are initialized first. Can we remove this later (mdp)");
+                    }
+
+                    if ( rian.getAllLinkedMaskTest() != 0 ) {
+                        allLinkedTestMask = allLinkedTestMask | 1;
+                    }
+                } else if ( NodeTypeEnums.NotNode != bn.getType() || ((NotNode)bn).isEmptyBetaConstraints()) {
+                    updateBitInNewSegment = false;
+                    // non empty not nodes can never be disabled and thus don't need checking
+                    allLinkedTestMask = allLinkedTestMask | 1;
+                }
+            }
+
+            isSplit = false;
+            if ( SegmentUtilities.isRootNode( tupleSource, removingRules ) ) {
+                // is split
+                isSplit = true;
+                updateBitInNewSegment = true; // allow bit to be set for segment
+                allLinkedTestMask = allLinkedTestMask << 1;
+                counter++;
+            }
+            recordIfSplitChange(pnode, subjectSplits, addingRules, isSplit);
+
+            tupleSource = tupleSource.getLeftTupleSource();
+            if ( tupleSource == startTupleSource ) {
+                // stop tracking if we move outside of a subnetwork boundary (if one is set)
+                subnetworkBoundaryCrossed = true;
+                updateAllLinkedTest = false;
+            }
+        }
+
+        if ( !subnetworkBoundaryCrossed ) {
+            allLinkedTestMask = allLinkedTestMask | 1;
+        }
+
+        pnode.setSegmentSize(counter);
+        pnode.setAllLinkedMaskTest(allLinkedTestMask);
+    }
+
+    private static void recordIfSplitChange(LeftTupleNode node, List<LeftTupleNode> subjectSplits, Set<Rule> addingRules, boolean isSplit) {
+        boolean wasSplit = SegmentUtilities.isRootNode(node, addingRules);
+        if ((isSplit ^ wasSplit)) {
+            // record split change. Add parent, as we consider the tip of previous segment as the single reference for a split
+            subjectSplits.add(node.getLeftTupleSource());
+        }
+    }
+
+    private static ConditionalBranchNode getConditionalBranchNode(LeftTupleSource tupleSource) {
+        ConditionalBranchNode cen = null;
+        while (  tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode ) {
+            // find the first ConditionalBranch, if one exists
+            if ( tupleSource.getType() == NodeTypeEnums.ConditionalBranchNode ) {
+                cen =  ( ConditionalBranchNode ) tupleSource;
+            }
+            tupleSource = tupleSource.getLeftTupleSource();
+        }
+        return cen;
     }
 
     /**

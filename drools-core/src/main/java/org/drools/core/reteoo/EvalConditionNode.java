@@ -89,7 +89,7 @@ public class EvalConditionNode extends LeftTupleSource
         out.writeObject( componentsMap );
     }
 
-    public void attach( BuildContext context ) {
+    public void doAttach( BuildContext context ) {
         this.leftInput.addTupleSink( this, context );
     }
 

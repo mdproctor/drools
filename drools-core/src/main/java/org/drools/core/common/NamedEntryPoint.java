@@ -479,6 +479,7 @@ public class NamedEntryPoint
             if (fhState.isStated()) {
                 deleteStated( rule, activation, handle, key );
             }
+
             if (fhState.isLogical()) {
                 deleteLogical( key );
             }

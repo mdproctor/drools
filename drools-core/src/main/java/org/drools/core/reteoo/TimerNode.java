@@ -89,7 +89,7 @@ public class TimerNode extends LeftTupleSource
         out.writeObject( declarations );
     }
 
-    public void attach(BuildContext context) {
+    public void doAttach(BuildContext context) {
         this.leftInput.addTupleSink(this, context);
         if (context == null || context.getKnowledgeBase().getConfiguration().isPhreakEnabled()) {
             return;
