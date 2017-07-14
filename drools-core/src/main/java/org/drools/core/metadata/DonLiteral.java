@@ -63,16 +63,16 @@ public abstract class DonLiteral<K, T extends Metadatable> extends AbstractWMTas
         }
         if ( factory != null && factory instanceof StandaloneTraitFactory ) {
             StandaloneTraitFactory stf = (StandaloneTraitFactory) factory;
-            try {
-                T x = (T) stf.don( getCore() instanceof TraitableBean ? ((TraitableBean) getCore()) : stf.makeTraitable( getCore(), getCore().getClass() ),
-                                    getTrait() != null ? getTrait() : Thing.class );
-                if ( setter != null ) {
-                    setter.call( x );
-                }
-                return x;
-            } catch ( LogicalTypeInconsistencyException e ) {
-                e.printStackTrace();
-            }
+//            try {
+//                T x = (T) stf.don( getCore() instanceof TraitableBean ? ((TraitableBean) getCore()) : stf.makeTraitable( getCore(), getCore().getClass() ),
+//                                    getTrait() != null ? getTrait() : Thing.class );
+//                if ( setter != null ) {
+//                    setter.call( x );
+//                }
+//                return x;
+//            } catch ( LogicalTypeInconsistencyException e ) {
+//                e.printStackTrace();
+//            }
         } else {
             throw new UnsupportedOperationException(  );
         }

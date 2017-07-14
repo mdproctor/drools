@@ -16,7 +16,7 @@
 package org.drools.compiler.compiler;
 
 import org.kie.internal.builder.KnowledgeBuilder;
-import org.kie.internal.utils.ServiceRegistryImpl;
+import org.kie.api.internal.utils.ServiceRegistryImpl;
 
 
 public class ProcessBuilderFactory {
@@ -44,9 +44,9 @@ public class ProcessBuilderFactory {
     private static ProcessBuilderFactoryService initializeProvider() {
         ProcessBuilderFactoryService service = null;
         try {
-            ServiceRegistryImpl.getInstance().addDefault(ProcessBuilderFactoryService.class, PROVIDER_CLASS);
-            service = ServiceRegistryImpl.getInstance().get(ProcessBuilderFactoryService.class);
-            setProcessBuilderFactoryService(ServiceRegistryImpl.getInstance().get(ProcessBuilderFactoryService.class ) );
+//            ServiceRegistryImpl.getInstance().addDefault(ProcessBuilderFactoryService.class, PROVIDER_CLASS);
+//            service = ServiceRegistryImpl.getInstance().get(ProcessBuilderFactoryService.class);
+//            setProcessBuilderFactoryService(ServiceRegistryImpl.getInstance().get(ProcessBuilderFactoryService.class ) );
         } catch (IllegalArgumentException e) {
             initializationException = e;
             // intentionally ignored

@@ -15,30 +15,22 @@
 
 package org.drools.core.marshalling.impl;
 
-import org.kie.internal.utils.ServiceRegistryImpl;
+import org.kie.api.internal.utils.ServiceRegistry;
 
 public class ProcessMarshallerFactory {
 
-    private static ProcessMarshallerFactoryService service;
+    private static ProcessMarshallerFactoryService service = ServiceRegistry.getInstance().get(ProcessMarshallerFactoryService.class);
 
     public static ProcessMarshaller newProcessMarshaller() {
-        return getProcessMarshallerFactoryService().newProcessMarshaller();
-    }
-
-    public static synchronized void setProcessMarshallerFactoryService(ProcessMarshallerFactoryService service) {
-        ProcessMarshallerFactory.service = service;
+        if (service != null) {
+            return getProcessMarshallerFactoryService().newProcessMarshaller();
+        } else {
+            return null;
+        }
     }
 
     public static synchronized ProcessMarshallerFactoryService getProcessMarshallerFactoryService() {
-        if (service == null) {
-            loadProvider();
-        }
         return service;
-    }
-
-    private static void loadProvider() {
-        ServiceRegistryImpl.getInstance().addDefault( ProcessMarshallerFactoryService.class, "org.jbpm.marshalling.impl.ProcessMarshallerFactoryServiceImpl" );
-        setProcessMarshallerFactoryService(ServiceRegistryImpl.getInstance().get( ProcessMarshallerFactoryService.class ) );
     }
 
 }

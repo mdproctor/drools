@@ -35,7 +35,7 @@ import org.kie.dmn.api.marshalling.v1_1.DMNExtensionRegister;
 import org.kie.dmn.core.api.DMNFactory;
 import org.kie.dmn.core.impl.DMNKnowledgeBuilderError;
 import org.kie.dmn.core.impl.DMNPackageImpl;
-import org.kie.internal.assembler.KieAssemblerService;
+import org.kie.api.internal.assembler.KieAssemblerService;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.ResultSeverity;
 import org.kie.internal.io.ResourceTypePackage;

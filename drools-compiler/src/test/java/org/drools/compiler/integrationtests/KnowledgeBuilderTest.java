@@ -40,6 +40,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.kie.api.internal.utils.ServiceDiscoveryImpl;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
 import org.kie.internal.builder.KnowledgeBuilderResult;
@@ -455,6 +456,27 @@ public class KnowledgeBuilderTest {
 
     @Test
     public void testResourceMapping() throws Exception {
+        ServiceDiscoveryImpl.getInstance().addService("org.drools.compiler.compiler.PMMLCompiler",
+                                                      new PMMLCompiler() {
+                                                          public String compile(InputStream stream, ClassLoader cl) {
+                                                              return "rule R2 when then end";
+                                                          }
+
+                                                          @Override
+                                                          public List<KnowledgeBuilderResult> getResults() {
+                                                              return Collections.emptyList();
+                                                          }
+
+                                                          @Override
+                                                          public void clearResults() {
+                                                              //To change body of implemented methods use File | Settings | File Templates.
+                                                          }
+
+                                                          public Resource[] transform( Resource input, ClassLoader classLoader ) {
+                                                              return new Resource[ 0 ];
+                                                          }
+                                                      } );
+
         String rule = "package org.drools.compiler.test\n" +
                 "rule R1 when\n" +
                 " \n" +
@@ -475,27 +497,7 @@ public class KnowledgeBuilderTest {
 
         Resource res2 = ResourceFactory.newByteArrayResource( pmml.getBytes() );
         KnowledgeBuilder kbuilder2 = KnowledgeBuilderFactory.newKnowledgeBuilder();
-
-        PMMLCompilerFactory.setProvider(new PMMLCompiler() {
-            public String compile(InputStream stream, ClassLoader cl) {
-                return "rule R2 when then end";
-            }
-
-            @Override
-            public List<KnowledgeBuilderResult> getResults() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public void clearResults() {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public Resource[] transform( Resource input, ClassLoader classLoader ) {
-                return new Resource[ 0 ];
-            }
-        });
-
+        
         kbuilder2.add( res2, ResourceType.PMML );
         assertFalse( kbuilder2.getErrors().toString(), kbuilder2.hasErrors() );
 

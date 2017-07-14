@@ -99,6 +99,7 @@ import org.kie.api.definition.type.Expires.Policy;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.definition.type.Role;
 import org.kie.api.event.kiebase.KieBaseEventListener;
+import org.kie.api.internal.utils.ServiceRegistry;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.Environment;
@@ -106,11 +107,11 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.StatelessKieSession;
 import org.kie.api.runtime.rule.FactHandle;
-import org.kie.internal.io.ResourceTypePackage;
+import org.kie.api.internal.io.ResourceTypePackage;
 import org.kie.internal.runtime.StatefulKnowledgeSession;
-import org.kie.internal.utils.ServiceRegistryImpl;
-import org.kie.internal.weaver.KieWeaverService;
-import org.kie.internal.weaver.KieWeavers;
+import org.kie.api.internal.utils.ServiceRegistryImpl;
+import org.kie.api.internal.weaver.KieWeaverService;
+import org.kie.api.internal.weaver.KieWeavers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -949,7 +950,7 @@ public class KnowledgeBaseImpl
             }
 
             if ( ! newPkg.getResourceTypePackages().isEmpty() ) {
-                KieWeavers weavers = ServiceRegistryImpl.getInstance().get(KieWeavers.class);
+                KieWeavers weavers = ServiceRegistry.getInstance().get(KieWeavers.class);
                 for ( ResourceTypePackage rtkKpg : newPkg.getResourceTypePackages().values() ) {
                     ResourceType rt = rtkKpg.getResourceType();
                     KieWeaverService factory = weavers.getWeavers().get( rt );
@@ -1321,7 +1322,7 @@ public class KnowledgeBaseImpl
         if ( ! newPkg.getResourceTypePackages().isEmpty() ) {
             for ( ResourceTypePackage rtkKpg : newPkg.getResourceTypePackages().values() ) {
                 ResourceType rt = rtkKpg.getResourceType();
-                KieWeavers weavers = ServiceRegistryImpl.getInstance().get(KieWeavers.class);
+                KieWeavers weavers = ServiceRegistry.getInstance().get(KieWeavers.class);
 
                 KieWeaverService weaver = weavers.getWeavers().get(rt);
                 weaver.merge( this, pkg, rtkKpg );

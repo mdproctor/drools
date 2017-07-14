@@ -24,7 +24,7 @@ import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNPackage;
 import org.kie.dmn.core.impl.DMNPackageImpl;
 import org.kie.internal.io.ResourceTypePackage;
-import org.kie.internal.weaver.KieWeaverService;
+import org.kie.api.internal.weaver.KieWeaverService;
 
 import java.util.Map;
 

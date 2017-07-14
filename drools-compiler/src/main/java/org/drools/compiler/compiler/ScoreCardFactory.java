@@ -15,31 +15,21 @@
 
 package org.drools.compiler.compiler;
 
+import org.kie.api.internal.utils.ServiceRegistry;
 import org.kie.internal.builder.ScoreCardConfiguration;
-import org.kie.internal.utils.ServiceRegistryImpl;
+import org.kie.api.internal.utils.ServiceRegistryImpl;
 
 import java.io.InputStream;
 
 public class ScoreCardFactory {
-    private static ScoreCardProvider provider;
+    private static ScoreCardProvider provider = ServiceRegistry.getInstance().get(ScoreCardProvider.class);
 
     public static String loadFromInputStream(InputStream is, ScoreCardConfiguration configuration) {
         return getScoreCardProvider().loadFromInputStream( is, configuration );
     }
     
-    public static synchronized void setScoreCardProvider(ScoreCardProvider provider) {
-        ScoreCardFactory.provider = provider;
-    }
-    
     public static synchronized ScoreCardProvider getScoreCardProvider() {
-        if ( provider == null ) {
-            loadProvider();
-        }
         return provider;
     }
-    
-    private static void loadProvider() {
-        ServiceRegistryImpl.getInstance().addDefault( ScoreCardProvider.class,  "org.drools.scorecards.ScoreCardProviderImpl" );
-        setScoreCardProvider(ServiceRegistryImpl.getInstance().get( ScoreCardProvider.class ) );
-    }
+
 }

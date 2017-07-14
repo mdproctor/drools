@@ -16,7 +16,7 @@
 package org.drools.core.runtime.process;
 
 import org.drools.core.impl.StatefulKnowledgeSessionImpl;
-import org.kie.internal.utils.ServiceRegistryImpl;
+import org.kie.api.internal.utils.ServiceRegistryImpl;
 
 
 public class ProcessRuntimeFactory {
@@ -27,13 +27,13 @@ public class ProcessRuntimeFactory {
 
     private static ProcessRuntimeFactoryService initializeProvider() {
         ProcessRuntimeFactoryService service = null;
-        try {
-            ServiceRegistryImpl.getInstance().addDefault(ProcessRuntimeFactoryService.class, PROVIDER_CLASS);
-            service = ServiceRegistryImpl.getInstance().get(ProcessRuntimeFactoryService.class);
-            setProcessRuntimeFactoryService(ServiceRegistryImpl.getInstance().get(ProcessRuntimeFactoryService.class ) );
-        } catch (IllegalArgumentException e) {
-            // intentionally ignored
-        }
+//        try {
+//            ServiceRegistryImpl.getInstance().addDefault(ProcessRuntimeFactoryService.class, PROVIDER_CLASS);
+//            service = ServiceRegistryImpl.getInstance().get(ProcessRuntimeFactoryService.class);
+//            setProcessRuntimeFactoryService(ServiceRegistryImpl.getInstance().get(ProcessRuntimeFactoryService.class ) );
+//        } catch (IllegalArgumentException e) {
+//            // intentionally ignored
+//        }
         return service;
     }
 
