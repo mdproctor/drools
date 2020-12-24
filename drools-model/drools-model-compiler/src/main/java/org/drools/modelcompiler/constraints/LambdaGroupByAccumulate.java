@@ -20,6 +20,8 @@ import java.io.ObjectOutput;
 
 import org.drools.core.WorkingMemory;
 import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.reteoo.AccumulateNode;
 import org.drools.core.reteoo.AccumulateNode.AccumulateContextEntry;
 import org.drools.core.reteoo.AccumulateNode.GroupByContext;
 import org.drools.core.reteoo.LeftTuple;
@@ -85,7 +87,7 @@ public class LambdaGroupByAccumulate extends Accumulate {
 
     @Override
     public Object createFunctionContext() {
-        throw new UnsupportedOperationException();
+        return innerAccumulate.createFunctionContext();
     }
 
     @Override
@@ -96,22 +98,29 @@ public class LambdaGroupByAccumulate extends Accumulate {
 
     @Override
     public Object accumulate( Object workingMemoryContext, Object context,
-                              Tuple leftTuple, InternalFactHandle handle, WorkingMemory wm ) {
+                              Tuple match, InternalFactHandle handle, WorkingMemory wm ) {
         GroupByContext groupByContext = ( GroupByContext ) context;
-        Object key = getKey(leftTuple, handle, wm);
+        Object key = getKey(match, handle, wm);
         if (key==null) {
-            throw new IllegalStateException("Unable to find group for: " + leftTuple + " : " + handle);
+            throw new IllegalStateException("Unable to find group for: " + match + " : " + handle);
         }
 
         TupleList<AccumulateContextEntry> tupleList = groupByContext.getGroup(workingMemoryContext, innerAccumulate,
-                                                                              leftTuple, handle, key, wm);
+                                                                              match, handle, key, wm);
+        Object value = accumulate(workingMemoryContext, (LeftTuple) match, handle, groupByContext, tupleList, wm);
+
+        return value;
+    }
+
+    @Override
+    public Object accumulate(Object workingMemoryContext, LeftTuple match, InternalFactHandle handle,
+                             GroupByContext groupByContext, TupleList<AccumulateContextEntry> tupleList, WorkingMemory wm) {
         groupByContext.moveToPropagateTupleList(tupleList);
 
-        Object value = innerAccumulate.accumulate( workingMemoryContext, tupleList.getContext(),
-                                                   leftTuple, handle, wm );
+        Object value = innerAccumulate.accumulate(workingMemoryContext, tupleList.getContext(),
+                                                  match, handle, wm);
 
         groupByContext.setLastTupleList(tupleList);
-
         return value;
     }
 
