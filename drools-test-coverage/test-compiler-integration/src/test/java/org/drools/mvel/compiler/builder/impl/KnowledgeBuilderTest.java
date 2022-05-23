@@ -29,6 +29,8 @@ import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.compiler.Dialect;
 import org.drools.compiler.compiler.DialectCompiletimeRegistry;
+import org.drools.core.rule.Behavior;
+import org.drools.drl.parser.DroolsParserException;
 import org.drools.compiler.compiler.DuplicateFunction;
 import org.drools.compiler.compiler.DuplicateRule;
 import org.drools.core.base.ClassObjectType;
@@ -43,7 +45,7 @@ import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.LeftTupleImpl;
 import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.Behavior;
+import org.drools.core.rule.BehaviorRuntime;
 import org.drools.core.rule.Declaration;
 import org.drools.core.rule.EvalCondition;
 import org.drools.core.rule.GroupElement;
@@ -74,7 +76,6 @@ import org.drools.drl.ast.descr.PatternDescr;
 import org.drools.drl.ast.descr.RuleDescr;
 import org.drools.drl.ast.descr.TypeDeclarationDescr;
 import org.drools.drl.ast.descr.TypeFieldDescr;
-import org.drools.drl.parser.DroolsParserException;
 import org.drools.drl.parser.ParserError;
 import org.drools.ecj.EclipseJavaCompiler;
 import org.drools.kiesession.consequence.DefaultKnowledgeHelper;
@@ -1278,9 +1279,9 @@ public class KnowledgeBuilderTest extends DroolsTestCase {
         final Pattern pattern = (Pattern) rule.getLhs().getChildren().get( 0 );
         assertEquals( StockTick.class.getName(),
                       ((ClassObjectType) pattern.getObjectType()).getClassType().getName() );
-        final Behavior window = pattern.getBehaviors().get( 0 );
-        assertEquals( Behavior.BehaviorType.TIME_WINDOW,
-                      window.getType() );
+        final BehaviorRuntime window = pattern.getBehaviors().get(0);
+        assertEquals(Behavior.BehaviorType.TIME_WINDOW,
+                     window.getType() );
         assertEquals( 60000,
                       ((SlidingTimeWindow) window).getSize() );
     }

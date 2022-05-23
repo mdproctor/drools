@@ -145,6 +145,9 @@
     <module>bom</module>
     <module>build-parent</module>
     <module>kie-api</module>
+    <module>kie-apiv2</module>
+    <module>kie-apiv2-flow</module>
+    <module>kie-apiv2-rules</module>
     <module>kie-internal</module>
     <module>kie-archetypes</module>
     <module>kie-util</module>
@@ -153,6 +156,7 @@
     <module>drools-wiring</module>
     <module>kie-test-util</module>
     <module>drools-util</module>
+    <module>drools-base</module>
     <module>drools-core</module>
     <module>drools-commands</module>
     <module>drools-kiesession</module>

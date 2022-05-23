@@ -41,6 +41,7 @@ import org.drools.core.rule.consequence.Activation;
 import org.drools.core.base.ObjectType;
 import org.drools.tms.beliefsystem.BeliefSet;
 import org.drools.tms.beliefsystem.abductive.Abductive;
+import org.kie.api.runtime.rule.Match;
 
 public class AbductiveQuery extends QueryImpl implements Externalizable, AcceptsClassObjectType {
 
@@ -169,7 +170,7 @@ public class AbductiveQuery extends QueryImpl implements Externalizable, Accepts
     }
 
     @Override
-    public boolean processAbduction(Activation resultLeftTuple, DroolsQuery dquery, Object[] objects, ReteEvaluator reteEvaluator) {
+    public boolean processAbduction(Match resultLeftTuple, DroolsQuery dquery, Object[] objects, ReteEvaluator reteEvaluator) {
         boolean pass = true;
         InternalWorkingMemory workingMemory = (InternalWorkingMemory) reteEvaluator;
         int numArgs = abducibleArgs.length;
