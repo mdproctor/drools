@@ -25,11 +25,11 @@ import java.util.HashSet;
 
 public class AbstractReactiveObject implements ReactiveObject {
 
-    private Collection<Tuple> lts;
+    private Collection<BaseTuple> lts;
 
     public void addTuple(BaseTuple tuple) {
         if (lts == null) {
-            lts = new HashSet<Tuple>();
+            lts = new HashSet<>();
         }
         lts.add(tuple);
     }

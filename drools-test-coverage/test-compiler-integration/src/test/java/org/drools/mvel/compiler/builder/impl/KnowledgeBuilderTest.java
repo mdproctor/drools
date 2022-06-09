@@ -1279,7 +1279,7 @@ public class KnowledgeBuilderTest extends DroolsTestCase {
         final Pattern pattern = (Pattern) rule.getLhs().getChildren().get( 0 );
         assertEquals( StockTick.class.getName(),
                       ((ClassObjectType) pattern.getObjectType()).getClassType().getName() );
-        final BehaviorRuntime window = pattern.getBehaviors().get(0);
+        final Behavior window = pattern.getBehaviors().get(0);
         assertEquals(Behavior.BehaviorType.TIME_WINDOW,
                      window.getType() );
         assertEquals( 60000,

@@ -29,6 +29,7 @@ import java.util.function.Function;
 
 import org.drools.core.base.ClassObjectType;
 import org.drools.core.base.DroolsQuery;
+import org.drools.core.base.ValueResolver;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.ObjectStore;
@@ -170,9 +171,9 @@ public class AbductiveQuery extends QueryImpl implements Externalizable, Accepts
     }
 
     @Override
-    public boolean processAbduction(Match resultLeftTuple, DroolsQuery dquery, Object[] objects, ReteEvaluator reteEvaluator) {
+    public boolean processAbduction(Match resultLeftTuple, DroolsQuery dquery, Object[] objects, ValueResolver valueResolver) {
         boolean pass = true;
-        InternalWorkingMemory workingMemory = (InternalWorkingMemory) reteEvaluator;
+        InternalWorkingMemory workingMemory = (InternalWorkingMemory) valueResolver;
         int numArgs = abducibleArgs.length;
         Object[] constructorArgs = new Object[ abducibleArgs.length ];
         for ( int j = 0; j < numArgs; j++ ) {
@@ -192,7 +193,7 @@ public class AbductiveQuery extends QueryImpl implements Externalizable, Accepts
                 abduced = handle.getObject();
                 firstAssertion = false;
             } else {
-                handle = TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(workingMemory).insertPositive( abduced, resultLeftTuple);
+                handle = TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(workingMemory).insertPositive( abduced, (Activation) resultLeftTuple);
             }
             BeliefSet bs = handle.getEqualityKey() != null ? ((TruthMaintenanceSystemEqualityKey)handle.getEqualityKey()).getBeliefSet() : null;
             if ( bs == null ) {
@@ -202,7 +203,7 @@ public class AbductiveQuery extends QueryImpl implements Externalizable, Accepts
                     pass = false;
                 } else {
                     if ( !firstAssertion ) {
-                        TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(workingMemory).insertPositive( abduced, resultLeftTuple);
+                        TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(workingMemory).insertPositive( abduced, (Activation) resultLeftTuple);
                     }
                 }
             }
