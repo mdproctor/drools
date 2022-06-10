@@ -26,6 +26,7 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.TruthMaintenanceSystem;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.util.ObjectHashMap;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
@@ -126,13 +127,13 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
 
             // check the packages are correctly populated
             assertEquals( 3, kbase.getKiePackages().size() );
-            KiePackage test = null, test2 = null;
+            InternalKnowledgePackage test = null, test2 = null;
             // different JVMs return the package list in different order
             for( KiePackage kpkg : kbase.getKiePackages() ) {
                 if( kpkg.getName().equals( "org.drools.compiler.test" )) {
-                    test = kpkg;
+                    test = (InternalKnowledgePackage) kpkg;
                 } else if( kpkg.getName().equals( "org.drools.compiler.test2" )) {
-                    test2 = kpkg;
+                    test2 = (InternalKnowledgePackage) kpkg;
                 }
             }
 
@@ -149,9 +150,9 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
             // different JVMs return the package list in different order
             for( KiePackage kpkg : kbase.getKiePackages() ) {
                 if( kpkg.getName().equals( "org.drools.compiler.test" )) {
-                    test = kpkg;
+                    test = (InternalKnowledgePackage) kpkg;
                 } else if( kpkg.getName().equals( "org.drools.compiler.test2" )) {
-                    test2 = kpkg;
+                    test2 = (InternalKnowledgePackage) kpkg;
                 }
             }
             assertThat(test).isNotNull();
@@ -195,9 +196,9 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
             // different JVMs return the package list in different order
             for( KiePackage kpkg : kbase.getKiePackages() ) {
                 if( kpkg.getName().equals( "org.drools.compiler.test" )) {
-                    test = kpkg;
+                    test = (InternalKnowledgePackage) kpkg;
                 } else if( kpkg.getName().equals( "org.drools.compiler.test2" )) {
-                    test2 = kpkg;
+                    test2 = (InternalKnowledgePackage) kpkg;
                 }
             }
             assertThat(test).isNotNull();
@@ -209,9 +210,9 @@ public class TruthMaintenanceTest extends CommonTestMethodBase {
             // different JVMs return the package list in different order
             for( KiePackage kpkg : kbase.getKiePackages() ) {
                 if( kpkg.getName().equals( "org.drools.compiler.test" )) {
-                    test = kpkg;
+                    test = (InternalKnowledgePackage) kpkg;
                 } else if( kpkg.getName().equals( "org.drools.compiler.test2" )) {
-                    test2 = kpkg;
+                    test2 = (InternalKnowledgePackage) kpkg;
                 }
             }
             assertThat(test).isNotNull();

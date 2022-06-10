@@ -162,6 +162,16 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
     }
 
     @Override
+    public long getCurrentTime() {
+        return getTimerService().getCurrentTime();
+    }
+
+    @Override
+    public org.drools.core.definitions.rule.RuleBase getRuleBase() {
+        return this.ruleBase;
+    }
+
+    @Override
     public void addPropagation(PropagationEntry propagationEntry, boolean register) {
         try {
             if (register) {

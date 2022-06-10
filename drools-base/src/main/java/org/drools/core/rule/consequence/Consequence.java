@@ -28,9 +28,7 @@ import org.kie.internal.security.KiePolicyHelper;
 /**
  * Consequence to be fired upon successful match of a <code>Rule</code>.
  */
-public interface Consequence<T>
-    extends
-        Invoker {
+public interface Consequence<T> extends Invoker {
     
     String getName();
     

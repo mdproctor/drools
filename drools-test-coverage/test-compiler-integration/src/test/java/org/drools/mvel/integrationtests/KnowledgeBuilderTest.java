@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.impl.KnowledgePackageImpl;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.rule.TypeDeclaration;
@@ -367,7 +368,7 @@ public class KnowledgeBuilderTest {
 
         Collection<KiePackage> kpkgs = kbuilder.getKnowledgePackages();
         assertEquals( 2, kpkgs.size() );
-        KiePackage kpkg = kpkgs.iterator().next();
+        InternalKnowledgePackage kpkg = (InternalKnowledgePackage) kpkgs.iterator().next();
         assertEquals( 1, kpkg.getRules().size() );
     }
 
@@ -405,7 +406,7 @@ public class KnowledgeBuilderTest {
         kbuilder.add( res1, ResourceType.DRL );
         assertFalse( kbuilder.getErrors().toString(), kbuilder.hasErrors() );
 
-        KiePackage kp1 = kbuilder.getKnowledgePackages().iterator().next();
+        InternalKnowledgePackage kp1 = (InternalKnowledgePackage) kbuilder.getKnowledgePackages().iterator().next();
         assertEquals( 1, kp1.getRules().size() );
         Rule r = kp1.getRules().iterator().next();
         assertEquals( res1, ((RuleImpl) r).getResource() );
@@ -418,7 +419,7 @@ public class KnowledgeBuilderTest {
         kbuilder2.add( res2, ResourceType.PMML );
         assertFalse( kbuilder2.getErrors().toString(), kbuilder2.hasErrors() );
 
-        KiePackage kp2 = kbuilder2.getKnowledgePackages().iterator().next();
+        InternalKnowledgePackage kp2 = (InternalKnowledgePackage) kbuilder2.getKnowledgePackages().iterator().next();
         assertEquals( 1, kp2.getRules().size() );
         Rule r2 = kp2.getRules().iterator().next();
         assertEquals( res2, ((RuleImpl) r2).getResource() );

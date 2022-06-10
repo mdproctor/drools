@@ -34,13 +34,13 @@ import java.util.jar.JarInputStream;
 import org.drools.core.ClockType;
 import org.drools.core.SessionConfiguration;
 import org.drools.core.base.ClassObjectType;
+import org.drools.core.base.ValueResolver;
 import org.drools.core.common.BaseNode;
 import org.drools.core.common.DroolsObjectInputStream;
 import org.drools.core.common.DroolsObjectOutputStream;
 import org.drools.core.common.InternalAgenda;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
 import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.EnvironmentFactory;
@@ -124,7 +124,7 @@ public class MarshallingTest extends CommonTestMethodBase {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase) loadKnowledgeBase();
         kbase.addPackages( Collections.singleton( kpkg ) );
 
-        final org.kie.api.definition.rule.Rule[] rules = kbase.getKiePackages().iterator().next().getRules().toArray( new org.kie.api.definition.rule.Rule[0] );
+        final org.kie.api.definition.rule.Rule[] rules = ((InternalKnowledgePackage) kbase.getKiePackages().iterator().next()).getRules().toArray( new org.kie.api.definition.rule.Rule[0] );
         assertEquals( 4,
                       rules.length );
 
@@ -2209,9 +2209,9 @@ public class MarshallingTest extends CommonTestMethodBase {
 
         final List<String> fired = new ArrayList<String>();
 
-        rule.setConsequence( new Consequence() {
+        rule.setConsequence( new Consequence<KnowledgeHelper>() {
             public void evaluate(KnowledgeHelper knowledgeHelper,
-                                 ReteEvaluator reteEvaluator) throws Exception {
+                                 ValueResolver valueResolver) throws Exception {
                 fired.add( "a" );
             }
 

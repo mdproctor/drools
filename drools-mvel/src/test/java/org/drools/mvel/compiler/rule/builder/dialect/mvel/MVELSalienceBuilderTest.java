@@ -132,7 +132,7 @@ public class MVELSalienceBuilderTest {
 
 
         assertEquals( 25,
-                      context.getRule().getSalience().getValue( item, context.getRule(), ksession ) );
+                      context.getRule().getSalience().getValue( item.getTuple(), context.getRule(), ksession ) );
 
     }
 
@@ -223,7 +223,7 @@ public class MVELSalienceBuilderTest {
                 Thread.sleep( 1000 );
                 for ( int i = 0; i < iterations && !halt; i++ ) {
                     assertEquals( result,
-                                  salience.getValue( item, rule, wm ) );
+                                  salience.getValue( item.getTuple(), rule, wm ) );
                     Thread.currentThread().yield();
                 }
             } catch ( Throwable e ) {

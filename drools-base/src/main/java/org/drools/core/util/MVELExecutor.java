@@ -16,12 +16,16 @@ package org.drools.core.util;
 
 import java.util.Map;
 
-import org.drools.mvel.MVELSafeHelper;
+import org.kie.api.internal.utils.KieService;
 
 public interface MVELExecutor {
 
-    public static MVELExecutor get() {
-        return (MVELExecutor) MVELSafeHelper.getEvaluator();
+    static MVELExecutor get() {
+        return Holder.MVEL_EXECUTOR_PROVIDER.get();
+    }
+
+    class Holder {
+        private static final MVELExecutorProvider MVEL_EXECUTOR_PROVIDER = KieService.load( MVELExecutorProvider.class );
     }
 
     Object eval(String expression);

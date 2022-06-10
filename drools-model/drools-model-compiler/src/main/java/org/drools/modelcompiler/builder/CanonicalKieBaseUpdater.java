@@ -200,7 +200,7 @@ public class CanonicalKieBaseUpdater extends KieBaseUpdaterImpl {
             if (!isPackageInKieBase( ctx.currentKieBaseModel, oldPkg.getName() )) {
                 continue;
             }
-            for (Rule oldRule : oldPkg.getRules()) {
+            for (Rule oldRule : ((InternalKnowledgePackage) oldPkg).getRules()) {
                 rules.add( (( RuleImpl ) oldRule) );
             }
         }

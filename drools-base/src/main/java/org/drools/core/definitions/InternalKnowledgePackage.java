@@ -38,6 +38,8 @@ import org.drools.core.rule.accessor.ReadAccessor;
 import org.drools.core.base.ObjectType;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.process.Process;
+import org.kie.api.definition.rule.Global;
+import org.kie.api.definition.rule.Query;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.io.Resource;
@@ -62,6 +64,8 @@ public interface InternalKnowledgePackage extends KiePackage,
     ResourceTypePackageRegistry getResourceTypePackages();
 
     Map<String, Class<?>> getGlobals();
+
+    Collection<Process> getProcesses();
 
     @Deprecated
     Map<String, Process> getRuleFlows();
@@ -175,5 +179,13 @@ public interface InternalKnowledgePackage extends KiePackage,
 
     default void setClassFieldAccessorCache(Object classFieldAccessorCache) { }
 
-    Collection<? extends Rule> getRules();
+    Collection<Rule> getRules();
+
+    Collection<FactType> getFactTypes();
+
+    Collection<String> getFunctionNames();
+
+    Collection<Global> getGlobalVariables();
+
+    Collection<Query> getQueries();
 }

@@ -382,7 +382,7 @@ public class CanonicalKieModule implements InternalKieModule {
             }
         } else {
             for (KiePackage pkg : pkgs) {
-                processes.addAll(pkg.getProcesses());
+                processes.addAll(((InternalKnowledgePackage)pkg).getProcesses());
             }
         }
         return processes;

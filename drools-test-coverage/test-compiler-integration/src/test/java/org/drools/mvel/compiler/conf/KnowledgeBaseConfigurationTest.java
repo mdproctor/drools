@@ -16,8 +16,6 @@
 package org.drools.mvel.compiler.conf;
 
 import org.drools.core.runtime.rule.impl.DefaultConsequenceExceptionHandler;
-import org.drools.core.util.MemoryUtil;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.kie.api.KieBaseConfiguration;
@@ -37,7 +35,6 @@ import org.kie.internal.conf.IndexPrecedenceOption;
 import org.kie.internal.conf.IndexRightBetaMemoryOption;
 import org.kie.internal.conf.MaxThreadsOption;
 import org.kie.internal.conf.MultithreadEvaluationOption;
-import org.kie.internal.conf.PermGenThresholdOption;
 import org.kie.internal.conf.SequentialAgendaOption;
 import org.kie.internal.conf.ShareAlphaNodesOption;
 import org.kie.internal.conf.ShareBetaNodesOption;
@@ -353,31 +350,6 @@ public class KnowledgeBaseConfigurationTest {
         // checking the string based getProperty() method
         assertEquals( "false",
                       config.getProperty( BetaRangeIndexOption.PROPERTY_NAME ) );
-    }
-
-    @Test
-    public void testPermGenThresholdConfiguration() {
-        Assume.assumeTrue("JVM with perm gen", MemoryUtil.hasPermGen());
-        // setting the option using the type safe method
-        config.setOption( PermGenThresholdOption.get(85) );
-
-        // checking the type safe getOption() method
-        assertEquals( PermGenThresholdOption.get(85),
-                config.getOption( PermGenThresholdOption.class ) );
-        // checking the string based getProperty() method
-        assertEquals( "85",
-                config.getProperty( PermGenThresholdOption.PROPERTY_NAME ) );
-
-        // setting the options using the string based setProperty() method
-        config.setProperty( PermGenThresholdOption.PROPERTY_NAME,
-                "87" );
-
-        // checking the type safe getOption() method
-        assertEquals( PermGenThresholdOption.get(87),
-                config.getOption( PermGenThresholdOption.class ) );
-        // checking the string based getProperty() method
-        assertEquals( "87",
-                config.getProperty( PermGenThresholdOption.PROPERTY_NAME ) );
     }
 
     @Test

@@ -42,12 +42,12 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.builder.impl.TypeDeclarationContext;
-import org.drools.core.base.CoreComponentsBuilder;
 import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.factmodel.AnnotationDefinition;
 import org.drools.core.rule.Behavior;
 import org.drools.core.time.TimeUtils;
+import org.drools.core.util.MVELExecutor;
 import org.drools.drl.ast.descr.AndDescr;
 import org.drools.drl.ast.descr.AnnotationDescr;
 import org.drools.drl.ast.descr.AttributeDescr;
@@ -430,7 +430,7 @@ public class ModelGenerator {
     private static Optional<Object> resolveValueWithMVEL(String value) {
         // try to resolve as an expression:
         try {
-            Object result = CoreComponentsBuilder.get().getMVELExecutor().eval(value);
+            Object result = MVELExecutor.get().eval(value);
             return Optional.of(result);
         } catch (Exception e) {
             return Optional.empty();

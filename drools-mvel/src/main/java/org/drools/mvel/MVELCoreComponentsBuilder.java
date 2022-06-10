@@ -59,11 +59,6 @@ public class MVELCoreComponentsBuilder implements CoreComponentsBuilder {
         return new ClassFieldInspectorImpl( classUnderInspection, includeFinalMethods );
     }
 
-    @Override
-    public MVELExecutor getMVELExecutor() {
-        return (MVELExecutor) MVELSafeHelper.getEvaluator();
-    }
-
     static ParserContext getParserContext(DialectRuntimeData data, ClassLoader classLoader) {
         ParserConfiguration conf = (( MVELDialectRuntimeData)data).getParserConfiguration();
         conf.setClassLoader( classLoader );

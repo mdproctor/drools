@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.drools.commands.runtime.rule.FireAllRulesCommand;
 import org.drools.compiler.kie.builder.impl.DrlProject;
 import org.drools.core.ClassObjectFilter;
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.event.DefaultAgendaEventListener;
 import org.drools.core.impl.RuleBase;
@@ -69,7 +70,6 @@ import org.kie.api.builder.model.KieModuleModel;
 import org.kie.api.command.BatchExecutionCommand;
 import org.kie.api.command.Command;
 import org.kie.api.command.KieCommands;
-import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
@@ -170,7 +170,7 @@ public class IncrementalCompilationTest {
         KieUtil.getKieModuleFromDrls(releaseId1, kieBaseTestConfiguration, header + drls);
         kc.updateToVersion(releaseId1);
 
-        final KiePackage kpkg = kc.getKieBase().getKiePackage("org.drools.compiler");
+        final InternalKnowledgePackage kpkg = (InternalKnowledgePackage) kc.getKieBase().getKiePackage("org.drools.compiler");
         assertEquals(ruleNames.length, kpkg.getRules().size());
         final Map<String, Rule> rules = rulestoMap(kpkg.getRules());
 
@@ -676,7 +676,7 @@ public class IncrementalCompilationTest {
 
         // Create a session and fire rules
         final KieContainer kc = ks.newKieContainer(releaseId1);
-        KiePackage kpkg = kc.getKieBase().getKiePackage("org.drools.compiler");
+        InternalKnowledgePackage kpkg = (InternalKnowledgePackage) kc.getKieBase().getKiePackage("org.drools.compiler");
         assertEquals(3, kpkg.getRules().size());
         Map<String, Rule> rules = rulestoMap(kpkg.getRules());
 
@@ -702,7 +702,7 @@ public class IncrementalCompilationTest {
         assertSame(rtn3_1, rtn3_2);
         assertSame(rtn1_1, rtn1_2);
 
-        kpkg = kc.getKieBase().getKiePackage("org.drools.compiler");
+        kpkg = (InternalKnowledgePackage) kc.getKieBase().getKiePackage("org.drools.compiler");
         assertEquals(2, kpkg.getRules().size());
         rules = rulestoMap(kpkg.getRules());
 

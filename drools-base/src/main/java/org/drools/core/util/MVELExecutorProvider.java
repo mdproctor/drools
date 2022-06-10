@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Red Hat, Inc. and/or its affiliates.
+ * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  *
@@ -12,21 +12,11 @@
  * limitations under the License.
  */
 
-package org.drools.core.rule.accessor;
+package org.drools.core.util;
 
-import org.drools.core.base.ValueResolver;
-import org.drools.core.base.ValueType;
-import org.drools.core.base.BaseTuple;
+import org.kie.api.internal.utils.KieService;
 
-public interface TupleValueExtractor extends Cloneable {
+public interface MVELExecutorProvider extends KieService {
 
-    ValueType getValueType();
-
-    default Object getValue( BaseTuple tuple ) {
-        return getValue( null, tuple );
-    }
-
-    Object getValue(ValueResolver valueResolver, BaseTuple tuple);
-
-    TupleValueExtractor clone();
+    MVELExecutor get();
 }

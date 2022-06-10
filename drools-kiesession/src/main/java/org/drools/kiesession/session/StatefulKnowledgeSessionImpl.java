@@ -373,11 +373,13 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
         }
     }
 
-    @Override public long getCurrentTime() {
+    @Override
+    public long getCurrentTime() {
         return getTimerService().getCurrentTime();
     }
 
-    @Override public RuleBase getRuleBase() {
+    @Override
+    public RuleBase getRuleBase() {
         return this.kBase;
     }
 

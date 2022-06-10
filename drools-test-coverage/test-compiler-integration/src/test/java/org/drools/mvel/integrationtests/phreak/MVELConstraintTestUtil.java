@@ -16,7 +16,7 @@ package org.drools.mvel.integrationtests.phreak;
 
 import java.util.ArrayList;
 
-import org.drools.core.common.ReteEvaluator;
+import org.drools.core.base.ValueResolver;
 import org.drools.core.rule.Declaration;
 import org.drools.core.rule.accessor.FieldValue;
 import org.drools.core.rule.accessor.ReadAccessor;
@@ -52,7 +52,7 @@ public class MVELConstraintTestUtil extends MVELConstraint {
     }
 
     @Override
-    protected ParserConfiguration getParserConfiguration(ReteEvaluator reteEvaluator) {
+    protected ParserConfiguration getParserConfiguration(ValueResolver valueResolver) {
         ParserConfiguration parserConfiguration = new ParserConfiguration();
         parserConfiguration.addImport(Cheese.class);
         return parserConfiguration;

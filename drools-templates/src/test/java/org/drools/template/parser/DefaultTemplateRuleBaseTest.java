@@ -26,6 +26,7 @@ import org.drools.core.rule.GroupElement;
 import org.drools.core.rule.IndexableConstraint;
 import org.drools.core.rule.constraint.Constraint;
 import org.junit.Test;
+import org.kie.api.definition.rule.Rule;
 
 import static org.junit.Assert.assertEquals;
 
@@ -69,7 +70,7 @@ public class DefaultTemplateRuleBaseTest {
         assertEquals(1, packages.length);
         Map<String, Class<?>> globals = packages[0].getGlobals();
         assertEquals(DefaultGenerator.class, globals.get("generator"));
-        Collection<org.kie.api.definition.rule.Rule> rules = packages[0].getRules();
+        Collection<Rule> rules = packages[0].getRules();
         assertEquals(1, rules.size());
         assertEquals("template1", rules.iterator().next().getName());
         GroupElement lhs = ((RuleImpl)rules.iterator().next()).getLhs();

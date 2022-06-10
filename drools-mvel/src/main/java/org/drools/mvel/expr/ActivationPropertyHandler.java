@@ -52,7 +52,7 @@ public class ActivationPropertyHandler implements PropertyHandler {
         if ( declr != null ) {
             return declr.getValue( null, item.getTuple().get( declr ).getObject() );
         } else {
-            return item.getRule().getMetaData( name );
+            return item.getRule().getMetaData( ).get( name );
         }
     }
 

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.mvel.compiler.Cheese;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
@@ -54,11 +55,11 @@ public class MergePackageTest {
         // using different builders
         try {
             Collection<KiePackage> kpkgs1 = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_RuleNameClashes1.drl").getKiePackages();
-            KiePackage kpkg1 = kpkgs1.stream().filter( pkg -> pkg.getName().equals( "org.drools.package1" ) ).findFirst().get();
+            InternalKnowledgePackage kpkg1 = (InternalKnowledgePackage)kpkgs1.stream().filter(pkg -> pkg.getName().equals( "org.drools.package1" ) ).findFirst().get();
             assertEquals(1, kpkg1.getRules().size());
 
             Collection<KiePackage> kpkgs2 = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_RuleNameClashes2.drl").getKiePackages();
-            KiePackage kpkg2 = kpkgs2.stream().filter( pkg -> pkg.getName().equals( "org.drools.package2" ) ).findFirst().get();
+            InternalKnowledgePackage kpkg2 = (InternalKnowledgePackage) kpkgs2.stream().filter( pkg -> pkg.getName().equals( "org.drools.package2" ) ).findFirst().get();
             assertEquals(1, kpkg2.getRules().size());
 
             InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration);
@@ -108,7 +109,7 @@ public class MergePackageTest {
             assertEquals(3, kpkgs.size());
             for (final KiePackage kpkg : kpkgs) {
                 if (kpkg.getName().equals("org.drools.package1")) {
-                    assertEquals("rule 1", kpkg.getRules().iterator().next().getName());
+                    assertEquals("rule 1", ((InternalKnowledgePackage)kpkg).getRules().iterator().next().getName());
                 }
             }
         } catch (final RuntimeException e) {

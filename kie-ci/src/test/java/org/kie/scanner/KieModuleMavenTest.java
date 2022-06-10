@@ -28,6 +28,7 @@ import org.drools.compiler.kie.builder.impl.InternalKieModule;
 import org.drools.compiler.kie.builder.impl.KieContainerImpl;
 import org.drools.compiler.kie.builder.impl.KieRepositoryImpl;
 import org.drools.compiler.kie.builder.impl.KieServicesImpl;
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.factmodel.ClassDefinition;
 import org.drools.core.factmodel.FieldDefinition;
 import org.drools.mvel.asm.DefaultBeanClassBuilder;
@@ -240,7 +241,7 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
         Collection<KiePackage> packages = kbase.getKiePackages();
         assertThat(packages).isNotNull();
         assertEquals(1, packages.size());
-        Collection<Rule> rules = packages.iterator().next().getRules();
+        Collection<Rule> rules = ((InternalKnowledgePackage) packages.iterator().next()).getRules();
         assertEquals(2, rules.size());
 
         ks.getRepository().removeKieModule(releaseId);
@@ -257,7 +258,7 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
         Collection<KiePackage> packages2 = kbase2.getKiePackages();
         assertThat(packages2).isNotNull();
         assertEquals(1, packages2.size());
-        Collection<Rule> rules2 = packages2.iterator().next().getRules();
+        Collection<Rule> rules2 = ((InternalKnowledgePackage) packages2.iterator().next()).getRules();
         assertEquals(4, rules2.size());
 
         ks.getRepository().removeKieModule(releaseId);

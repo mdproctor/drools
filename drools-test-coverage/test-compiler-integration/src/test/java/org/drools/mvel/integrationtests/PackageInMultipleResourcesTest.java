@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil;
@@ -26,7 +27,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.kie.api.KieBase;
-import org.kie.api.definition.KiePackage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -50,7 +50,7 @@ public class PackageInMultipleResourcesTest {
         // DROOLS-6785
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(this.getClass(), kieBaseTestConfiguration, "rf_test_rules.drl", "rf_test_rueflow.rf");
 
-        KiePackage kiePackage = kbase.getKiePackage("com.example.rules");
+        InternalKnowledgePackage kiePackage = (InternalKnowledgePackage) kbase.getKiePackage("com.example.rules");
         List<String> ruleNames = kiePackage.getRules().stream().map(rule -> rule.getName()).collect(Collectors.toList());
 
         assertEquals(3, ruleNames.size());
@@ -62,13 +62,13 @@ public class PackageInMultipleResourcesTest {
         // DROOLS-6797
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(this.getClass(), kieBaseTestConfiguration, "rf_test_rules_different_pkg.drl", "rf_test_rueflow.rf");
 
-        KiePackage kiePackage = kbase.getKiePackage("com.example.rules");
+        InternalKnowledgePackage kiePackage = (InternalKnowledgePackage) kbase.getKiePackage("com.example.rules");
         List<String> ruleNames = kiePackage.getRules().stream().map(rule -> rule.getName()).collect(Collectors.toList());
 
         assertEquals(1, ruleNames.size());
         assertThat(ruleNames).contains("RuleFlow-Split-example-xxx-DROOLS_DEFAULT");
 
-        KiePackage kiePackageDiffPkg = kbase.getKiePackage("com.example.rules.different.pkg");
+        InternalKnowledgePackage kiePackageDiffPkg = (InternalKnowledgePackage) kbase.getKiePackage("com.example.rules.different.pkg");
         List<String> ruleNamesDiffPkg = kiePackageDiffPkg.getRules().stream().map(rule -> rule.getName()).collect(Collectors.toList());
 
         assertEquals(2, ruleNamesDiffPkg.size());

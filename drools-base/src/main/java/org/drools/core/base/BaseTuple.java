@@ -17,4 +17,18 @@ public interface BaseTuple {
     Object getContextObject();
 
     int size();
+
+    default Object[] toObjects() {
+        return toObjects(false);
+    }
+
+    Object[] toObjects(boolean reverse);
+
+    FactHandle[] toFactHandles();
+
+    BaseTuple getParent();
+
+    BaseTuple getTuple(int index);
+
+    int getIndex();
 }

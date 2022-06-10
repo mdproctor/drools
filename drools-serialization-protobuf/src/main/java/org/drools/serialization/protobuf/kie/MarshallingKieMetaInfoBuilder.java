@@ -25,6 +25,7 @@ import java.util.Set;
 
 import com.google.protobuf.ByteString;
 import org.drools.compiler.builder.InternalKnowledgeBuilder;
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.kie.memorycompiler.resources.ResourceStore;
 import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.compiler.kie.builder.impl.InternalKieModule;
@@ -61,7 +62,7 @@ public class MarshallingKieMetaInfoBuilder extends KieMetaInfoBuilder {
                 JavaDialectRuntimeData runtimeData = (JavaDialectRuntimeData) pkgRegistry.getDialectRuntimeRegistry().getDialectData( "java" );
 
                 List<String> types = new ArrayList<>();
-                for ( FactType factType : kPkg.getFactTypes() ) {
+                for ( FactType factType : ((InternalKnowledgePackage) kPkg).getFactTypes() ) {
                     Class< ? > typeClass = ((ClassDefinition) factType).getDefinedClass();
                     TypeDeclaration typeDeclaration = pkgRegistry.getPackage().getTypeDeclaration( typeClass );
                     if ( typeDeclaration != null ) {
@@ -83,7 +84,7 @@ public class MarshallingKieMetaInfoBuilder extends KieMetaInfoBuilder {
                 if( rules == null ) {
                     rules = new HashSet<>();
                 }
-                for ( Rule rule : kPkg.getRules() ) {
+                for ( Rule rule : ((InternalKnowledgePackage) kPkg).getRules() ) {
                     rules.add(rule.getName());
                 }
                 if (!rules.isEmpty()) {

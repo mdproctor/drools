@@ -23,6 +23,7 @@ import org.drools.commands.runtime.FlatQueryResults;
 import org.drools.core.QueryResultsImpl;
 import org.drools.core.QueryResultsRowImpl;
 import org.drools.core.common.InternalFactHandle;
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.runtime.rule.impl.FlatQueryResultRow;
 import org.drools.mvel.CommonTestMethodBase;
 import org.drools.mvel.compiler.Cheese;
@@ -132,7 +133,7 @@ public class QueryTest extends CommonTestMethodBase {
         assertEquals( 1,
                       results.size() );
 
-        Rule rule = kbase.getKiePackage( "org.drools.compiler.test" ).getRules().iterator().next();
+        Rule rule = ((InternalKnowledgePackage) kbase.getKiePackage("org.drools.compiler.test")).getRules().iterator().next();
 
         assertEquals( "simple query",
                       rule.getName());
@@ -140,7 +141,7 @@ public class QueryTest extends CommonTestMethodBase {
         kbase.removeQuery( "org.drools.compiler.test",
                            "simple query" );
 
-        assertTrue( kbase.getKiePackage( "org.drools.compiler.test" ).getRules().isEmpty() );
+        assertTrue(((InternalKnowledgePackage) kbase.getKiePackage("org.drools.compiler.test")).getRules().isEmpty() );
 
         try {
             results = session.getQueryResults( "simple query" );

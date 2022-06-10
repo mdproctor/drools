@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
+import org.drools.core.definitions.InternalKnowledgePackage;
 import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.util.io.ByteArrayResource;
 import org.drools.core.rule.GroupElement;
@@ -569,7 +570,7 @@ public class DescrBuilderTest {
         kbase.addPackages( knowledgeBuilder.getKnowledgePackages() );
         KieSession knowledgeSession = kbase.newKieSession();
 
-        KiePackage rebuiltPkg = knowledgeBuilder.getPackage( "org.test" );
+        InternalKnowledgePackage rebuiltPkg = knowledgeBuilder.getPackage( "org.test" );
         org.kie.api.definition.rule.Rule rule = rebuiltPkg.getRules().iterator().next();
         RuleImpl r = ((RuleImpl) rule);
 

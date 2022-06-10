@@ -812,7 +812,7 @@ public class ProtobufInputMarshaller {
                 return true;
             } else {
 
-                RuleImpl rule = activation.getRule();
+                RuleImpl rule = (RuleImpl) activation.getRule();
                 ActivationKey activationKey = PersisterHelper.hasNodeMemory( rtn ) && !serializedNodeMemories ?
                         PersisterHelper.createActivationKey( rule.getPackageName(), rule.getName(), activation.getTuple().toObjects(true)) :
                         PersisterHelper.createActivationKey( rule.getPackageName(), rule.getName(), activation.getTuple() );

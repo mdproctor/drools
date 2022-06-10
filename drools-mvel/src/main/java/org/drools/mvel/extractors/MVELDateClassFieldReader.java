@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.drools.core.base.ValueResolver;
 import org.drools.mvel.accessors.BaseDateClassFieldReader;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.definitions.rule.impl.RuleImpl;
@@ -107,10 +108,8 @@ public class MVELDateClassFieldReader extends BaseDateClassFieldReader implement
         MVELObjectClassFieldReader.doCompile(this, runtimeData, rule.toRuleNameAndPathString());
     }
 
-    /* (non-Javadoc)
-     * @see org.kie.base.extractors.BaseObjectClassFieldExtractor#getValue(java.lang.Object)
-     */
-    public Object getValue(ReteEvaluator reteEvaluator, Object object) {
+    @Override
+    public Object getValue(ValueResolver valueResolver, Object object) {
         return evaluator.evaluate( object  );
     }
 

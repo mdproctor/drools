@@ -42,7 +42,7 @@ public class BayesBeliefSystem<M extends BayesHardEvidence<M>> implements Belief
     @Override
     public BeliefSet<M> insert(LogicalDependency<M> node, BeliefSet<M> beliefSet, PropagationContext context, ObjectTypeConf typeConf) {
         return insert( node.getMode(),
-                       node.getJustifier().getRule(),
+                       (RuleImpl)  node.getJustifier().getRule(),
                        node.getJustifier(),
                        node.getObject(),
                        beliefSet,
@@ -82,7 +82,7 @@ public class BayesBeliefSystem<M extends BayesHardEvidence<M>> implements Belief
     public void delete(LogicalDependency<M> node,
                        BeliefSet<M> beliefSet,
                        PropagationContext context) {
-        delete( node.getMode(), node.getJustifier().getRule(), node.getJustifier(), node.getObject(), beliefSet, context );
+        delete( node.getMode(), (RuleImpl) node.getJustifier().getRule(), node.getJustifier(), node.getObject(), beliefSet, context );
     }
 
     @Override

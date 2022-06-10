@@ -46,6 +46,7 @@ import org.drools.core.common.NodeMemories;
 import org.drools.core.common.ObjectStore;
 import org.drools.core.common.ObjectTypeConfigurationRegistry;
 import org.drools.core.common.QueryElementFactHandle;
+import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.common.TruthMaintenanceSystem;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
 import org.drools.core.definitions.rule.impl.RuleImpl;
@@ -64,7 +65,6 @@ import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.Sink;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.rule.consequence.Activation;
-import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.time.JobContext;
 import org.drools.core.time.SelfRemovalJobContext;
 import org.drools.core.time.Trigger;
@@ -523,7 +523,7 @@ public class ProtobufOutputMarshaller {
             LogicalDependency dependency = (LogicalDependency) node.getObject();
             Activation activation = dependency.getJustifier();
             ProtobufMessages.Activation _activation = ProtobufMessages.Activation.newBuilder()
-                    .setPackageName( activation.getRule().getPackage() )
+                    .setPackageName(((RuleImpl) activation.getRule()).getPackage() )
                     .setRuleName( activation.getRule().getName() )
                     .setTuple( writeTuple( context, activation, true ) )
                     .build();
@@ -696,7 +696,7 @@ public class ProtobufOutputMarshaller {
                                                                                              boolean isDormient) {
         ProtobufMessages.Activation.Builder _activation = ProtobufMessages.Activation.newBuilder();
 
-        RuleImpl rule = agendaItem.getRule();
+        RuleImpl rule = (RuleImpl) agendaItem.getRule();
         _activation.setPackageName( rule.getPackage() );
         _activation.setRuleName( rule.getName() );
         _activation.setTuple( writeTuple( context, agendaItem, isDormient ) );
