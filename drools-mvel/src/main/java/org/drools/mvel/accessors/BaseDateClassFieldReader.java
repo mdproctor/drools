@@ -19,9 +19,9 @@ package org.drools.mvel.accessors;
 import java.lang.reflect.Method;
 import java.util.Date;
 
-import org.drools.core.base.BaseClassFieldReader;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.base.ValueType;
+import org.drools.base.base.BaseClassFieldReader;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
 
 public abstract class BaseDateClassFieldReader extends BaseClassFieldReader {
 

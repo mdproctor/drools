@@ -14,7 +14,7 @@
 
 package org.drools.mvel.rule;
 
-import org.drools.core.rule.TypeDeclaration;
+import org.drools.base.rule.TypeDeclaration;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

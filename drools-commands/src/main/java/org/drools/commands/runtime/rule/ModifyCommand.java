@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.drools.core.common.DisconnectedFactHandle;
-import org.drools.core.util.MVELExecutor;
+import org.drools.base.util.MVELExecutor;
 import org.kie.api.command.ExecutableCommand;
 import org.kie.api.command.Setter;
 import org.kie.api.runtime.Context;

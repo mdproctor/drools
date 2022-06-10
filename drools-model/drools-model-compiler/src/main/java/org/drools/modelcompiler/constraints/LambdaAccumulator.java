@@ -21,11 +21,11 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
 import org.drools.core.reteoo.SubnetworkTuple;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.Accumulator;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.Accumulator;
 import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.api.runtime.rule.FactHandle;
 

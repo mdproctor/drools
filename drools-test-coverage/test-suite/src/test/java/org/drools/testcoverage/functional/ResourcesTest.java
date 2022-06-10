@@ -19,7 +19,7 @@ package org.drools.testcoverage.functional;
 import java.io.StringReader;
 import java.util.Collection;
 
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.decisiontable.ExternalSpreadsheetCompiler;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;

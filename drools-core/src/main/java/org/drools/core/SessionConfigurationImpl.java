@@ -25,7 +25,7 @@ import java.util.Properties;
 
 import org.drools.core.process.WorkItemManagerFactory;
 import org.drools.core.util.ConfFileUtils;
-import org.drools.core.util.MVELExecutor;
+import org.drools.base.util.MVELExecutor;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.Environment;

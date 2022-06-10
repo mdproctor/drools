@@ -15,8 +15,8 @@
 
 package org.drools.mvel;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
 import org.kie.api.runtime.rule.FactHandle;
 
 public interface ConditionEvaluator {

@@ -28,14 +28,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
 import org.drools.core.common.AgendaItemImpl;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.GlobalResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.kie.api.definition.rule.Rule;

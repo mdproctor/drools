@@ -42,12 +42,12 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.builder.impl.TypeDeclarationContext;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.factmodel.AnnotationDefinition;
-import org.drools.core.rule.Behavior;
-import org.drools.core.time.TimeUtils;
-import org.drools.core.util.MVELExecutor;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.AnnotationDefinition;
+import org.drools.base.rule.Behavior;
+import org.drools.base.time.TimeUtils;
+import org.drools.base.util.MVELExecutor;
 import org.drools.drl.ast.descr.AndDescr;
 import org.drools.drl.ast.descr.AnnotationDescr;
 import org.drools.drl.ast.descr.AttributeDescr;
@@ -65,7 +65,7 @@ import org.drools.modelcompiler.builder.generator.expressiontyper.ExpressionType
 import org.drools.modelcompiler.builder.generator.expressiontyper.ExpressionTyperContext;
 import org.drools.modelcompiler.builder.generator.visitor.ModelGeneratorVisitor;
 import org.drools.util.TypeResolver;
-import org.kie.internal.ruleunit.RuleUnitDescription;
+import org.drools.base.ruleunit.RuleUnitDescription;
 
 import static com.github.javaparser.StaticJavaParser.parseExpression;
 import static org.drools.kiesession.session.StatefulKnowledgeSessionImpl.DEFAULT_RULE_UNIT;

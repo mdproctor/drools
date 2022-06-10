@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.drools.core.common.EntryPointFactory;
-import org.drools.core.definitions.rule.RuleBase;
+import org.drools.base.definitions.rule.RuleBase;
 import org.drools.core.rule.accessor.FactHandleFactory;
 import org.drools.kiesession.factory.RuntimeComponentFactoryImpl;
 import org.drools.kiesession.rulebase.SessionsAwareKnowledgeBase;

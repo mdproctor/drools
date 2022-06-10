@@ -18,11 +18,9 @@ package org.kie.dmn.core.weaver;
 
 import java.util.Map;
 
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.ResourceTypePackageRegistry;
-import org.kie.api.KieBase;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.ResourceTypePackageRegistry;
 import org.kie.api.definition.KiePackage;
-import org.kie.api.internal.io.ResourceTypePackage;
 import org.kie.api.internal.weaver.KieWeaverService;
 import org.kie.api.io.ResourceType;
 import org.kie.dmn.api.core.DMNModel;

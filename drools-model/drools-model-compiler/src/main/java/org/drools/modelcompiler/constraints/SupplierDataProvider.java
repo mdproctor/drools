@@ -20,10 +20,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.DataProvider;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.DataProvider;
 import org.drools.model.functions.Function0;
 
 public class SupplierDataProvider implements DataProvider {

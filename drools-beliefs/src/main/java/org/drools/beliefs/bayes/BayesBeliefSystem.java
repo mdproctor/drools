@@ -19,7 +19,7 @@ import org.drools.tms.beliefsystem.BeliefSet;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.core.common.TruthMaintenanceSystem;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.rule.consequence.Activation;
 import org.drools.core.common.PropagationContext;

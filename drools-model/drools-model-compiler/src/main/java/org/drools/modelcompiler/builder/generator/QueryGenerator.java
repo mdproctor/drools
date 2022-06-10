@@ -40,7 +40,7 @@ import org.drools.model.QueryDef;
 import org.drools.modelcompiler.builder.PackageModel;
 import org.drools.modelcompiler.builder.QueryModel;
 import org.drools.modelcompiler.builder.generator.visitor.ModelGeneratorVisitor;
-import org.kie.internal.ruleunit.RuleUnitDescription;
+import org.drools.base.ruleunit.RuleUnitDescription;
 
 import static org.drools.model.impl.VariableImpl.GENERATED_VARIABLE_PREFIX;
 import static org.drools.modelcompiler.builder.generator.DrlxParseUtil.getClassFromContext;

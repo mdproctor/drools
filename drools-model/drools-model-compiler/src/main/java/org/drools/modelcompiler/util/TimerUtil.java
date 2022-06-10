@@ -19,10 +19,10 @@ import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.util.Map;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.rule.Declaration;
-import org.drools.core.time.TimeUtils;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.time.TimeUtils;
 import org.drools.core.time.TimerExpression;
 import org.drools.core.time.impl.CronExpression;
 import org.drools.util.ClassUtils;

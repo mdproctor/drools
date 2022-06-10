@@ -19,11 +19,11 @@ package org.drools.metric.rule;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.EvalCondition;
-import org.drools.core.rule.accessor.EvalExpression;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.EvalCondition;
+import org.drools.base.rule.accessor.EvalExpression;
 import org.drools.metric.util.MetricLogUtils;
 
 public class EvalConditionMetric extends EvalCondition {

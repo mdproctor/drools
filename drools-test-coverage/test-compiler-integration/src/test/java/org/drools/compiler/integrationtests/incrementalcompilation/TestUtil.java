@@ -19,7 +19,7 @@ package org.drools.compiler.integrationtests.incrementalcompilation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.kie.api.KieBase;

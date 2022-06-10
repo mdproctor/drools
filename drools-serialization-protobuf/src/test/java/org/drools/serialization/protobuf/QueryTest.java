@@ -23,7 +23,7 @@ import org.drools.commands.runtime.FlatQueryResults;
 import org.drools.core.QueryResultsImpl;
 import org.drools.core.QueryResultsRowImpl;
 import org.drools.core.common.InternalFactHandle;
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.core.runtime.rule.impl.FlatQueryResultRow;
 import org.drools.mvel.CommonTestMethodBase;
 import org.drools.mvel.compiler.Cheese;

@@ -17,7 +17,7 @@ package org.drools.modelcompiler.constraints;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.drools.core.util.MVELExecutor;
+import org.drools.base.util.MVELExecutor;
 import org.drools.model.functions.Function1;
 import org.drools.util.ClassUtils;
 

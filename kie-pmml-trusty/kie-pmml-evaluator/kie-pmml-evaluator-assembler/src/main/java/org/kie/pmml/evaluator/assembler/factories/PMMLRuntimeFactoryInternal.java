@@ -29,7 +29,7 @@ import org.drools.compiler.kie.builder.impl.InternalKieModule;
 import org.drools.compiler.kie.builder.impl.KieContainerImpl;
 import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.util.io.DescrResource;
 import org.drools.util.io.FileSystemResource;

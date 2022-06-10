@@ -18,7 +18,7 @@ package org.drools.kiesession.debug;
 
 import java.util.Stack;
 
-import org.drools.core.common.NetworkNode;
+import org.drools.base.common.NetworkNode;
 
 public class AlphaNodeVisitor extends AbstractNetworkNodeVisitor {
     

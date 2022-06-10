@@ -16,12 +16,12 @@ package org.drools.mvel;
 
 import java.util.ArrayList;
 
-import org.drools.core.base.ValueResolver;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.core.test.model.Cheese;
-import org.drools.core.util.index.ConstraintOperatorType;
+import org.drools.base.util.index.ConstraintOperatorType;
 import org.mvel2.MVEL;
 import org.mvel2.ParserConfiguration;
 

@@ -16,7 +16,7 @@
   <name>Drools :: base</name>
 
   <properties>
-    <java.module.name>org.drools.core</java.module.name>
+    <java.module.name>org.drools.base</java.module.name>
     <surefire.forkCount>2</surefire.forkCount>
   </properties>
 

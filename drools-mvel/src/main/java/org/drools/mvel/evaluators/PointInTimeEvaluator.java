@@ -20,14 +20,14 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.core.base.ValueResolver;
-import org.drools.core.base.ValueType;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.drl.parser.impl.Operator;
 import org.kie.api.runtime.rule.FactHandle;
 
-import static org.drools.core.util.TimeIntervalParser.getTimestampFromDate;
+import static org.drools.base.util.TimeIntervalParser.getTimestampFromDate;
 
 public abstract class PointInTimeEvaluator extends BaseEvaluator {
     protected long              initRange;

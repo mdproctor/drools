@@ -16,18 +16,18 @@
 
 package org.drools.modelcompiler.constraints;
 
-import org.drools.core.base.BaseTuple;
+import org.drools.base.base.BaseTuple;
 import org.drools.core.base.DroolsQueryImpl;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.rule.ContextEntry;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.IndexableConstraint;
-import org.drools.core.rule.MutableTypeConstraint;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.util.FieldIndex;
-import org.drools.core.util.index.ConstraintOperatorType;
-import org.drools.core.util.index.IndexConfiguration;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.ContextEntry;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.IndexableConstraint;
+import org.drools.base.rule.MutableTypeConstraint;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.util.FieldIndex;
+import org.drools.base.util.index.ConstraintOperatorType;
+import org.drools.base.util.index.IndexConfiguration;
 import org.drools.model.Index;
 import org.drools.modelcompiler.constraints.LambdaConstraint.LambdaContextEntry;
 import org.kie.api.runtime.rule.FactHandle;

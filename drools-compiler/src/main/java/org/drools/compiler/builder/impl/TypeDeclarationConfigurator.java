@@ -17,16 +17,15 @@ package org.drools.compiler.builder.impl;
 
 import java.util.Map;
 
-import org.drools.compiler.builder.DroolsAssemblerContext;
 import org.drools.compiler.compiler.AnalysisResult;
 import org.drools.compiler.compiler.BoundIdentifiers;
 import org.drools.compiler.compiler.Dialect;
 import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.compiler.compiler.TypeDeclarationError;
 import org.drools.compiler.rule.builder.PackageBuildContext;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.rule.Annotated;
-import org.drools.core.rule.TypeDeclaration;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.rule.Annotated;
+import org.drools.base.rule.TypeDeclaration;
 import org.drools.drl.ast.descr.AbstractClassTypeDeclarationDescr;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.kie.api.definition.type.Duration;
@@ -34,7 +33,7 @@ import org.kie.api.definition.type.Role;
 import org.kie.api.definition.type.Timestamp;
 
 import static org.drools.compiler.rule.builder.util.AnnotationFactory.toAnnotated;
-import static org.drools.core.rule.TypeDeclaration.processTypeAnnotations;
+import static org.drools.base.rule.TypeDeclaration.processTypeAnnotations;
 
 public class TypeDeclarationConfigurator {
 

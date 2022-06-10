@@ -21,7 +21,7 @@ import org.drools.modelcompiler.builder.PackageModel;
 import org.drools.modelcompiler.builder.PackageModelWriter;
 import org.drools.modelcompiler.builder.PackageSources;
 import org.drools.modelcompiler.builder.QueryModel;
-import org.kie.internal.ruleunit.RuleUnitDescription;
+import org.drools.base.ruleunit.RuleUnitDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

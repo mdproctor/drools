@@ -21,15 +21,15 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.security.CodeSource;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.core.reteoo.CoreComponentFactory;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.EvalCondition;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.EvalCondition;
 import org.drools.core.rule.JavaDialectRuntimeData;
-import org.drools.core.rule.accessor.EvalExpression;
+import org.drools.base.rule.accessor.EvalExpression;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

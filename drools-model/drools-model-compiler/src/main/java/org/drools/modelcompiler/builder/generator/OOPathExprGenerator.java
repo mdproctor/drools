@@ -49,7 +49,7 @@ import static org.drools.modelcompiler.builder.generator.DslMethodNames.FROM_CAL
 import static org.drools.modelcompiler.builder.generator.DslMethodNames.PATTERN_CALL;
 import static org.drools.modelcompiler.builder.generator.DslMethodNames.REACTIVE_FROM_CALL;
 import static org.drools.modelcompiler.builder.generator.DslMethodNames.createDslTopLevelMethod;
-import static org.kie.internal.ruleunit.RuleUnitUtil.isDataSource;
+import static org.drools.base.ruleunit.RuleUnitUtil.isDataSource;
 
 public class OOPathExprGenerator {
 

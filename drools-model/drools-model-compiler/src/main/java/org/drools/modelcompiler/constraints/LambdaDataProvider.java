@@ -21,11 +21,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Objects;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.phreak.ReactiveObject;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.DataProvider;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.phreak.ReactiveObject;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.DataProvider;
 import org.drools.model.functions.FunctionN;
 
 public class LambdaDataProvider implements DataProvider {

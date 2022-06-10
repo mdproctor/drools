@@ -20,11 +20,11 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.base.ValueType;
-import org.drools.core.rule.accessor.Evaluator;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.drl.parser.impl.Operator;
 import org.drools.mvel.evaluators.VariableRestriction.ObjectVariableContextEntry;
 import org.drools.mvel.evaluators.VariableRestriction.VariableContextEntry;

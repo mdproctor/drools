@@ -17,7 +17,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Map;
 
-import org.drools.core.util.MVELExecutor;
+import org.drools.base.util.MVELExecutor;
 import org.drools.mvel.util.MVELEvaluator;
 import org.kie.internal.security.KiePolicyHelper;
 import org.mvel2.MVEL;

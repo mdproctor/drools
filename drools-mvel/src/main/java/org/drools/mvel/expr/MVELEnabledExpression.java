@@ -21,14 +21,14 @@ import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.RuleBase;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.SortDeclarations;
-import org.drools.core.rule.accessor.Enabled;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.SortDeclarations;
+import org.drools.base.rule.accessor.Enabled;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.mvel2.integration.VariableResolverFactory;
 

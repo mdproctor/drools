@@ -18,12 +18,12 @@ package org.drools.core.reteoo;
 
 import java.io.Serializable;
 
-import org.drools.core.base.BaseTuple;
+import org.drools.base.base.BaseTuple;
 import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.NetworkNode;
+import org.drools.base.common.NetworkNode;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.rule.Declaration;
-import org.drools.core.util.Entry;
+import org.drools.base.rule.Declaration;
+import org.drools.base.util.Entry;
 import org.drools.core.util.index.TupleList;
 
 /**

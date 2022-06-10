@@ -17,7 +17,7 @@ package org.drools.core.reteoo;
 
 import org.junit.Test;
 
-import static org.drools.core.reteoo.NodeTypeEnums.*;
+import static org.drools.base.reteoo.NodeTypeEnums.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

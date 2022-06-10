@@ -28,11 +28,11 @@ import java.util.Properties;
 
 import org.drools.core.common.AgendaGroupFactory;
 import org.drools.core.reteoo.RuntimeComponentFactory;
-import org.drools.core.rule.consequence.ConflictResolver;
+import org.drools.base.rule.consequence.ConflictResolver;
 import org.drools.core.runtime.rule.impl.DefaultConsequenceExceptionHandler;
 import org.drools.core.util.ConfFileUtils;
-import org.drools.core.util.MVELExecutor;
-import org.drools.core.util.index.IndexConfiguration;
+import org.drools.base.util.MVELExecutor;
+import org.drools.base.util.index.IndexConfiguration;
 import org.drools.util.StringUtils;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.kie.api.KieBaseConfiguration;

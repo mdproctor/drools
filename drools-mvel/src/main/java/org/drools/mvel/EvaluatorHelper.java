@@ -20,12 +20,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.rule.Declaration;
-import org.drools.core.util.MVELExecutor;
+import org.drools.base.rule.Declaration;
+import org.drools.base.util.MVELExecutor;
 
 public class EvaluatorHelper {
 

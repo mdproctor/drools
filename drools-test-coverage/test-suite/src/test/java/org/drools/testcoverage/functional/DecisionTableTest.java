@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.template.parser.DecisionTableParseException;
 import org.drools.testcoverage.common.listener.OrderListener;
 import org.drools.testcoverage.common.listener.TrackingAgendaEventListener;

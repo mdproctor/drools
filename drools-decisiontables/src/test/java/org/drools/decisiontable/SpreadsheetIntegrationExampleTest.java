@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.acme.insurance.launcher.PricingRuleLauncher;
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.junit.Test;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;

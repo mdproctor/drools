@@ -20,11 +20,11 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.Accumulator;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.Accumulator;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.kie.api.runtime.rule.FactHandle;
 import org.mvel2.integration.VariableResolverFactory;

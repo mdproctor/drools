@@ -16,11 +16,11 @@
 
 package org.drools.modelcompiler.constraints;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.accessor.EvalExpression;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.accessor.EvalExpression;
 import org.drools.model.SingleConstraint;
 
 public class LambdaEvalExpression implements EvalExpression {

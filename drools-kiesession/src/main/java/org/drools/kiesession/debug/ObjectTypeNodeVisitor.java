@@ -16,7 +16,7 @@
 
 package org.drools.kiesession.debug;
 
-import org.drools.core.common.NetworkNode;
+import org.drools.base.common.NetworkNode;
 import org.drools.core.reteoo.ObjectTypeNode;
 
 import java.util.Stack;

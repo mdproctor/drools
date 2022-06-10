@@ -19,12 +19,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.Pattern;
 import org.drools.core.impl.RuleBase;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.IndexableConstraint;
-import org.drools.core.rule.constraint.Constraint;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.IndexableConstraint;
+import org.drools.base.rule.constraint.Constraint;
 import org.junit.Test;
 import org.kie.api.definition.rule.Rule;
 
@@ -83,29 +84,29 @@ public class DefaultTemplateRuleBaseTest {
         //  column3 : Column(name == "column3")
         //  exists StringCell(row == r, column == column3, value == "xyz")
         assertEquals(7, lhs.getChildren().size());
-        org.drools.core.rule.Pattern pattern = (org.drools.core.rule.Pattern) lhs.getChildren().get(1);
+        Pattern pattern = (Pattern) lhs.getChildren().get(1);
         assertEquals(1, pattern.getConstraints().size());
         Constraint constraint = pattern.getConstraints().get(0);
         GroupElement exists = (GroupElement) lhs.getChildren().get(2);
-        pattern = (org.drools.core.rule.Pattern) exists.getChildren().get(0);
+        pattern = (Pattern) exists.getChildren().get(0);
         assertEquals(3, pattern.getConstraints().size());
         IndexableConstraint vconstraint = (IndexableConstraint) pattern.getConstraints().get(1);
         assertEquals(Column.class, vconstraint.getFieldIndex().getRightExtractor().getExtractToClass());
         assertEquals("column1", vconstraint.getRequiredDeclarations()[0].getIdentifier());
-        pattern = (org.drools.core.rule.Pattern) lhs.getChildren().get(3);
+        pattern = (Pattern) lhs.getChildren().get(3);
         assertEquals(1, pattern.getConstraints().size());
         constraint = pattern.getConstraints().get(0);
         exists = (GroupElement) lhs.getChildren().get(4);
-        pattern = (org.drools.core.rule.Pattern) exists.getChildren().get(0);
+        pattern = (Pattern) exists.getChildren().get(0);
         assertEquals(3, pattern.getConstraints().size());
         vconstraint = (IndexableConstraint) pattern.getConstraints().get(1);
         assertEquals(Column.class, vconstraint.getFieldIndex().getRightExtractor().getExtractToClass());
         assertEquals("column2", vconstraint.getRequiredDeclarations()[0].getIdentifier());
-        pattern = (org.drools.core.rule.Pattern) lhs.getChildren().get(5);
+        pattern = (Pattern) lhs.getChildren().get(5);
         assertEquals(1, pattern.getConstraints().size());
         constraint = pattern.getConstraints().get(0);
         exists = (GroupElement) lhs.getChildren().get(6);
-        pattern = (org.drools.core.rule.Pattern) exists.getChildren().get(0);
+        pattern = (Pattern) exists.getChildren().get(0);
         assertEquals(3, pattern.getConstraints().size());
         vconstraint = (IndexableConstraint) pattern.getConstraints().get(1);
         assertEquals(Column.class, vconstraint.getFieldIndex().getRightExtractor().getExtractToClass());

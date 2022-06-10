@@ -331,7 +331,7 @@ public class JTMSTest {
         
         ObjectHashMap equalityMap =  TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(ep).getEqualityKeyMap();
         assertEquals( 1, equalityMap.size() ); // Only Person type is logical
-        org.drools.core.util.Iterator it = equalityMap.iterator();
+        org.drools.base.util.Iterator it = equalityMap.iterator();
         TruthMaintenanceSystemEqualityKey key = (TruthMaintenanceSystemEqualityKey) (( ObjectEntry ) it.next() ).getValue();
         while ( !key.getFactHandle().getObject().equals( new Person( "darth") ) ) {
             key = ( TruthMaintenanceSystemEqualityKey  ) (( ObjectEntry ) it.next() ).getValue();
@@ -429,7 +429,7 @@ public class JTMSTest {
         
         ObjectHashMap equalityMap =  TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(ep).getEqualityKeyMap();
         assertEquals( 1, equalityMap.size() ); // Only Person type is logical
-        org.drools.core.util.Iterator it = equalityMap.iterator();
+        org.drools.base.util.Iterator it = equalityMap.iterator();
         TruthMaintenanceSystemEqualityKey key = ( TruthMaintenanceSystemEqualityKey  ) (( ObjectEntry ) it.next() ).getValue();
         while ( !key.getFactHandle().getObject().equals( new Person( "darth") ) ) {
             key = ( TruthMaintenanceSystemEqualityKey  ) (( ObjectEntry ) it.next() ).getValue();
@@ -523,7 +523,7 @@ public class JTMSTest {
         TruthMaintenanceSystem tms = TruthMaintenanceSystemFactory.get().getOrCreateTruthMaintenanceSystem(ep);
         ObjectHashMap equalityMap =  tms.getEqualityKeyMap();
         assertEquals( 2, equalityMap.size() ); // go1, neg are two different strings.
-        org.drools.core.util.Iterator it = equalityMap.iterator();
+        org.drools.base.util.Iterator it = equalityMap.iterator();
         TruthMaintenanceSystemEqualityKey key = ( TruthMaintenanceSystemEqualityKey  ) (( ObjectEntry ) it.next() ).getValue();
         while ( !key.getFactHandle().getObject().equals( "neg") ) {
             key = ( TruthMaintenanceSystemEqualityKey  ) (( ObjectEntry ) it.next() ).getValue();

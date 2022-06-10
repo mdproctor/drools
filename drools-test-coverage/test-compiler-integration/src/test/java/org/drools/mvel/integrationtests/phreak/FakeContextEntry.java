@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.core.base.BaseTuple;
-import org.drools.core.base.ValueResolver;
+import org.drools.base.base.BaseTuple;
+import org.drools.base.base.ValueResolver;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.rule.ContextEntry;
+import org.drools.base.rule.ContextEntry;
 import org.kie.api.runtime.rule.FactHandle;
 
 public class FakeContextEntry implements ContextEntry {

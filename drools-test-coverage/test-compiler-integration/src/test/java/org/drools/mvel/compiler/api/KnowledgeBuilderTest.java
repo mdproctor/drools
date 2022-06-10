@@ -17,7 +17,7 @@ package org.drools.mvel.compiler.api;
 
 import java.util.Collection;
 
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.junit.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieFileSystem;
