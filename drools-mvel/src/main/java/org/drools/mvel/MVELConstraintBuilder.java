@@ -24,6 +24,7 @@ import java.io.ObjectOutput;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,6 +66,8 @@ import org.drools.mvel.evaluators.OverlapsEvaluatorDefinition;
 import org.drools.mvel.evaluators.StartedByEvaluatorDefinition;
 import org.drools.mvel.evaluators.StartsEvaluatorDefinition;
 import org.drools.mvel.evaluators.StrEvaluatorDefinition;
+import org.drools.mvel.expr.MVELCalendarCoercion;
+import org.drools.mvel.expr.MVELDateCoercion;
 import org.drools.mvel.field.FieldFactory;
 import org.drools.base.base.ValueType;
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
@@ -131,6 +134,8 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
             CompatibilityStrategy.setCompatibilityEvaluator(StringCoercionCompatibilityEvaluator.INSTANCE);
             DataConversion.addConversionHandler(Boolean.class, BooleanConversionHandler.INSTANCE);
             DataConversion.addConversionHandler(boolean.class, BooleanConversionHandler.INSTANCE);
+            DataConversion.addConversionHandler( Date.class, new MVELDateCoercion());
+            DataConversion.addConversionHandler( Calendar.class, new MVELCalendarCoercion());
 
             MVEL_OPERATORS = new HashSet<>() {{
                 add("==");
@@ -480,7 +485,7 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
 
     public static class StringCoercionCompatibilityEvaluator extends CompatibilityStrategy.DefaultCompatibilityEvaluator {
 
-        private static final CompatibilityStrategy.CompatibilityEvaluator INSTANCE = new StringCoercionCompatibilityEvaluator();
+        public static final CompatibilityStrategy.CompatibilityEvaluator INSTANCE = new StringCoercionCompatibilityEvaluator();
 
         private StringCoercionCompatibilityEvaluator() { }
 

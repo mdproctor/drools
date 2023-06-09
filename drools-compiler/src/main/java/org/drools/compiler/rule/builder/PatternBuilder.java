@@ -85,6 +85,8 @@ import org.drools.drl.ast.descr.AtomicExprDescr;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.BehaviorDescr;
 import org.drools.drl.ast.descr.BindingDescr;
+import org.drools.drl.ast.descr.ConnectiveDescr;
+import org.drools.drl.ast.descr.ConnectiveDescr.RestrictionConnectiveType;
 import org.drools.drl.ast.descr.ConnectiveType;
 import org.drools.drl.ast.descr.ConstraintConnectiveDescr;
 import org.drools.drl.ast.descr.EntryPointDescr;
@@ -97,6 +99,7 @@ import org.drools.drl.ast.descr.OperatorDescr;
 import org.drools.drl.ast.descr.PatternDescr;
 import org.drools.drl.ast.descr.PredicateDescr;
 import org.drools.drl.ast.descr.RelationalExprDescr;
+import org.drools.drl.ast.descr.RestrictionDescr;
 import org.drools.drl.ast.descr.ReturnValueRestrictionDescr;
 import org.drools.drl.ast.descr.RuleDescr;
 import org.drools.drl.parser.DrlExprParser;
@@ -125,6 +128,8 @@ import static org.drools.util.StringUtils.isIdentifier;
  * A builder for patterns
  */
 public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
+
+    public static boolean SINGLE_CONSTRAINT = false;
 
     private static final Logger LOG = LoggerFactory.getLogger(PatternBuilder.class);
 
@@ -748,10 +753,114 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
                                     Pattern pattern,
                                     ConstraintConnectiveDescr descr,
                                     DumperContext mvelCtx) {
+        int originalSize = descr.getDescrs().size();
+        List<Constraint> constraints = new ArrayList<>(descr.getDescrs().size());
 
-        List<Constraint> constraints = new ArrayList<>();
+        List<BaseDescr> initialDescrs;
+        List<BaseDescr> relational = new ArrayList<>();
+        List<BaseDescr> others = new ArrayList<>();
+        BaseDescr xpathDescr = null;
+        for ( BaseDescr d : descr.getDescrs()) {
+            if (isXPathDescr(d)) {
+                if (xpathDescr != null) {
+                    registerDescrBuildError(context, patternDescr,
+                                            "More than a single oopath constraint is not allowed in the same pattern");
+                    return constraints;
+                }
+                xpathDescr = d;
+            } else if (d instanceof RelationalExprDescr){
+                relational.add(d);
+            } else {
+                others.add(d);
+            }
+        }
 
-        List<BaseDescr> initialDescrs = new ArrayList<>(descr.getDescrs());
+        if (relational.size() > 1) {
+            ConstraintConnectiveDescr and = new ConstraintConnectiveDescr();
+            and.setLocation(descr.getLine(), descr.getColumn());
+            and.setConnective(ConnectiveType.AND);
+            // need to recombine this back into a single MVELConstraint
+            for (BaseDescr d : relational) {
+                and.addOrMerge(d);
+            }
+            initialDescrs = new ArrayList<>();
+            initialDescrs.add(and);
+            initialDescrs.addAll(others);
+            if (xpathDescr != null) {
+                initialDescrs.add(xpathDescr);
+            }
+        } else {
+            initialDescrs = new ArrayList<>(descr.getDescrs());
+        }
+        //initialDescrs.addAll(descr.getDescrs());
+//
+
+//        // extract indexes
+//        List<BaseDescr> equalityIndexes = new ArrayList<>(initialDescrs.size());
+//        BaseDescr rangeIndex = null;
+//        List<BaseDescr> temp = new ArrayList<>(initialDescrs.size());
+//        ExpressionDescr xpathDescr = null;
+//
+//        // scan indexable constraints and remove them all
+//        // Track the first range index, in case it needs to be removed.
+//        // Remove the XPath statement, if present.
+//        for (BaseDescr d : initialDescrs) {
+//            if (d instanceof RelationalExprDescr) {
+//                RelationalExprDescr rel = ((RelationalExprDescr) d);
+//                String operator = rel.getOperator();
+//                if (operator.equals("==") ) {
+//                    // we cannot currently index expressions with null safe operators
+//                    if (!rel.getLeft().getText().contains("!") && !rel.getLeft().getText().contains("!")) {
+//                        equalityIndexes.add(d);
+//                        continue;
+//                    }
+//                } else if (rangeIndex == null && operator.equals("<") || operator.equals(">")) {
+//                    // we cannot currently index expressions with null safe operators
+//                    if (!rel.getLeft().getText().contains("!") && !rel.getLeft().getText().contains("!")) {
+//                        rangeIndex = d;
+//                    }
+//                }
+//            } else if (isXPathDescr(d)) {
+//                if (xpathDescr != null) {
+//                    registerDescrBuildError(context, patternDescr,
+//                                            "More than a single oopath constraint is not allowed in the same pattern");
+//                    return constraints;
+//                }
+//                xpathDescr = (ExpressionDescr) d;
+//                continue;
+//            }
+//            temp.add(d);
+//        }
+//
+//        if (!equalityIndexes.isEmpty()) {
+//            // copy over the new list,
+//            initialDescrs = new ArrayList<>(temp);
+//        }
+//
+//
+//        // There are no equality indexes, but a range was found so remove it and use that.
+//        if (equalityIndexes.isEmpty() && rangeIndex != null) {
+//            temp = new ArrayList<>(initialDescrs.size());
+//            for (BaseDescr d : initialDescrs) {
+//                if ( d != rangeIndex) {
+//                    temp.add(d);
+//                }
+//            }
+//            initialDescrs = new ArrayList<>(temp);
+//        }
+//
+//        if (initialDescrs.size() > 1) {
+//            ConstraintConnectiveDescr and = new ConstraintConnectiveDescr();
+//            and.setConnective(ConnectiveType.AND);
+//            // need to recombine this back into a single MVELConstraint
+//            for (BaseDescr d : initialDescrs) {
+//                and.addOrMerge(d);
+//            }
+//            initialDescrs = new ArrayList<>(1);
+//            initialDescrs.add(and);
+//        }
+
+        //--------------------
         for (BaseDescr d : initialDescrs) {
             boolean isXPath = isXPathDescr(d);
             if (isXPath && pattern.hasXPath()) {
@@ -783,7 +892,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
             }
         }
 
-        if (descr.getDescrs().size() > initialDescrs.size()) {
+        if (descr.getDescrs().size() > originalSize) {
             // The initial build process may have generated other constraint descrs.
             // This happens when null-safe references or inline-casts are used
             // These additional constraints must be built, and added as
@@ -1366,6 +1475,8 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
     }
 
     protected boolean isSimpleExpr(final RelationalExprDescr relDescr) {
+        //if (true) return false;
+
         boolean simple = false;
         if (relDescr != null) {
             if ((relDescr.getLeft() instanceof AtomicExprDescr || relDescr.getLeft() instanceof BindingDescr) &&

@@ -20,6 +20,7 @@ package org.drools.mvel.builder;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -36,14 +37,18 @@ import org.drools.core.common.InternalWorkingMemory;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.RuleConditionElement;
 import org.drools.drl.ast.descr.BaseDescr;
+import org.drools.mvel.MVELConstraintBuilder.StringCoercionCompatibilityEvaluator;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.drools.mvel.asm.AsmUtil;
+import org.drools.mvel.expr.MVELDateCoercion;
 import org.kie.api.definition.rule.Rule;
 import org.mvel2.CompileException;
+import org.mvel2.DataConversion;
 import org.mvel2.MVEL;
 import org.mvel2.ParserConfiguration;
 import org.mvel2.ParserContext;
 import org.mvel2.optimizers.OptimizerFactory;
+import org.mvel2.util.CompatibilityStrategy;
 import org.mvel2.util.PropertyTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +105,11 @@ public class MVELExprAnalyzer {
         MVEL.COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING = true;
         MVEL.COMPILER_OPT_ALLOW_RESOLVE_INNERCLASSES_WITH_DOTNOTATION = true;
         MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS = true;
+
+        CompatibilityStrategy.setCompatibilityEvaluator(StringCoercionCompatibilityEvaluator.INSTANCE);
+
+        DataConversion.addConversionHandler(Date.class,
+                                            new MVELDateCoercion());
 
         MVELDialect dialect = (MVELDialect) context.getDialect( "mvel" );
 

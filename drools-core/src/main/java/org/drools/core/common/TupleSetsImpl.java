@@ -330,7 +330,11 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
     }
 
     private void appendSet( StringBuilder sbuilder, Tuple tuple ) {
+        int i = 0;
         for ( ; tuple != null; tuple = getNextTuple( (T) tuple ) ) {
+            if (i++ > 100) {
+                break;
+            }
             sbuilder.append( " " ).append( tuple ).append( "\n" );
         }
     }

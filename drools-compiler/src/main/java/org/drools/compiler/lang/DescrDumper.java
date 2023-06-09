@@ -201,7 +201,7 @@ public class DescrDumper extends ReflectiveVisitor implements ExpressionRewriter
         context.addBinding(bind);
     }
 
-    private void processRelationalExpression(StringBuilder sbuilder, RelationalExprDescr red, ConstraintConnectiveDescr parent, DumperContext context) {
+    public void processRelationalExpression(StringBuilder sbuilder, RelationalExprDescr red, ConstraintConnectiveDescr parent, DumperContext context) {
         // maximum precedence, so wrap any child connective in parenthesis
         int idx = parent.getDescrs().indexOf( red );
         StringBuilder left = dump(new StringBuilder(), red.getLeft(), parent, idx, Integer.MAX_VALUE, true, context);

@@ -20,13 +20,23 @@ package org.drools.mvel;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
+import org.drools.mvel.MVELConstraintBuilder.StringCoercionCompatibilityEvaluator;
 import org.drools.util.DateUtils;
 import org.drools.mvel.expr.MVELDateCoercion;
 import org.junit.Test;
+import org.mvel2.DataConversion;
+import org.mvel2.MVEL;
+import org.mvel2.ParserContext;
+import org.mvel2.util.CompatibilityStrategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.mvel2.MVEL.executeExpression;
 
 public class MVELDateCoercionTest {
 
@@ -50,5 +60,5 @@ public class MVELDateCoercionTest {
         Date dt_ = DateUtils.parseDate(dt);
         assertThat(co.convertFrom(dt)).isEqualTo(dt_);
     }
-
+    
 }

@@ -30,6 +30,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.drools.compiler.rule.builder.PatternBuilder;
+import org.drools.core.common.QuadroupleBetaConstraints;
+import org.drools.core.common.SingleBetaConstraints;
+import org.drools.core.reteoo.BetaNode;
+import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.mvel.accessors.ClassFieldReader;
 import org.drools.base.base.ClassObjectType;
@@ -1124,5 +1129,88 @@ public class MVELTest {
         f.setField3(new Float(15.1f));
         ksession.insert(f);
         assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    @Test
+    public void testConjuction() {  //  age != 0, name != "yoda", hair != "blue", cheese != null
+        for ( int i = 0; i < 1; i++) {
+            testConjuctionWithParam(true);
+            testConjuctionWithParam(false);
+        }
+    }
+
+    public void testConjuctionWithParam(boolean singleConstraint) {  //  age != 0, name != "yoda", hair != "blue", cheese != null
+        System.gc();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException x) {
+            // Restore interrupt status
+            Thread.currentThread().interrupt();
+        }
+        final String str = ""+
+                           "package org.drools.mvel.compiler.test \n" +
+                           "import " + Person.class.getCanonicalName() + "\n" +
+                           "import " + Address.class.getCanonicalName() + "\n" +
+                           "global java.util.List list \n" +
+                           "rule \"show\" \n" +
+                           "when  \n" +
+                           "    p1 : Person(name == 'yoda') \n" +
+                           //"    p2 : Person( name != 'yoda', this != p1, name != p1.name, age != p1.age, hair != p1.hair) \n" +
+                           "    p2 : Person( name != 'yoda', this != p1 && name == p1.name && age != p1.age && hair != p1.hair) \n" +
+                           //"    p2 : Person( name != 'yoda', (this != p1 || name != p1.name || age != p1.age || hair != p1.hair)) \n" +
+                           "then \n" +
+                           "   list.add(p2); \n" +
+                           "end \n";
+
+        PatternBuilder.SINGLE_CONSTRAINT = singleConstraint;
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, str);
+        // Check it was built with quad MVEL constraint
+
+        final ObjectTypeNode otn = KieUtil.getObjectTypeNode(kbase, Person.class);
+        BetaNode bnode = (BetaNode) otn.getSinks()[1].getSinks()[0];
+        BetaNodeFieldConstraint[]  constraints = bnode.getConstraints();
+        System.out.println(constraints);
+//        if ( PatternBuilder.SINGLE_CONSTRAINT) {
+//            assertThat(constraints.length).isEqualTo(1);
+//            assertThat(bnode.getRawConstraints()).isInstanceOf(SingleBetaConstraints.class);
+//        } else {
+//            assertThat(constraints.length).isEqualTo(4);
+//            assertThat(bnode.getRawConstraints()).isInstanceOf(QuadroupleBetaConstraints.class);
+//        }
+
+//        System.gc();
+//        try {
+//            Thread.sleep(1000);
+//        } catch (InterruptedException x) {
+//            // Restore interrupt status
+//            Thread.currentThread().interrupt();
+//        }
+//
+        int n = 1;//1000000;
+        final Person p1 = new Person("yoda");
+        p1.setAge(Integer.MAX_VALUE);
+        p1.setHair("green");
+
+        Person[] persons = new Person[n];
+        for (int i = 0; i < n; i++) {
+            persons[i] = new Person("name"+i, i);
+            persons[i].setHair("color"+i);
+        }
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1; i++) {
+            KieSession ksession = kbase.newKieSession();
+            final List list = new ArrayList(n);
+            ksession.setGlobal("list", list);
+
+            ksession.insert(p1);
+            Arrays.stream(persons).forEach(p -> ksession.insert(p));
+            ksession.fireAllRules();
+            ksession.dispose();
+            assertThat(list.size()).isEqualTo(n);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println( singleConstraint + " : " + (end - start));
     }
 }
