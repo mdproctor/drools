@@ -221,8 +221,6 @@ public class TypeCoercionTest extends BaseModelTest {
                 "rule Init when then insert(new Flight(new Date(365L * 24 * 60 * 60 * 1000))); end\n" +
                 "rule R when\n" +
                 "    Flight( departuretime >= \"01-Jan-1970\" && departuretime <= \"01-Jan-2018\" )\n" +
-                //"    Flight( departuretime >= \"01-Jan-1970\" )\n" +
-                //"    Flight( departuretime <= \"01-Jan-2018\" )\n" +
                 "then\n" +
                 "end\n";
 

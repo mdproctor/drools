@@ -31,10 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.compiler.rule.builder.PatternBuilder;
-import org.drools.core.common.QuadroupleBetaConstraints;
-import org.drools.core.common.SingleBetaConstraints;
 import org.drools.core.reteoo.BetaNode;
-import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.mvel.accessors.ClassFieldReader;
 import org.drools.base.base.ClassObjectType;
