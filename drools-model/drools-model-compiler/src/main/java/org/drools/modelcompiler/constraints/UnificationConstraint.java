@@ -34,7 +34,7 @@ import org.drools.modelcompiler.constraints.LambdaConstraint.LambdaContextEntry;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.runtime.rule.FactHandle;
 
-public class UnificationConstraint extends MutableTypeConstraint implements IndexableConstraint {
+public class UnificationConstraint extends MutableTypeConstraint<ContextEntry> implements IndexableConstraint {
 
     private Declaration indexingDeclaration;
     private final ReadAccessor readAccessor;
@@ -153,7 +153,7 @@ public class UnificationConstraint extends MutableTypeConstraint implements Inde
     }
 
     @Override
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         return new LambdaContextEntry();
     }
 }

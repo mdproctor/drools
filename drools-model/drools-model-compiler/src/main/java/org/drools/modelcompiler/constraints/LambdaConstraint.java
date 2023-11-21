@@ -207,7 +207,7 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         return new LambdaContextEntry();
     }
 

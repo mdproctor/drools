@@ -35,7 +35,6 @@ import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.RightTupleImpl;
 import org.drools.core.reteoo.TupleMemory;
 import org.drools.base.rule.Accumulate;
-import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.reteoo.Tuple;
@@ -141,7 +140,7 @@ public class PhreakAccumulateNode {
         BetaMemory bm = am.getBetaMemory();
         TupleMemory ltm = bm.getLeftTupleMemory();
         TupleMemory rtm = bm.getRightTupleMemory();
-        ContextEntry[] contextEntry = bm.getContext();
+        Object contextEntry = bm.getContext();
         BetaConstraints constraints = accNode.getRawConstraints();
 
         boolean leftTupleMemoryEnabled = accNode.isLeftTupleMemoryEnabled();
@@ -223,7 +222,7 @@ public class PhreakAccumulateNode {
         BetaMemory bm = am.getBetaMemory();
         TupleMemory ltm = bm.getLeftTupleMemory();
         TupleMemory rtm = bm.getRightTupleMemory();
-        ContextEntry[] contextEntry = bm.getContext();
+        Object contextEntry = bm.getContext();
         BetaConstraints constraints = accNode.getRawConstraints();
 
         if (srcRightTuples.getInsertSize() > 32 && rtm instanceof AbstractHashTable ) {
@@ -249,8 +248,8 @@ public class PhreakAccumulateNode {
                 FastIterator leftIt = accNode.getLeftIterator( ltm );
 
                 for ( LeftTuple leftTuple = accNode.getFirstLeftTuple( rightTuple, ltm, leftIt ); leftTuple != null; leftTuple = (LeftTuple) leftIt.next( leftTuple ) ) {
-                    if ( constraints.isAllowedCachedRight( contextEntry,
-                                                           leftTuple ) ) {
+                    if ( constraints.isAllowedCachedRight(leftTuple, contextEntry
+                                                         ) ) {
                         final BaseAccumulation accctx = (BaseAccumulation) leftTuple.getContextObject();
                         addMatch( accNode, accumulate, leftTuple, rightTuple,
                                   null, null, reteEvaluator, am,
@@ -278,7 +277,7 @@ public class PhreakAccumulateNode {
         BetaMemory bm = am.getBetaMemory();
         TupleMemory rtm = bm.getRightTupleMemory();
         Accumulate accumulate = accNode.getAccumulate();
-        ContextEntry[] contextEntry = bm.getContext();
+        Object contextEntry = bm.getContext();
         BetaConstraints constraints = accNode.getRawConstraints();
 
         for (LeftTuple leftTuple = srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
@@ -413,7 +412,7 @@ public class PhreakAccumulateNode {
                                 TupleSets<LeftTuple> trgLeftTuples) {
         BetaMemory bm = am.getBetaMemory();
         TupleMemory ltm = bm.getLeftTupleMemory();
-        ContextEntry[] contextEntry = bm.getContext();
+        Object contextEntry = bm.getContext();
         BetaConstraints constraints = accNode.getRawConstraints();
         Accumulate accumulate = accNode.getAccumulate();
 
@@ -480,8 +479,8 @@ public class PhreakAccumulateNode {
             // either we are indexed and changed buckets or
             // we had no children before, but there is a bucket to potentially match, so try as normal assert
             for (; leftTuple != null; leftTuple = (LeftTuple) leftIt.next(leftTuple)) {
-                if (constraints.isAllowedCachedRight(bm.getContext(),
-                                                     leftTuple)) {
+                if (constraints.isAllowedCachedRight(leftTuple, bm.getContext()
+                                                    )) {
                     if (leftTuple.getStagedType() == LeftTuple.NONE) {
                         trgLeftTuples.addUpdate(leftTuple);
                     }
@@ -495,8 +494,8 @@ public class PhreakAccumulateNode {
         } else {
             // in the same bucket, so iterate and compare
             for (; leftTuple != null; leftTuple = (LeftTuple) leftIt.next(leftTuple)) {
-                if (constraints.isAllowedCachedRight(bm.getContext(),
-                                                     leftTuple)) {
+                if (constraints.isAllowedCachedRight(leftTuple, bm.getContext()
+                                                    )) {
                     if (leftTuple.getStagedType() == LeftTuple.NONE) {
                         trgLeftTuples.addUpdate(leftTuple);
                     }

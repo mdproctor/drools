@@ -35,7 +35,7 @@ public class FastUtilIndexMemory {
     public static class FastUtilComparisonMemoryFactory implements IndexMemory.Factory {
 
         @Override
-        public TupleMemory createMemory(IndexSpec indexSpec, boolean isLeft) {
+            public TupleMemory createMemory(IndexSpec indexSpec, boolean isLeft) {
             return new FastUtilTreeMemory(indexSpec.getConstraintType(), indexSpec.getIndex(0), isLeft);
         }
     }

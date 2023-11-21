@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.compiler.rule.builder.PatternBuilder;
 import org.drools.core.reteoo.BetaNode;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
@@ -1153,7 +1154,7 @@ public class MVELTest {
                            "when  \n" +
                            "    p1 : Person(name == 'yoda') \n" +
                            //"    p2 : Person( name != 'yoda', this != p1, name != p1.name, age != p1.age, hair != p1.hair) \n" +
-                           "    p2 : Person( name != 'yoda', this != p1 && name == p1.name && age != p1.age && hair != p1.hair) \n" +
+                           "    p2 : Person( name != 'yoda', this != p1 && name != p1.name && age != p1.age && hair != p1.hair) \n" +
                            //"    p2 : Person( name != 'yoda', (this != p1 || name != p1.name || age != p1.age || hair != p1.hair)) \n" +
                            "then \n" +
                            "   list.add(p2); \n" +
@@ -1165,8 +1166,8 @@ public class MVELTest {
         // Check it was built with quad MVEL constraint
 
         final ObjectTypeNode otn = KieUtil.getObjectTypeNode(kbase, Person.class);
-        BetaNode bnode = (BetaNode) otn.getSinks()[1].getSinks()[0];
-        BetaNodeFieldConstraint[]  constraints = bnode.getConstraints();
+        BetaNode         bnode       = (BetaNode) otn.getSinks()[1].getSinks()[0];
+        BetaConstraint[] constraints = bnode.getConstraints();
         System.out.println(constraints);
 //        if ( PatternBuilder.SINGLE_CONSTRAINT) {
 //            assertThat(constraints.length).isEqualTo(1);

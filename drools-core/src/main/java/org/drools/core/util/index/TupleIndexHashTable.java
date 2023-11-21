@@ -31,14 +31,13 @@ import org.drools.core.util.LinkedList;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.function.Supplier;
 
 public class TupleIndexHashTable extends AbstractHashTable implements TupleMemory {
 
     private static final long                         serialVersionUID = 510l;
 
     public static final int                           PRIME            = 31;
-
-    private int                                       startResult;
 
     private transient FieldIndexHashTableFullIterator tupleValueFullIterator;
 
@@ -54,48 +53,46 @@ public class TupleIndexHashTable extends AbstractHashTable implements TupleMemor
         // constructor for serialisation
     }
 
-    public TupleIndexHashTable(FieldIndex[] index, boolean left) {
-        this( 128, 0.75f, index, left );
+    public TupleIndexHashTable(Supplier<Index> indexSupplier, boolean left) {
+        this( 128, 0.75f, indexSupplier, left );
     }
 
     public TupleIndexHashTable( int capacity,
                                 float loadFactor,
-                                FieldIndex[] index,
+                                Supplier<Index> indexSupplier,
                                 boolean left ) {
         super( capacity,
                loadFactor );
 
         this.left = left;
 
-        this.startResult = PRIME;
-        for ( FieldIndex i : index ) {
-            this.startResult += PRIME * this.startResult + i.getRightExtractor().getIndex();
-        }
 
-        switch ( index.length ) {
-            case 0 :
-                throw new IllegalArgumentException( "FieldIndexHashTable cannot use an index[] of length  0" );
-            case 1 :
-                this.index = new SingleIndex( index,
-                                              this.startResult );
-                break;
-            case 2 :
-                this.index = new DoubleCompositeIndex( index,
-                                                       this.startResult );
-                break;
-            case 3 :
-                this.index = new TripleCompositeIndex( index,
-                                                       this.startResult );
-                break;
-            default :
-                throw new IllegalArgumentException( "FieldIndexHashTable cannot use an index[] of length  great than 3" );
-        }
+
+        index = indexSupplier.get();
+
+//        switch ( index.length ) {
+//            case 0 :
+//                throw new IllegalArgumentException( "FieldIndexHashTable cannot use an index[] of length  0" );
+//            case 1 :
+//                this.index = new SingleIndex( index,
+//                                              this.startResult );
+//                break;
+//            case 2 :
+//                this.index = new DoubleCompositeIndex( index,
+//                                                       this.startResult );
+//                break;
+//            case 3 :
+//                this.index = new TripleCompositeIndex( index,
+//                                                       this.startResult );
+//                break;
+//            default :
+//                throw new IllegalArgumentException( "FieldIndexHashTable cannot use an index[] of length  great than 3" );
+//        }
     }
 
     public void readExternal(ObjectInput in) throws IOException,
                                             ClassNotFoundException {
         super.readExternal( in );
-        startResult = in.readInt();
         factSize = in.readInt();
         index = (Index) in.readObject();
         left = in.readBoolean();
@@ -103,7 +100,6 @@ public class TupleIndexHashTable extends AbstractHashTable implements TupleMemor
 
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal( out );
-        out.writeInt( startResult );
         out.writeInt( factSize );
         out.writeObject( index );
         out.writeBoolean( left );
@@ -465,7 +461,6 @@ public class TupleIndexHashTable extends AbstractHashTable implements TupleMemor
 
     public void clear() {
         super.clear();
-        this.startResult = PRIME;
         this.factSize = 0;
         this.fullFastIterator = null;
         this.tupleValueFullIterator = null;

@@ -19,14 +19,19 @@
 package org.drools.core.util.index;
 
 import org.drools.base.rule.IndexableConstraint;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.util.FieldIndex;
 import org.drools.base.util.index.ConstraintTypeOperator;
 import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.util.AbstractHashTable.DoubleCompositeIndex;
+import org.drools.core.util.AbstractHashTable.Index;
+import org.drools.core.util.AbstractHashTable.SingleIndex;
+import org.drools.core.util.AbstractHashTable.TripleCompositeIndex;
 import org.kie.internal.conf.IndexPrecedenceOption;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.drools.base.util.index.IndexUtil.isEqualIndexable;
 
@@ -34,8 +39,18 @@ public class IndexSpec {
     private ConstraintTypeOperator constraintType = ConstraintTypeOperator.UNKNOWN;
     private FieldIndex[] indexes;
 
-    IndexSpec(short nodeType, BetaNodeFieldConstraint[] constraints, RuleBaseConfiguration config) {
+    public IndexSpec(short nodeType, BetaConstraint[] constraints, RuleBaseConfiguration config) {
         init(nodeType, constraints, config);
+    }
+
+    public IndexSpec(FieldIndex[] indexes,  ConstraintTypeOperator constraintType) {
+        this.indexes = indexes;
+        this.constraintType = constraintType;
+    }
+
+    public IndexSpec(FieldIndex[] indexes) {
+        this.indexes = indexes;
+        this.constraintType = ConstraintTypeOperator.EQUAL;
     }
 
     public ConstraintTypeOperator getConstraintType() {
@@ -46,11 +61,41 @@ public class IndexSpec {
         return indexes;
     }
 
+    public Supplier<Index> getIndexSupplier() {
+        Index index;
+        int PRIME   = 31;
+        int startResult = PRIME;
+        for ( FieldIndex i : indexes ) {
+            startResult += PRIME * startResult + i.getRightExtractor().getIndex();
+        }
+
+        switch ( indexes.length ) {
+            case 0 :
+                throw new IllegalArgumentException( "FieldIndexHashTable cannot use an index[] of length  0" );
+            case 1 :
+                index = new SingleIndex(indexes,
+                                        startResult );
+                break;
+            case 2 :
+                index = new DoubleCompositeIndex(indexes,
+                                                 startResult );
+                break;
+            case 3 :
+                index = new TripleCompositeIndex(indexes,
+                                                 startResult );
+                break;
+            default :
+                throw new IllegalArgumentException( "FieldIndexHashTable cannot use an index[] of length  great than 3" );
+        }
+
+        return () -> index;
+    }
+
     public FieldIndex getIndex(int pos) {
         return indexes[pos];
     }
 
-    private void init(short nodeType, BetaNodeFieldConstraint[] constraints, RuleBaseConfiguration config) {
+    private void init(short nodeType, BetaConstraint[] constraints, RuleBaseConfiguration config) {
         int keyDepth = config.getCompositeKeyDepth();
         IndexPrecedenceOption indexPrecedenceOption = config.getIndexPrecedenceOption();
         int firstIndexableConstraint = indexPrecedenceOption == IndexPrecedenceOption.EQUALITY_PRIORITY ?
@@ -77,7 +122,7 @@ public class IndexSpec {
         }
     }
 
-    private int determineTypeWithEqualityPriority(short nodeType, BetaNodeFieldConstraint[] constraints, RuleBaseConfiguration config) {
+    private int determineTypeWithEqualityPriority(short nodeType, BetaConstraint[] constraints, RuleBaseConfiguration config) {
         int indexedConstraintPos = 0;
         for (int i = 0; i < constraints.length; i++) {
             if (constraints[i] instanceof IndexableConstraint) {
@@ -95,7 +140,7 @@ public class IndexSpec {
         return indexedConstraintPos;
     }
 
-    private int determineTypeWithPatternOrder(short nodeType, BetaNodeFieldConstraint[] constraints, RuleBaseConfiguration config) {
+    private int determineTypeWithPatternOrder(short nodeType, BetaConstraint[] constraints, RuleBaseConfiguration config) {
         for (int i = 0; i < constraints.length; i++) {
             ConstraintTypeOperator type = ConstraintTypeOperator.getType(constraints[i]);
             if ( type.isIndexableForNode(nodeType, (IndexableConstraint) constraints[i], config) ) {

@@ -99,7 +99,7 @@ import static org.drools.util.StringUtils.extractFirstIdentifier;
 import static org.drools.util.StringUtils.lookAheadIgnoringSpaces;
 import static org.drools.util.StringUtils.skipBlanks;
 
-public class MVELConstraint extends MutableTypeConstraint implements IndexableConstraint, AcceptsReadAccessor {
+public class MVELConstraint extends MutableTypeConstraint<ContextEntry> implements IndexableConstraint, AcceptsReadAccessor {
     protected static final boolean TEST_JITTING = false;
 
     private static final Logger logger = LoggerFactory.getLogger(MVELConstraint.class);
@@ -381,7 +381,7 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
         return mvelEvaluator;
     }
 
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         if (declarations.length == 0) return null;
         ContextEntry contextEntry = new MvelContextEntry(declarations);
         if (isUnification) {

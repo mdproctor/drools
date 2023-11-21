@@ -169,7 +169,7 @@ public class CombinedConstraint extends AbstractConstraint {
     }
 
     @Override
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         return new LambdaContextEntry();
     }
 }

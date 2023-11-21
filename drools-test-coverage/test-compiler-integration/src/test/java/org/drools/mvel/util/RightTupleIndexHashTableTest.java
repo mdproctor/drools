@@ -21,8 +21,12 @@ package org.drools.mvel.util;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.base.ClassFieldAccessorCache;
+import org.drools.core.util.index.IndexSpec;
 import org.drools.mvel.accessors.ClassFieldAccessorStore;
 import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.DefaultFactHandle;
@@ -42,6 +46,8 @@ import org.drools.core.util.index.TupleIndexHashTable;
 import org.drools.core.util.index.TupleList;
 import org.junit.Before;
 import org.junit.Test;
+import org.kie.api.KieBase;
+import org.kie.api.KieServices;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,6 +59,9 @@ public class RightTupleIndexHashTableTest {
     public void setUp() throws Exception {
         store.setClassFieldAccessorCache( new ClassFieldAccessorCache( Thread.currentThread().getContextClassLoader() ) );
         store.setEagerWire( true );
+    }
+    public Supplier<AbstractHashTable.Index> getIndexSupplier(FieldIndex fieldIndex) {
+        return new IndexSpec(new FieldIndex[] {fieldIndex}).getIndexSupplier();
     }
 
     @Test
@@ -70,7 +79,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable( new IndexSpec(new FieldIndex[]{fieldIndex}).getIndexSupplier(), false );
 
         final Cheese cheddar = new Cheese( "cheddar",
                                            10 );
@@ -120,7 +129,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable( getIndexSupplier(fieldIndex), false );
 
         assertThat(map.size()).isEqualTo(0);
 
@@ -177,7 +186,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable( getIndexSupplier(fieldIndex), false );
 
         assertThat(map.size()).isEqualTo(0);
 
@@ -233,7 +242,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable(getIndexSupplier(fieldIndex), false );
 
         final TestClass c1 = new TestClass( 0,
                                             new TestClass( 20,
@@ -286,7 +295,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable( getIndexSupplier(fieldIndex), false );
 
         assertThat(map.size()).isEqualTo(0);
 
@@ -349,7 +358,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( 16, 0.75f, new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable( 16, 0.75f, getIndexSupplier(fieldIndex), false );
 
         assertThat(map.size()).isEqualTo(0);
 
@@ -568,7 +577,7 @@ public class RightTupleIndexHashTableTest {
         final FieldIndex fieldIndex = new FieldIndex( extractor,
                                                       declaration );
 
-        final TupleIndexHashTable map = new TupleIndexHashTable( new FieldIndex[]{fieldIndex}, false );
+        final TupleIndexHashTable map = new TupleIndexHashTable(getIndexSupplier(fieldIndex), false );
 
         final Cheese stilton = new Cheese( "stilton",
                                            55 );

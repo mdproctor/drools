@@ -243,7 +243,7 @@ public class FieldConstraintTest {
                                null,
                                true );
 
-        final PredicateContextEntry context = (PredicateContextEntry) constraint1.createContextEntry();
+        final PredicateContextEntry context = (PredicateContextEntry) constraint1.createContext();
         context.updateFromTuple(ksession,
                 tuple);
         assertThat(constraint1.isAllowedCachedLeft(context,

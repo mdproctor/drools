@@ -41,7 +41,7 @@ import org.kie.api.runtime.rule.FactHandle;
  * inside inside a field constraint (and as so, must implement the
  * Restriction interface).
  */
-public class PredicateConstraint extends MutableTypeConstraint
+public class PredicateConstraint extends MutableTypeConstraint<ContextEntry>
     implements
         Wireable,
     Externalizable {
@@ -225,7 +225,7 @@ public class PredicateConstraint extends MutableTypeConstraint
         return this.expression.equals( other.expression );
     }
 
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         PredicateContextEntry ctx = new PredicateContextEntry();
         ctx.dialectContext = this.expression.createContext();
         return ctx;

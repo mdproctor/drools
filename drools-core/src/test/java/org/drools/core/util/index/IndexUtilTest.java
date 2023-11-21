@@ -28,7 +28,7 @@ import org.drools.base.rule.IndexableConstraint;
 import org.drools.base.rule.accessor.FieldValue;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.util.FieldIndex;
 import org.drools.base.util.index.ConstraintTypeOperator;
@@ -118,8 +118,8 @@ public class IndexUtilTest {
         RuleBaseConfiguration config = getRuleBaseConfiguration();
         FakeBetaNodeFieldConstraint intEqualsConstraint = new FakeBetaNodeFieldConstraint(ConstraintTypeOperator.EQUAL, new FakeReadAccessor(ValueType.PINTEGER_TYPE));
         FakeBetaNodeFieldConstraint stringEqualsConstraint = new FakeBetaNodeFieldConstraint(ConstraintTypeOperator.EQUAL, new FakeReadAccessor(ValueType.STRING_TYPE));
-        BetaNodeFieldConstraint[] constraints = new FakeBetaNodeFieldConstraint[]{intEqualsConstraint, stringEqualsConstraint};
-        boolean[] indexed = IndexUtil.isIndexableForNode(IndexPrecedenceOption.EQUALITY_PRIORITY, NodeTypeEnums.JoinNode, config.getCompositeKeyDepth(), constraints, config);
+        BetaConstraint[]            constraints            = new FakeBetaNodeFieldConstraint[]{intEqualsConstraint, stringEqualsConstraint};
+        boolean[]                   indexed                = IndexUtil.isIndexableForNode(IndexPrecedenceOption.EQUALITY_PRIORITY, NodeTypeEnums.JoinNode, config.getCompositeKeyDepth(), constraints, config);
         assertThat(indexed).containsExactly(true, true);
     }
 
@@ -129,8 +129,8 @@ public class IndexUtilTest {
         FakeBetaNodeFieldConstraint intEqualsConstraint = new FakeBetaNodeFieldConstraint(ConstraintTypeOperator.EQUAL, new FakeReadAccessor(ValueType.PINTEGER_TYPE));
         FakeBetaNodeFieldConstraint bigDecimalEqualsConstraint = new FakeBetaNodeFieldConstraint(ConstraintTypeOperator.EQUAL, new FakeReadAccessor(ValueType.BIG_DECIMAL_TYPE));
         FakeBetaNodeFieldConstraint stringEqualsConstraint = new FakeBetaNodeFieldConstraint(ConstraintTypeOperator.EQUAL, new FakeReadAccessor(ValueType.STRING_TYPE));
-        BetaNodeFieldConstraint[] constraints = new FakeBetaNodeFieldConstraint[]{intEqualsConstraint, bigDecimalEqualsConstraint, stringEqualsConstraint};
-        boolean[] indexed = IndexUtil.isIndexableForNode(IndexPrecedenceOption.EQUALITY_PRIORITY, NodeTypeEnums.JoinNode, config.getCompositeKeyDepth(), constraints, config);
+        BetaConstraint[]            constraints            = new FakeBetaNodeFieldConstraint[]{intEqualsConstraint, bigDecimalEqualsConstraint, stringEqualsConstraint};
+        boolean[]                   indexed                = IndexUtil.isIndexableForNode(IndexPrecedenceOption.EQUALITY_PRIORITY, NodeTypeEnums.JoinNode, config.getCompositeKeyDepth(), constraints, config);
         assertThat(indexed).as("BigDecimal is sorted to the last").containsExactly(true, true, false);
     }
 
@@ -138,12 +138,12 @@ public class IndexUtilTest {
     public void isIndexableForNodeWithBigDecimal() {
         RuleBaseConfiguration config = getRuleBaseConfiguration();
         FakeBetaNodeFieldConstraint bigDecimalEqualsConstraint = new FakeBetaNodeFieldConstraint(ConstraintTypeOperator.EQUAL, new FakeReadAccessor(ValueType.BIG_DECIMAL_TYPE));
-        BetaNodeFieldConstraint[] constraints = new FakeBetaNodeFieldConstraint[]{bigDecimalEqualsConstraint};
-        boolean[] indexed = IndexUtil.isIndexableForNode(IndexPrecedenceOption.EQUALITY_PRIORITY, NodeTypeEnums.JoinNode, config.getCompositeKeyDepth(), constraints, config);
+        BetaConstraint[]            constraints                = new FakeBetaNodeFieldConstraint[]{bigDecimalEqualsConstraint};
+        boolean[]                   indexed                    = IndexUtil.isIndexableForNode(IndexPrecedenceOption.EQUALITY_PRIORITY, NodeTypeEnums.JoinNode, config.getCompositeKeyDepth(), constraints, config);
         assertThat(indexed).as("BigDecimal is not indexed").containsExactly(false);
     }
 
-    static class FakeBetaNodeFieldConstraint implements BetaNodeFieldConstraint,
+    static class FakeBetaNodeFieldConstraint implements BetaConstraint<ContextEntry>,
                                                         IndexableConstraint {
 
         private ConstraintTypeOperator constraintType;
@@ -202,12 +202,12 @@ public class IndexUtilTest {
         }
 
         @Override
-        public ContextEntry createContextEntry() {
+        public ContextEntry createContext() {
             return null;
         }
 
         @Override
-        public BetaNodeFieldConstraint cloneIfInUse() {
+        public BetaConstraint cloneIfInUse() {
             return null;
         }
 
