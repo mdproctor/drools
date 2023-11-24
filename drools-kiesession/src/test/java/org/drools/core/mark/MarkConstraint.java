@@ -191,7 +191,7 @@ public class MarkConstraint extends MutableTypeConstraint<MarkContextEntry> impl
 
     @Override
     public boolean isIndexed() {
-        return p2 != null;
+        return false;
     }
 
     @Override
@@ -310,7 +310,7 @@ public class MarkConstraint extends MutableTypeConstraint<MarkContextEntry> impl
 
     @Override
     public ConstraintTypeOperator getConstraintType() {
-        return operatorType;
+        return ConstraintTypeOperator.UNKNOWN; //operatorType;
     }
 
     public void setConstraintTypeOperator(ConstraintTypeOperator operatorType) {
