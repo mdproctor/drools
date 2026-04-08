@@ -19,12 +19,12 @@
 package org.drools.core;
 
 import org.drools.base.time.JobHandle;
-import org.drools.core.common.DefaultEventHandle;
 
 import java.util.Collection;
 
-public interface BehaviorContext {
-    Collection<DefaultEventHandle> getFactHandles();
+public interface WindowFilterContext {
+    // EventHandleImpl replaces DefaultEventHandle (drools-core) — type TBD for vol2
+    Collection<EventHandleImpl> getFactHandles();
 
     default JobHandle getJobHandle() {
         return null;
