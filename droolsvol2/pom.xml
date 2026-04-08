@@ -49,6 +49,14 @@
       <groupId>org.drools</groupId>
       <artifactId>drools-base</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.drools</groupId>
+          <artifactId>drools-wiring-api</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.drools</groupId>
+          <artifactId>drools-wiring-static</artifactId>
+      </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

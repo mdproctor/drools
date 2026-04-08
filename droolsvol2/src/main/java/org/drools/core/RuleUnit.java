@@ -16,5 +16,8 @@ public class RuleUnit {
     private List<Rule>        rulesList = new ArrayList<>();
 
 
+    public Map<String, Rule> getRules() {
+        return rulesMap;
+    }
 
 }

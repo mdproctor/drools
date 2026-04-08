@@ -1,22 +1,20 @@
-package org.drools.core.rete;
+package org.drools.core;
 
 import org.drools.api.data.ObjectHandle;
-import org.drools.core.Context;
-import org.drools.core.Memory;
-import org.drools.core.TupleImpl;
-import org.drools.core.TupleMemory;
 import org.drools.core.function.Predicate5;
 import org.drools.core.function.Predicate6;
 import org.drools.core.function.Predicate7;
 import org.drools.core.function.Predicate8;
+import org.drools.core.rete.NetworkNode;
+import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.FastIterator;
 
 public class Join4<DS, B, C, D, E> extends NetworkNode {
-    private TupleSource leftInput;
+    private BaseNode leftInput;
 
-    private TupleSource rightInput;
+    private BaseNode rightInput;
 
-    private TupleSink sink;
+    private BaseNode sink;
 
     private Predicate8<Context<DS>, B, C, D, E, Object, Object, Object> predicate8;
     private Predicate7<Context<DS>, B, C, D, E, Object, Object> predicate7;
@@ -25,7 +23,7 @@ public class Join4<DS, B, C, D, E> extends NetworkNode {
 
     private int rightSize;
 
-    private static class Join4Memory implements Memory {
+    private static class Join4Memory extends AbstractDoubleLinkedNode<Memory> implements Memory {
         TupleMemory leftMemory;
         TupleMemory rightMemory;
 
@@ -35,6 +33,26 @@ public class Join4<DS, B, C, D, E> extends NetworkNode {
 
         public TupleMemory rightMemory() {
             return rightMemory;
+        }
+
+        @Override
+        public int getNodeType() {
+            return 0;
+        }
+
+        @Override
+        public SegmentMemory getSegmentMemory() {
+            return null;
+        }
+
+        @Override
+        public void setSegmentMemory(SegmentMemory segmentMemory) {
+
+        }
+
+        @Override
+        public void reset() {
+
         }
     }
 

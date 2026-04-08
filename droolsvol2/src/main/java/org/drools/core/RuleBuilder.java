@@ -63,7 +63,7 @@ public class RuleBuilder<DS> {
 
     //public From1First<Object, Object, Object> from(Function1<T, DS> persons) {}
 
-    public static class BaseRuleBuilder<END> {
+    public class BaseRuleBuilder<END> {
         private END end;
 
         public BaseRuleBuilder(END end) {
@@ -71,7 +71,7 @@ public class RuleBuilder<DS> {
         }
 
         public Rule build() {
-            return null;
+            return rule;
         }
 
         public END end() {
@@ -126,7 +126,7 @@ public class RuleBuilder<DS> {
             return new ParametersSecond<>(end(), mapParams);
         }
 
-        public <B> From1First<END, DS, B> params(Class... cls) {
+        public <B> From1First<END, DS, B> params(B... cls) {
             params = cls.getClass().getComponentType();
             return new From1First<>(end());
         }
@@ -495,25 +495,25 @@ public class RuleBuilder<DS> {
 
         }
 
-        <PB, PC, PD, PE, PF> Path6<Join2First<END, DS, B, Tuple6<B, PB, PC, PD, PE, PF>>, Tuple6<B, PB, PC, PD, PE, PF>, B, PB, PC,PD, PE, PF> path6() {
+        <PB, PC, PD, PE, PF> Path6<Join4First<END, DS, B, C, D, Tuple6<D, PB, PC, PD, PE, PF>>, Tuple6<D, PB, PC, PD, PE, PF>, D, PB, PC,PD, PE, PF> path6() {
             return new Path6<>(null, null, null);
         }
 
-        <PB, PC, PD, PE> Path4<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple4<B, PB, PC, PD>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple4<B, PB, PC, PD>>,B,?> fn2,
-                                                                                                                             Predicate2<PathContext<Tuple4<B, PB, PC, PD>>,PB> flt2) {
-            Path5<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple4<B, PB, PC, PD>, B, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
+        <PB, PC, PD, PE> Path4<Join4First<END, DS, B, C, D, Tuple5<D, PB, PC, PD, PE>>, Tuple5<D, PB, PC, PD, PE>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple5<D, PB, PC, PD, PE>>,D,?> fn2,
+                                                                                                                             Predicate2<PathContext<Tuple5<D, PB, PC, PD, PE>>,PB> flt2) {
+            Path5<Join4First<END, DS, B, C, D, Tuple5<D, PB, PC, PD, PE>>, Tuple5<D, PB, PC, PD, PE>, D, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
             return path5.path(fn2, flt2);
         }
 
-        <PB, PC, PD> Path4<Join2First<END, DS, B, Tuple4<B, PB, PC, PD>>, Tuple4<B, PB, PC, PD>, B, PB, PC,PD> path4() {
+        <PB, PC, PD> Path4<Join4First<END, DS, B, C, D, Tuple4<D, PB, PC, PD>>, Tuple4<D, PB, PC, PD>, D, PB, PC,PD> path4() {
             return new Path4<>(null, null, null);
         }
 
-        <PB, PC> Path3<Join2First<END, DS, B, Tuple3<B, PB, PC>>,Tuple3<B, PB, PC>, B, PB, PC>  path3() {
+        <PB, PC> Path3<Join4First<END, DS, B, C, D, Tuple3<D, PB, PC>>,Tuple3<D, PB, PC>, D, PB, PC>  path3() {
             return new Path3<>(null, null, null);
         }
 
-        <PB> Path2<Join2First<END, DS, B, Tuple2<B, PB>>,Tuple2<B, PB>, B, PB> path2() {
+        <PB> Path2<Join4First<END, DS, B, C, D, Tuple2<D, PB>>,Tuple2<D, PB>, D, PB> path2() {
             return new Path2<>(null, null, null);
         }
     }

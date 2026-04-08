@@ -1,21 +1,19 @@
-package org.drools.core.rete;
+package org.drools.core;
 
-import org.drools.core.Context;
-import org.drools.core.Memory;
-import org.drools.core.TupleImpl;
-import org.drools.core.TupleMemory;
 import org.drools.core.function.Predicate5;
 import org.drools.core.function.Predicate6;
 import org.drools.core.function.Predicate7;
 import org.drools.core.function.Predicate8;
+import org.drools.core.rete.NetworkNode;
+import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.FastIterator;
 
 public class JoinN<DS, T> extends NetworkNode {
-    private TupleSource leftInput;
+    private BaseNode leftInput;
 
-    private TupleSource rightInput;
+    private BaseNode rightInput;
 
-    private TupleSink sink;
+    private BaseNode sink;
 
     private Predicate8<Context<DS>, Object, Object, Object, Object, Object, Object, Object> predicate8;
     private Predicate7<Context<DS>, Object, Object, Object, Object, Object, Object> predicate7;
@@ -24,7 +22,12 @@ public class JoinN<DS, T> extends NetworkNode {
 
     private int rightSize;
 
-    private static class Join4Memory implements Memory {
+    public void test1() {
+        Join4Memory j = new Join4Memory();
+
+    }
+
+    private static class Join4Memory extends AbstractDoubleLinkedNode<Memory> implements Memory {
         TupleMemory leftMemory;
         TupleMemory rightMemory;
 
@@ -35,7 +38,28 @@ public class JoinN<DS, T> extends NetworkNode {
         public TupleMemory rightMemory() {
             return rightMemory;
         }
+
+        @Override
+        public int getNodeType() {
+            return 0;
+        }
+
+        @Override
+        public SegmentMemory getSegmentMemory() {
+            return null;
+        }
+
+        @Override
+        public void setSegmentMemory(SegmentMemory segmentMemory) {
+
+        }
+
+        @Override
+        public void reset() {
+
+        }
     }
+
 
     private void leftAdd(Context<DS> ctx, TupleImpl<T> tp) {
         Join4Memory             memory      = ctx.getMemory(this);
@@ -73,6 +97,7 @@ public class JoinN<DS, T> extends NetworkNode {
 ////            //sink.leftAdd(ds, b, c, d, e);
 ////        }
     }
+
 
 //    private void join(Context<DS> ctx, DataHandle<B> b, DataHandle<C> c, DataHandle<D> d, DataHandle<E> e) {
 //        int joins = 0;

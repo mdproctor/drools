@@ -29,6 +29,7 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.InvalidPatternException;
 import org.drools.base.rule.TypeDeclaration;
 import org.kie.api.KieBaseConfiguration;
+import org.kie.api.builder.model.KieBaseModel;
 import org.kie.api.definition.KiePackage;
 
 public interface RuleBase {
@@ -55,6 +56,4 @@ public interface RuleBase {
     void setContainerId(String containerId);
     
     Map<String, Type> getGlobals();
-
-
 }

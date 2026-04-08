@@ -26,15 +26,16 @@ public class RuleBaseModifier {
         }
 
         public <DS> void apply(ChangeSetBuilder<DS> changeSetBuilder) {
-            ChangeSet<DS> changeSet = changeSetBuilder.getChangeSet();
-            for(PackageChangeSet<DS> packages : changeSet.added.values()) {
-               for(UnitChangeSet<DS> units : packages.added.values()) {
-                   for(Rule rule : units.added.values()) {
-
-
-                   }
-               }
-            }
+            ruleBase.apply(changeSetBuilder);
+//            ChangeSet<DS> changeSet = changeSetBuilder.getChangeSet();
+//            for(PackageChangeSet<DS> packages : changeSet.added.values()) {
+//               for(UnitChangeSet<DS> units : packages.added.values()) {
+//                   for(Rule rule : units.added.values()) {
+//
+//
+//                   }
+//               }
+//            }
         }
     }
 
@@ -43,14 +44,14 @@ public class RuleBaseModifier {
     }
 
     public static class ChangeSet<DS> implements ChangeSetBuilder<DS> {
-        private Map<String, PackageChangeSet<DS>> added   = new HashMap<>();
-        private Set<String>                       removed = new HashSet<>();
-        private PackageChangeSet<DS>              packageChangeSet;
+        private Map<String, RulePackageChangeSet<DS>> added   = new HashMap<>();
+        private Set<String>                           removed = new HashSet<>();
+        private RulePackageChangeSet<DS>              packageChangeSet;
 
-        public PackageChangeSet<DS> selectPackage(String packageName) {
+        public RulePackageChangeSet<DS> selectPackage(String packageName) {
             packageChangeSet = added.get(packageName);
             if (packageChangeSet == null) {
-                packageChangeSet = new PackageChangeSet<DS>();
+                packageChangeSet = new RulePackageChangeSet<DS>(this);
                 added.put(packageName, packageChangeSet);
             }
             return packageChangeSet;
@@ -67,7 +68,7 @@ public class RuleBaseModifier {
             return this;
         }
 
-        public Map<String, PackageChangeSet<DS>> getAdded() {
+        public Map<String, RulePackageChangeSet<DS>> getAdded() {
             return added;
         }
 
@@ -77,24 +78,28 @@ public class RuleBaseModifier {
     }
 
 
-    public static class PackageChangeSet<DS> implements ChangeSetBuilder<DS> {
+    public static class RulePackageChangeSet<DS> implements ChangeSetBuilder<DS> {
         private ChangeSet<DS>              changeSet;
-        private String                     packageName;
-        private Map<String, UnitChangeSet> added = new HashMap<>();
-        private Set<String>                removed = new HashSet<>();
-        private UnitChangeSet<DS>          unitChangeSet;
+        private String                         packageName;
+        private Map<String, RuleUnitChangeSet> added   = new HashMap<>();
+        private Set<String>           removed = new HashSet<>();
+        private RuleUnitChangeSet<DS> unitChangeSet;
 
-        public UnitChangeSet<DS> selectUnit(String unitName) {
+        public RulePackageChangeSet(ChangeSet<DS> changeSet) {
+            this.changeSet = changeSet;
+        }
+
+        public RuleUnitChangeSet<DS> selectUnit(String unitName) {
             unitChangeSet = added.get(unitName);
             if (unitChangeSet == null) {
-                unitChangeSet =  new UnitChangeSet<DS>(this);
+                unitChangeSet =  new RuleUnitChangeSet<DS>(this);
                 added.put(unitName, unitChangeSet);
             }
 
             return unitChangeSet;
         }
 
-        public PackageChangeSet<DS> remove(String unitName) {
+        public RulePackageChangeSet<DS> remove(String unitName) {
             this.added.remove(unitName);
             this.removed.add(unitName);
             return this;
@@ -104,7 +109,7 @@ public class RuleBaseModifier {
             return packageName;
         }
 
-        public Map<String, UnitChangeSet> getAdded() {
+        public Map<String, RuleUnitChangeSet> getAdded() {
             return added;
         }
 
@@ -118,30 +123,30 @@ public class RuleBaseModifier {
         }
     }
 
-    public static class UnitChangeSet<DS> implements ChangeSetBuilder<DS>  {
-        private PackageChangeSet<DS> packageChangeSet;
-        private Map<String, Rule>    added   = new HashMap<String, Rule>();
+    public static class RuleUnitChangeSet<DS> implements ChangeSetBuilder<DS>  {
+        private RulePackageChangeSet<DS> packageChangeSet;
+        private Map<String, Rule>        added   = new HashMap<String, Rule>();
         private Set<String>          removed = new HashSet<>();
 
-        public UnitChangeSet(PackageChangeSet<DS> packageChangeSet) {
+        public RuleUnitChangeSet(RulePackageChangeSet<DS> packageChangeSet) {
             this.packageChangeSet = packageChangeSet;
         }
 
-        public PackageChangeSet<DS> selectPackage(String packageName) {
+        public RulePackageChangeSet<DS> selectPackage(String packageName) {
             return packageChangeSet.changeSet.selectPackage(packageName);
         }
 
-        public UnitChangeSet<DS> selectUnit(String unitName) {
+        public RuleUnitChangeSet<DS> selectUnit(String unitName) {
             return packageChangeSet.selectUnit(unitName);
         }
 
-        public UnitChangeSet<DS> add(BaseRuleBuilder builder) {
+        public RuleUnitChangeSet<DS> add(BaseRuleBuilder builder) {
             Rule rule = builder.build();
             added.put(rule.getName(), rule);
             return this;
         }
 
-        public UnitChangeSet<DS> remove(String rule) {
+        public RuleUnitChangeSet<DS> remove(String rule) {
             added.remove(rule);
             removed.remove(rule);
             return this;

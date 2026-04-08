@@ -27,6 +27,10 @@ public class ObjectHandleImpl<T> extends TupleImpl<T> implements ObjectHandle<T>
     private T object;
     private int hashCode;
 
+    private EqualityKey key;
+    protected int objectHashCode;
+    protected int identityHashCode;
+
     public ObjectHandleImpl(long id, T object, int hashCode, NetworkNode node) {
         super(node);
         this.id = id;
@@ -115,6 +119,8 @@ public class ObjectHandleImpl<T> extends TupleImpl<T> implements ObjectHandle<T>
     public long getRecency() {
         return 0;
     }
+
+    public
 
     @Override
     public Object as(Class klass) throws ClassCastException {

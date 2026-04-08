@@ -43,8 +43,8 @@ public class RuleExtendsPoint {
         }
     }
 
-    public static class RuleExtensionPoint6<DS, B, C, D, E, F> extends RuleExtendsPoint {
-        public RuleExtensionPoint6(Rule rule) {
+    public static class RuleExtendsPoint6<DS, B, C, D, E, F> extends RuleExtendsPoint {
+        public RuleExtendsPoint6(Rule rule) {
             super(rule, 6);
         }
     }

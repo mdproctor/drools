@@ -1,15 +1,14 @@
-package org.drools.core.rete;
+package org.drools.core;
 
 import org.drools.api.data.ObjectHandle;
-import org.drools.core.Context;
 import org.drools.core.function.Predicate4;
 
 public class Join3<DS, B, C, D> {
-    private TupleSource leftInput;
+    private BaseNode leftInput;
 
-    private TupleSource rightInput;
+    private BaseNode rightInput;
 
-    private TupleSink sink;
+    private BaseNode sink;
 
     private Predicate4 predicate4;
 

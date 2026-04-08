@@ -1,6 +1,7 @@
 package org.drools.core;
 
 import org.drools.api.data.DataStore;
+import org.drools.core.conf.RuleBaseConfigurationFactory;
 import org.junit.jupiter.api.Test;
 
 public class RuleProapgationAndExecutionTest {
