@@ -120,8 +120,6 @@ public class ObjectHandleImpl<T> extends TupleImpl<T> implements ObjectHandle<T>
         return 0;
     }
 
-    public
-
     @Override
     public Object as(Class klass) throws ClassCastException {
         return null;

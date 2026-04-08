@@ -6,7 +6,7 @@ import org.drools.core.RuleExtendsPoint.RuleExtendsPoint2;
 import org.drools.core.RuleExtendsPoint.RuleExtendsPoint3;
 import org.drools.core.RuleExtendsPoint.RuleExtendsPoint4;
 import org.drools.core.RuleExtendsPoint.RuleExtendsPoint5;
-import org.drools.core.RuleExtendsPoint.RuleExtensionPoint6;
+import org.drools.core.RuleExtendsPoint.RuleExtendsPoint6;
 import org.drools.core.RuleOOPathBuilder.Path2;
 import org.drools.core.RuleOOPathBuilder.Path3;
 import org.drools.core.RuleOOPathBuilder.Path4;
@@ -620,8 +620,8 @@ public class RuleBuilder<DS> {
             super(end);
         }
 
-        public RuleExtensionPoint6<DS, B, C, D, E, F> extensionPoint() {
-            return new RuleExtensionPoint6<>(rule);
+        public RuleExtendsPoint6<DS, B, C, D, E, F> extensionPoint() {
+            return new RuleExtendsPoint6<>(rule);
         }
     }
 

@@ -38,7 +38,20 @@
   <properties>
     <java.module.name>org.drools</java.module.name>
     <surefire.forkCount>2</surefire.forkCount>
+    <permuplate.version>1.0.0-SNAPSHOT</permuplate.version>
+    <javaparser.version>3.25.9</javaparser.version>
+    <commons-jexl3.version>3.3</commons-jexl3.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.quarkiverse.permuplate</groupId>
+        <artifactId>quarkus-permuplate-annotations</artifactId>
+        <version>${permuplate.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!--
@@ -48,6 +61,11 @@
     <dependency>
       <groupId>org.drools</groupId>
       <artifactId>drools-base</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkiverse.permuplate</groupId>
+      <artifactId>quarkus-permuplate-annotations</artifactId>
     </dependency>
       <dependency>
           <groupId>org.drools</groupId>
@@ -140,6 +158,41 @@
     </resources>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>io.quarkiverse.permuplate</groupId>
+              <artifactId>quarkus-permuplate-processor</artifactId>
+              <version>${permuplate.version}</version>
+            </path>
+            <!-- Transitive deps of the processor must be listed explicitly -->
+            <path>
+              <groupId>io.quarkiverse.permuplate</groupId>
+              <artifactId>quarkus-permuplate-core</artifactId>
+              <version>${permuplate.version}</version>
+            </path>
+            <path>
+              <groupId>io.quarkiverse.permuplate</groupId>
+              <artifactId>quarkus-permuplate-ide-support</artifactId>
+              <version>${permuplate.version}</version>
+            </path>
+            <path>
+              <groupId>com.github.javaparser</groupId>
+              <artifactId>javaparser-core</artifactId>
+              <version>${javaparser.version}</version>
+            </path>
+            <path>
+              <groupId>org.apache.commons</groupId>
+              <artifactId>commons-jexl3</artifactId>
+              <version>${commons-jexl3.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
