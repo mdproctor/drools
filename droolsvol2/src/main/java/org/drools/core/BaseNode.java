@@ -70,6 +70,10 @@ public abstract class BaseNode implements NetworkNode {
         return leftInput;
     }
 
+    public void setLeftInput(BaseNode leftInput) {
+        this.leftInput = leftInput;
+    }
+
     public int getType() {
         return 0;
     }
