@@ -18,11 +18,6 @@
  */
 package org.drools.core;
 
-import org.drools.core.common.DefaultEventHandle;
-import org.drools.core.common.PhreakPropagationContextFactory;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.reteoo.ObjectTypeNode;
 import org.kie.api.runtime.rule.FactHandle;
 
 import java.io.Externalizable;
@@ -33,126 +28,121 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * A length window behavior implementation
+ * A length-based window filter implementation.
+ * Keeps the last N facts in scope; older facts are expired when the window is full.
  */
-public class SlidingLengthWindow
-        implements
-        BehaviorRuntime {
+public class SlidingLengthWindow implements WindowFilter {
 
     protected int size;
 
     public SlidingLengthWindow() {
-        this( 0 );
+        this(0);
     }
 
-    /**
-     * @param size
-     */
     public SlidingLengthWindow(final int size) {
-        super();
         this.size = size;
     }
 
-    public BehaviorType getType() {
-        return BehaviorType.LENGTH_WINDOW;
+    @Override
+    public WindowFilterType getType() {
+        return WindowFilterType.LENGTH_WINDOW;
     }
 
-    /**
-     * @return the size
-     */
     public long getSize() {
         return size;
     }
 
-    /**
-     * @param size the size to set
-     */
     public void setSize(final int size) {
         this.size = size;
     }
 
-    public BehaviorContext createContext() {
-        return new SlidingLengthWindowContext( this.size );
+    @Override
+    public WindowFilterContext createContext() {
+        return new SlidingLengthWindowContext(this.size);
     }
 
-    /**
-     * @inheritDoc
-     */
+    @Override
     public boolean assertFact(final Object context,
                               final FactHandle handle,
                               final PropagationContext pctx,
                               final ReteEvaluator reteEvaluator) {
         SlidingLengthWindowContext window = (SlidingLengthWindowContext) context;
         window.pos = (window.pos + 1) % window.handles.length;
-        if ( window.handles[window.pos] != null ) {
-            final DefaultEventHandle previous = window.handles[window.pos];
-            // retract previous
-            final PropagationContext expiresPctx = PhreakPropagationContextFactory.createPropagationContextForFact(reteEvaluator, previous, PropagationContext.Type.EXPIRATION);
-            ObjectTypeNode.doRetractObject( previous, expiresPctx, reteEvaluator);
+        if (window.handles[window.pos] != null) {
+            final EventHandleImpl previous = window.handles[window.pos];
+            // retract previous fact that fell out of the window
+            // PhreakPropagationContextFactory and ObjectTypeNode.doRetractObject commented out
+            // until vol2 propagation infrastructure is built
+            // final PropagationContext expiresPctx = PhreakPropagationContextFactory
+            //         .createPropagationContextForFact(reteEvaluator, previous, PropagationContext.Type.EXPIRATION);
+            // ObjectTypeNode.doRetractObject(previous, expiresPctx, reteEvaluator);
         }
-        window.handles[window.pos] = (DefaultEventHandle) handle;
+        window.handles[window.pos] = (EventHandleImpl) handle;
         return true;
     }
 
+    @Override
     public void retractFact(final Object context,
                             final FactHandle handle,
                             final PropagationContext pctx,
                             final ReteEvaluator reteEvaluator) {
         SlidingLengthWindowContext window = (SlidingLengthWindowContext) context;
         final int last = (window.pos == 0) ? window.handles.length - 1 : window.pos - 1;
-        // we start the loop on current pos because the most common scenario is to retract the
-        // right tuple referenced by the current "pos" position, causing this loop to only execute
-        // the first iteration
-        for ( int i = window.pos; i != last; i = (i + 1) % window.handles.length ) {
-            if ( window.handles[i] == handle ) {
+        for (int i = window.pos; i != last; i = (i + 1) % window.handles.length) {
+            if (window.handles[i] == handle) {
                 window.handles[i] = null;
                 break;
             }
         }
     }
 
+    @Override
     public void expireFacts(final Object context,
                             final PropagationContext pctx,
                             final ReteEvaluator reteEvaluator) {
-        // do nothing?
+        // length windows expire facts via assertFact — nothing to do here
     }
 
-    /**
-     * Length windows don't change expiration offset, so
-     * always return -1
-     */
+    @Override
     public long getExpirationOffset() {
-        return -1;
+        return -1; // length windows have no time-based expiration
     }
 
+    @Override
     public String toString() {
         return "SlidingLengthWindow( size=" + size + " )";
     }
 
     /**
-     * A Context object for length windows
+     * Per-instance context (memory) for a length window.
      */
-    public static class SlidingLengthWindowContext
-            implements
-            BehaviorContext,
-            Externalizable {
+    public static class SlidingLengthWindowContext implements WindowFilterContext, Externalizable {
 
-        public DefaultEventHandle[] handles;
-        public int               pos = 0;
+        public EventHandleImpl[] handles;
+        public int pos = 0;
 
         public SlidingLengthWindowContext(final int size) {
-            this.handles = new DefaultEventHandle[size];
+            this.handles = new EventHandleImpl[size];
         }
 
-        /**
-         * Do not use this constructor! It should be used just by deserialization.
-         */
-        public SlidingLengthWindowContext() {
-        }
+        /** For deserialization only. */
+        public SlidingLengthWindowContext() { }
 
-        public Collection<DefaultEventHandle> getFactHandles() {
+        @Override
+        public Collection<EventHandleImpl> getFactHandles() {
             return Collections.emptyList();
         }
-    }
 
+        @Override
+        public void writeExternal(ObjectOutput out) throws IOException {
+            out.writeInt(pos);
+            out.writeObject(handles);
+        }
+
+        @Override
+        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+            pos = in.readInt();
+            handles = (EventHandleImpl[]) in.readObject();
+        }
+    }
 }

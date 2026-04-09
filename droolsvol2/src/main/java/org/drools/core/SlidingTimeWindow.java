@@ -19,74 +19,55 @@
 package org.drools.core;
 
 import org.drools.base.time.JobHandle;
-import org.drools.core.common.DefaultEventHandle;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.PhreakPropagationContextFactory;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.WorkingMemoryAction;
-import org.drools.core.marshalling.MarshallerReaderContext;
-import org.drools.core.phreak.PropagationEntry;
-import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.WindowNode;
-import org.drools.core.reteoo.WindowNode.WindowMemory;
 import org.drools.core.time.Job;
 import org.drools.core.time.JobContext;
 import org.drools.core.time.TimerService;
 import org.drools.core.time.impl.PointInTimeTrigger;
 import org.kie.api.runtime.rule.FactHandle;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.PriorityQueue;
 
-public class SlidingTimeWindow
-        implements
-        BehaviorRuntime {
+/**
+ * A time-based window filter implementation.
+ * Keeps facts in scope for a fixed duration; facts older than the window size are expired.
+ * Timers fire via the container's async queue (vol2 threading model).
+ */
+public class SlidingTimeWindow implements WindowFilter {
 
     protected long size;
-    // stateless job
-    private static final BehaviorJob job = new BehaviorJob();
+    // stateless job — one instance shared across all contexts
+    private static final WindowFilterJob job = new WindowFilterJob();
 
     protected int nodeId;
 
     public SlidingTimeWindow() {
-        this( 0 );
+        this(0);
     }
 
     public SlidingTimeWindow(final long size) {
-        super();
         this.size = size;
     }
 
     @Override
-    public BehaviorType getType() {
-        return BehaviorType.TIME_WINDOW;
+    public WindowFilterType getType() {
+        return WindowFilterType.TIME_WINDOW;
     }
 
-    public void setWindowNode(WindowNode windowNode) {
-        this.nodeId = windowNode.getId();
+    public void setNodeId(int nodeId) {
+        this.nodeId = nodeId;
     }
 
-    /**
-     * @return the size
-     */
     public long getSize() {
         return size;
     }
 
-    /**
-     * @param size the size to set
-     */
     public void setSize(final long size) {
         this.size = size;
     }
 
     @Override
-    public BehaviorContext createContext() {
+    public WindowFilterContext createContext() {
         return new SlidingTimeWindowContext();
     }
 
@@ -96,21 +77,15 @@ public class SlidingTimeWindow
                               final PropagationContext pctx,
                               final ReteEvaluator reteEvaluator) {
         final SlidingTimeWindowContext queue = (SlidingTimeWindowContext) context;
-        final DefaultEventHandle handle = (DefaultEventHandle) fact;
+        final EventHandleImpl handle = (EventHandleImpl) fact;
         long currentTime = reteEvaluator.getTimerService().getCurrentTime();
-        if ( isExpired( currentTime, handle ) ) {
+        if (isExpired(currentTime, handle)) {
             return false;
         }
-
-        queue.add( handle );
-        if ( handle.equals( queue.peek() ) ) {
-            // update next expiration time
-            updateNextExpiration( handle,
-                                  reteEvaluator,
-                                  queue,
-                                  nodeId );
+        queue.add(handle);
+        if (handle.equals(queue.peek())) {
+            updateNextExpiration(handle, reteEvaluator, queue, nodeId);
         }
-
         return true;
     }
 
@@ -120,22 +95,18 @@ public class SlidingTimeWindow
                             final PropagationContext pctx,
                             final ReteEvaluator reteEvaluator) {
         final SlidingTimeWindowContext queue = (SlidingTimeWindowContext) context;
-        final DefaultEventHandle handle = (DefaultEventHandle) fact;
-        final DefaultEventHandle peekEvent = queue.peek();
+        final EventHandleImpl handle = (EventHandleImpl) fact;
+        final EventHandleImpl peekEvent = queue.peek();
         if (peekEvent != null) {
             if (handle.equals(peekEvent)) {
-                // it was the head of the queue
                 queue.poll();
-                // update next expiration time
                 updateNextExpiration(queue.peek(), reteEvaluator, queue, nodeId);
             } else if (handle.compareTo(peekEvent) >= 0) {
-                // if the event to be removed is older than the peek event we already know that it cannot be there,
-                // so it is not necessary to try to remove it (which is an expensive operation)
                 queue.remove(handle);
             }
         }
-        if ( queue.isEmpty() && queue.getJobHandle() != null ) {
-            reteEvaluator.getTimerService().removeJob( queue.getJobHandle() );
+        if (queue.isEmpty() && queue.getJobHandle() != null) {
+            reteEvaluator.getTimerService().removeJob(queue.getJobHandle());
         }
     }
 
@@ -147,48 +118,43 @@ public class SlidingTimeWindow
         long currentTime = clock.getCurrentTime();
         SlidingTimeWindowContext queue = (SlidingTimeWindowContext) context;
 
-        DefaultEventHandle handle = queue.peek();
-        while ( handle != null && isExpired( currentTime, handle ) ) {
+        EventHandleImpl handle = queue.peek();
+        while (handle != null && isExpired(currentTime, handle)) {
             queue.remove();
-            if( handle.isValid()) {
-                // if not expired yet, expire it
-                final PropagationContext expiresPctx = PhreakPropagationContextFactory.createPropagationContextForFact(reteEvaluator, handle, PropagationContext.Type.EXPIRATION);
-                ObjectTypeNode.doRetractObject(handle, expiresPctx, reteEvaluator);
+            if (handle.isValid()) {
+                // expire the fact — propagation infrastructure commented out until rebuilt in vol2
+                // final PropagationContext expiresPctx = PhreakPropagationContextFactory
+                //         .createPropagationContextForFact(reteEvaluator, handle, PropagationContext.Type.EXPIRATION);
+                // ObjectTypeNode.doRetractObject(handle, expiresPctx, reteEvaluator);
             }
             handle = queue.peek();
         }
-        // update next expiration time
-        updateNextExpiration( handle, reteEvaluator, queue, nodeId );
+        updateNextExpiration(handle, reteEvaluator, queue, nodeId);
     }
 
-    protected boolean isExpired(final long currentTime,
-                                final DefaultEventHandle handle) {
+    protected boolean isExpired(final long currentTime, final EventHandleImpl handle) {
         return handle.getStartTimestamp() + this.size <= currentTime;
     }
 
-    protected void updateNextExpiration(final InternalFactHandle fact,
+    protected void updateNextExpiration(final EventHandleImpl fact,
                                         final ReteEvaluator reteEvaluator,
-                                        final BehaviorContext context,
+                                        final WindowFilterContext context,
                                         final int nodeId) {
         TimerService clock = reteEvaluator.getTimerService();
-        if ( fact != null ) {
-            long nextTimestamp = ((DefaultEventHandle) fact).getStartTimestamp() + getSize();
-            if ( nextTimestamp < clock.getCurrentTime() ) {
-                // Past and out-of-order events should not be insert,
-                // but the engine silently accepts them anyway, resulting in possibly undesirable behaviors
-                reteEvaluator.addPropagation(new BehaviorExpireWMAction(nodeId, this, context));
+        if (fact != null) {
+            long nextTimestamp = fact.getStartTimestamp() + getSize();
+            if (nextTimestamp < clock.getCurrentTime()) {
+                // past/out-of-order event — schedule immediate expiry via container queue
+                reteEvaluator.addPropagation(new WindowFilterExpireAction(nodeId, this, context));
             } else {
-                // if there exists already another job it meeans that the new one to be created
-                // has to be triggered before the existing one and then we can remove the old one
-                if ( context.getJobHandle() != null ) {
-                    reteEvaluator.getTimerService().removeJob( context.getJobHandle() );
+                if (context.getJobHandle() != null) {
+                    reteEvaluator.getTimerService().removeJob(context.getJobHandle());
                 }
-
-                JobContext jobctx = new BehaviorJobContext( nodeId, reteEvaluator, this, context);
-                JobHandle handle = clock.scheduleJob( job,
-                                                      jobctx,
-                                                      PointInTimeTrigger.createPointInTimeTrigger( nextTimestamp, null ) );
-                jobctx.setJobHandle( handle );
+                JobContext jobctx = new WindowFilterJobContext(nodeId, reteEvaluator, this, context);
+                JobHandle handle = clock.scheduleJob(job,
+                                                     jobctx,
+                                                     PointInTimeTrigger.createPointInTimeTrigger(nextTimestamp, null));
+                jobctx.setJobHandle(handle);
             }
         }
     }
@@ -203,15 +169,16 @@ public class SlidingTimeWindow
         return "SlidingTimeWindow( size=" + size + " )";
     }
 
-    public static class SlidingTimeWindowContext
-            implements
-            BehaviorContext {
+    /**
+     * Per-instance context (memory) for a time window.
+     */
+    public static class SlidingTimeWindowContext implements WindowFilterContext {
 
-        private PriorityQueue<DefaultEventHandle> queue;
-        private JobHandle                      jobHandle;
+        private final PriorityQueue<EventHandleImpl> queue;
+        private JobHandle jobHandle;
 
         public SlidingTimeWindowContext() {
-            this.queue = new PriorityQueue<>(16); // arbitrary size... can we improve it?
+            this.queue = new PriorityQueue<>(16);
         }
 
         @Override
@@ -224,70 +191,47 @@ public class SlidingTimeWindow
             this.jobHandle = jobHandle;
         }
 
-        public void add(DefaultEventHandle handle) {
-            queue.add( handle );
-        }
-
-        public void remove(DefaultEventHandle handle) {
-            queue.remove( handle );
-        }
-
-        public boolean isEmpty() {
-            return queue.isEmpty();
-        }
-
-        public DefaultEventHandle peek() {
-            return queue.peek( );
-        }
-
-        public DefaultEventHandle poll() {
-            return queue.poll( );
-        }
-
-        public DefaultEventHandle remove() {
-            return queue.remove( );
-        }
+        public void add(EventHandleImpl handle) { queue.add(handle); }
+        public void remove(EventHandleImpl handle) { queue.remove(handle); }
+        public boolean isEmpty() { return queue.isEmpty(); }
+        public EventHandleImpl peek() { return queue.peek(); }
+        public EventHandleImpl poll() { return queue.poll(); }
+        public EventHandleImpl remove() { return queue.remove(); }
 
         @Override
-        public Collection<DefaultEventHandle> getFactHandles() {
+        public Collection<EventHandleImpl> getFactHandles() {
             return queue;
         }
     }
 
-    public static class BehaviorJobContext
-            implements
-            JobContext,
-            Externalizable {
-        public ReteEvaluator         reteEvaluator;
-        public int                   nodeId;
-        public BehaviorRuntime       behavior;
-        public BehaviorContext      behaviorContext;
+    /**
+     * Job context for scheduling window expiry via the timer service.
+     * Timer fires → puts WindowFilterExpireAction onto the container's async queue.
+     */
+    public static class WindowFilterJobContext implements JobContext {
+        public ReteEvaluator    reteEvaluator;
+        public int              nodeId;
+        public WindowFilter     filter;
+        public WindowFilterContext filterContext;
 
-        public BehaviorJobContext(int             nodeId,
-                                  ReteEvaluator   reteEvaluator,
-                                  BehaviorRuntime behavior,
-                                  BehaviorContext behaviorContext) {
-            super();
+        public WindowFilterJobContext(int nodeId,
+                                      ReteEvaluator reteEvaluator,
+                                      WindowFilter filter,
+                                      WindowFilterContext filterContext) {
             this.nodeId = nodeId;
             this.reteEvaluator = reteEvaluator;
-            this.behavior = behavior;
-            this.behaviorContext = behaviorContext;
-        }
-
-        /**
-         * Do not use this constructor! It should be used just by deserialization.
-         */
-        public BehaviorJobContext() {
+            this.filter = filter;
+            this.filterContext = filterContext;
         }
 
         @Override
         public JobHandle getJobHandle() {
-            return behaviorContext.getJobHandle();
+            return filterContext.getJobHandle();
         }
 
         @Override
         public void setJobHandle(JobHandle jobHandle) {
-            behaviorContext.setJobHandle( jobHandle );
+            filterContext.setJobHandle(jobHandle);
         }
 
         @Override
@@ -296,53 +240,42 @@ public class SlidingTimeWindow
         }
     }
 
-    public static class BehaviorJob
-            implements
-            Job {
-
+    /**
+     * Stateless job — triggered by timer, enqueues expiry action onto container queue.
+     */
+    public static class WindowFilterJob implements Job {
         @Override
         public void execute(JobContext ctx) {
-            BehaviorJobContext context = (BehaviorJobContext) ctx;
-            context.reteEvaluator.addPropagation( new BehaviorExpireWMAction( context.nodeId, context.behavior, context.behaviorContext ) );
+            WindowFilterJobContext context = (WindowFilterJobContext) ctx;
+            context.reteEvaluator.addPropagation(
+                    new WindowFilterExpireAction(context.nodeId, context.filter, context.filterContext));
         }
-
     }
 
-    public static class BehaviorExpireWMAction
-            extends PropagationEntry.AbstractPropagationEntry
-            implements WorkingMemoryAction {
-        protected BehaviorRuntime behavior;
-        protected BehaviorContext context;
+    /**
+     * Propagation action that triggers fact expiry for a window filter.
+     * Commented-out parts depend on vol2 propagation infrastructure not yet built.
+     *
+     * TODO: extend vol2 propagation base class once available (replaces
+     *       PropagationEntry.AbstractPropagationEntry + WorkingMemoryAction from vol1)
+     */
+    public static class WindowFilterExpireAction {
+        protected WindowFilter filter;
+        protected WindowFilterContext context;
         protected int nodeId;
 
-        protected BehaviorExpireWMAction() { }
+        protected WindowFilterExpireAction() { }
 
-        public BehaviorExpireWMAction(final int nodeId,
-                                      BehaviorRuntime behavior,
-                                      BehaviorContext context) {
-            super();
+        public WindowFilterExpireAction(final int nodeId,
+                                        WindowFilter filter,
+                                        WindowFilterContext context) {
             this.nodeId = nodeId;
-            this.behavior = behavior;
+            this.filter = filter;
             this.context = context;
         }
 
-        public BehaviorExpireWMAction(MarshallerReaderContext inCtx) throws IOException {
-            nodeId = inCtx.readInt();
-            WindowNode windowNode = (WindowNode) inCtx.getSinks().get( nodeId );
-
-            WindowMemory memory = inCtx.getWorkingMemory().getNodeMemory( windowNode );
-
-            BehaviorContext[] behaviorContext = memory.behaviorContext;
-
-            int i = inCtx.readInt();
-
-            this.behavior = windowNode.getBehaviors()[i];
-            this.context = behaviorContext[i];
-        }
-
-        @Override
         public void internalExecute(ReteEvaluator reteEvaluator) {
-            this.behavior.expireFacts( context, null, reteEvaluator );
+            this.filter.expireFacts(context, null, reteEvaluator);
         }
     }
 }
