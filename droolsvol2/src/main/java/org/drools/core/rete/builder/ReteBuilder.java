@@ -33,7 +33,8 @@ public class ReteBuilder {
         this.buildUtils = new BuildUtils();
 
         this.buildUtils.addBuilder( GroupElement.class,    new GroupElementBuilder() );
-        this.buildUtils.addBuilder( EntryPointId.class,   new EntryPointBuilder() );
+        this.buildUtils.addBuilder( EntryPointId.class,   new EntryPointBuilder()  );
+        this.buildUtils.addBuilder( Pattern.class,        new PatternBuilder()     );
     }
 
     public List<TerminalNode> addRule(RuleImpl rule) {
