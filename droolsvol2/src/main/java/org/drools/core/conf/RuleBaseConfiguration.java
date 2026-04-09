@@ -215,7 +215,7 @@ public class RuleBaseConfiguration  extends BaseConfiguration<KieBaseOption, Sin
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
+
         out.writeBoolean(sequential);
         out.writeObject(sequentialAgenda);
         out.writeBoolean(maintainTms);

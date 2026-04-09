@@ -32,6 +32,10 @@ public class ReteBuilder {
                                new GroupElementBuilder() );
     }
 
+    public List<TerminalNode> addRule(RuleImpl rule) {
+        return addRule(rule, java.util.Collections.emptyList());
+    }
+
     public List<TerminalNode> addRule(RuleImpl rule, Collection<InternalWorkingMemory> workingMemories) {
         GroupElement group = rule.getBody();
 

@@ -108,6 +108,11 @@ public class BetaMemory<C> extends AbstractDoubleLinkedNode<Memory> implements S
         return segmentMemory;
     }
 
+    public SegmentMemory getOrCreateSegmentMemory(BaseNode tupleSource, ReteEvaluator reteEvaluator) {
+        // TODO #6650: implement lazy segment memory creation
+        return segmentMemory;
+    }
+
     public void setSegmentMemory(SegmentMemory segmentMemory) {
         this.segmentMemory = segmentMemory;
     }

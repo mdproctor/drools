@@ -18,64 +18,48 @@
  */
 package org.drools.core;
 
-import org.drools.base.rule.EntryPointId;
 import org.drools.base.time.JobHandle;
+import org.drools.core.time.TimerService;
 import org.kie.api.runtime.rule.EventHandle;
 
 import java.util.LinkedList;
 
+/**
+ * Vol2 event handle — extends ObjectHandleImpl with event timing fields.
+ * TODO #6650: full vol2 event handle design TBD (CEP integration with DataSources)
+ * Clone/copy methods stripped — ObjectHandleImpl vol2 doesn't have vol1 fields
+ * (recency, identityHashCode, linkedTuples, wmEntryPoint, equalityKey, objectHashCode).
+ */
 public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHandle, Comparable<EventHandleImpl> {
 
-    private static final long serialVersionUID = 510l;
-
+    private static final long serialVersionUID = 510L;
     static final String EVENT_FORMAT_VERSION = "5";
 
-    private long              startTimestamp;
-    private long              duration;
-    private boolean           expired;
-    private boolean           pendingRemoveFromStore;
-    private int               otnCount;
+    private long    startTimestamp;
+    private long    duration;
+    private boolean expired;
+    private boolean pendingRemoveFromStore;
+    private int     otnCount;
 
     private EventHandleImpl linkedFactHandle;
 
     private final transient LinkedList<JobHandle> jobs = new LinkedList<>();
 
     public EventHandleImpl() {
-        super();
+        super(0L, null, null);
         this.startTimestamp = 0;
         this.duration = 0;
     }
 
-    public EventHandleImpl(long id, EntryPointId entryPointId) {
-        super(id, null);
+    public EventHandleImpl(long id, T object) {
+        super(id, object, null);
         this.startTimestamp = 0;
         this.duration = 0;
-        this.entryPointId = entryPointId;
     }
 
-    /**
-     * Creates a new event fact handle.
-     *
-     * @param id this event fact handle ID
-     * @param object the event object encapsulated in this event fact handle
-     * @param recency the recency of this event fact handle
-     * @param timestamp the timestamp of the occurrence of this event
-     * @param duration the duration of this event. May be 0 (zero) in case this is a primitive event.
-     */
-    // WorkingMemoryEntryPoint constructor removed — vol1 concept, no vol2 equivalent
-    // public EventHandleImpl(long id, Object object, long recency, long timestamp,
-    //                        long duration, WorkingMemoryEntryPoint wmEntryPoint) { ... }
-
-    protected EventHandleImpl(long id,
-                              int identityHashCode,
-                              Object object,
-                              long recency,
-                              long timestamp,
-                              long duration,
-                              EntryPointId entryPointId) {
-
-        super( id, identityHashCode, object, recency, entryPointId );
-        this.startTimestamp = timestamp;
+    public EventHandleImpl(long id, T object, long startTimestamp, long duration) {
+        super(id, object, null);
+        this.startTimestamp = startTimestamp;
         this.duration = duration;
     }
 
@@ -83,46 +67,24 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
         return EVENT_FORMAT_VERSION;
     }
 
-    /**
-     * @see Object
-     */
+    @Override
     public String toString() {
         return toExternalForm();
     }
 
-    /**
-     * Always returns true, since the EventFactHandle is
-     * only used for Events, and not for regular Facts
-     */
+    @Override
     public boolean isEvent() {
         return true;
     }
 
-    /**
-     * Returns the timestamp of the occurrence of this event.
-     * @return
-     */
     public long getStartTimestamp() {
         return startTimestamp;
     }
 
-    /**
-     * Returns the duration of this event. In case this is a primitive event,
-     * returns 0 (zero).
-     *
-     * @return
-     */
     public long getDuration() {
         return duration;
     }
 
-    /**
-     * Returns the end timestamp for this event. This is the same as:
-     *
-     * startTimestamp + duration
-     *
-     * @return
-     */
     public long getEndTimestamp() {
         return this.startTimestamp + this.duration;
     }
@@ -132,126 +94,38 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
     }
 
     @Override
-    public void invalidate() {
-        if ( linkedFactHandle != null ) {
-            linkedFactHandle.invalidate();
-        }  else {
-            super.invalidate();
-        }
-    }
-
-    @Override
-    public boolean isValid() {
-        if ( linkedFactHandle != null ) {
-            return linkedFactHandle.isValid();
-        }  else {
-            return super.isValid();
-        }
-    }
-
-    @Override
     public boolean isExpired() {
-        if ( linkedFactHandle != null ) {
+        if (linkedFactHandle != null) {
             return linkedFactHandle.isExpired();
-        }  else {
-            return expired;
         }
+        return expired;
     }
 
     public void setExpired(boolean expired) {
-        if ( linkedFactHandle != null ) {
+        if (linkedFactHandle != null) {
             linkedFactHandle.setExpired(expired);
-        }  else {
+        } else {
             this.expired = expired;
         }
     }
 
     public boolean isPendingRemoveFromStore() {
-        if ( linkedFactHandle != null ) {
-            return linkedFactHandle.isPendingRemoveFromStore();
-        }  else {
-            return pendingRemoveFromStore;
-        }
+        return pendingRemoveFromStore;
     }
 
     public void setPendingRemoveFromStore(boolean pendingRemove) {
-        if ( linkedFactHandle != null ) {
-            linkedFactHandle.setPendingRemoveFromStore(pendingRemove);
-        }  else {
-            this.pendingRemoveFromStore = pendingRemove;
-        }
+        this.pendingRemoveFromStore = pendingRemove;
     }
 
-    public void increaseOtnCount() {
-        otnCount++;
-    }
+    public void increaseOtnCount() { otnCount++; }
+    public void decreaseOtnCount() { otnCount--; }
+    public int getOtnCount() { return otnCount; }
+    public void setOtnCount(int otnCount) { this.otnCount = otnCount; }
 
-    public void decreaseOtnCount() {
-        otnCount--;
-    }
-
-    public int getOtnCount() {
-        return otnCount;
-    }
-
-    public void setOtnCount( int otnCount ) {
-        this.otnCount = otnCount;
-    }
-
-    public EventHandleImpl clone() {
-        EventHandleImpl clone = new EventHandleImpl(getId(),
-                                                    getIdentityHashCode(),
-                                                    this.getObject(),
-                                                    getRecency(),
-                                                    getStartTimestamp(),
-                                                    getDuration(),
-                                                    getEntryPointId() );
-        clone.setOtnCount( getOtnCount() );
-        clone.setExpired( isExpired() );
-        clone.setEqualityKey( getEqualityKey() );
-        clone.linkedTuples = this.linkedTuples.clone();
-        clone.setObjectHashCode(getObjectHashCode());
-        clone.wmEntryPoint = this.wmEntryPoint;
-        return clone;
-    }
-
-    private EventHandleImpl cloneWithoutTuples() {
-        EventHandleImpl clone = new EventHandleImpl(getId(),
-                                                    getIdentityHashCode(),
-                                                    this.getObject(),
-                                                    getRecency(),
-                                                    getStartTimestamp(),
-                                                    getDuration(),
-                                                    getEntryPointId() );
-        clone.setOtnCount( getOtnCount() );
-        clone.setExpired( isExpired() );
-        clone.setEqualityKey( getEqualityKey() );
-        clone.linkedTuples = this.linkedTuples.cloneEmpty();
-        clone.setObjectHashCode(getObjectHashCode());
-        clone.wmEntryPoint = this.wmEntryPoint;
-        return clone;
-    }
-
-    public EventHandleImpl cloneAndLink() {
-        EventHandleImpl clone = cloneWithoutTuples();
-        clone.linkedFactHandle = this;
-        return clone;
-    }
-
-    public void quickCloneUpdate(ObjectHandleImpl clone) {
-        clone.setObject(this.getObject());
-        clone.setRecency( getRecency() );
-        clone.setEqualityKey( getEqualityKey() );
-
-        clone.setObjectHashCode( getObjectHashCode() );
-        clone.setIdentityHashCode( getIdentityHashCode() );
-        clone.setTraitType( getTraitType() );
-        clone.setDisconnected( isDisconnected() );
-        clone.setNegated( isNegated() );
-    }
-
+    @Override
     public int compareTo(EventHandleImpl e) {
-        return (getStartTimestamp() < e.getStartTimestamp()) ? -1 : (getStartTimestamp() == e.getStartTimestamp() ? 0 : 1);
+        return (getStartTimestamp() < e.getStartTimestamp()) ? -1
+                : (getStartTimestamp() == e.getStartTimestamp() ? 0 : 1);
     }
 
     public void addJob(JobHandle job) {
@@ -262,8 +136,6 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
 
     public void removeJob(JobHandle job) {
         synchronized (jobs) {
-            // the job could have been already removed if the event has been just retracted
-            // and then the unscheduleAllJobs method has been invoked concurrently
             if (jobs.contains(job)) {
                 jobs.remove(job);
             }
@@ -274,7 +146,7 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
         if (!jobs.isEmpty()) {
             synchronized (jobs) {
                 TimerService clock = reteEvaluator.getTimerService();
-                while ( !jobs.isEmpty() ) {
+                while (!jobs.isEmpty()) {
                     JobHandle job = jobs.removeFirst();
                     clock.removeJob(job);
                 }

@@ -18,69 +18,15 @@
  */
 package org.drools.core;
 
-import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.base.rule.From;
-import org.drools.base.rule.accessor.DataProvider;
-import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.BetaConstraints;
-import org.drools.core.ReteEvaluator;
-import org.drools.core.TupleSets;
-import org.drools.core.TupleSetsImpl;
-import org.drools.core.rete.builder.BuildContext;
-import org.drools.core.util.index.TupleList;
+/**
+ * Vol2 reactive from-node — stub pending vol2 reactive DataSource integration.
+ * TODO #6650: implement vol2 ReactiveFromNode (DataSource change notification)
+ */
+public class ReactiveFromNode extends FromNode<FromNode.FromMemory> {
 
-public class ReactiveFromNode extends FromNode<ReactiveFromNode.ReactiveFromMemory> {
     public ReactiveFromNode() { }
 
-    public ReactiveFromNode(final int id,
-                            final DataProvider dataProvider,
-                            final BaseNode tupleSource,
-                            final AlphaNodeFieldConstraint[] constraints,
-                            final BetaConstraints binder,
-                            final boolean tupleMemoryEnabled,
-                            final BuildContext context,
-                            final From from) {
-        super(id, dataProvider, tupleSource, constraints, binder, tupleMemoryEnabled, context, from);
+    public ReactiveFromNode(int id, int pathIndex, int objectIndex) {
+        super(id, pathIndex, objectIndex);
     }
-
-    public ReactiveFromMemory createMemory(final RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
-        BetaMemory beta = new BetaMemory(new TupleList(),
-                                         null,
-                                         this.betaConstraints.createContext(),
-                                         NodeTypeEnums.FromNode );
-        return new ReactiveFromMemory( beta,
-                                       this.dataProvider );
-    }
-
-    public int getType() {
-        return NodeTypeEnums.ReactiveFromNode;
-    } 
-
-    public static class ReactiveFromMemory extends FromNode.FromMemory {
-
-        private static final long serialVersionUID = 510l;
-
-        private final TupleSets stagedLeftTuples;
-
-        public ReactiveFromMemory(BetaMemory betaMemory,
-                                  DataProvider dataProvider) {
-            super(betaMemory, dataProvider);
-            stagedLeftTuples = new TupleSetsImpl();
-        }
-
-        public int getNodeType() {
-            return NodeTypeEnums.ReactiveFromNode;
-        }
-
-        public TupleSets getStagedLeftTuples() {
-            return stagedLeftTuples;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "[ReactiveFromNode(" + id + ") :: " + dataProvider + "]";
-    }
-
 }

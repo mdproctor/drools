@@ -115,7 +115,7 @@ public class KnowledgeBaseConfigurationImpl extends BaseConfiguration<KieBaseOpt
 
 
     public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
+
         out.writeBoolean(mutabilityEnabled);
     }
 

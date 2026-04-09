@@ -28,7 +28,7 @@ public interface SegmentMemorySupport {
     SegmentMemory createChildSegmentLazily(BaseNode node);
 
     // TODO #6650: path memory init for subnetworks and query segments — not yet implemented in vol2
-    default void initializePathMemory(TupleToObjectNode tton) {
+    default TupleToObjectNode.SubnetworkPathMemory initializePathMemory(TupleToObjectNode tton) {
         throw new UnsupportedOperationException("vol2 stub — see #6650");
     }
 
