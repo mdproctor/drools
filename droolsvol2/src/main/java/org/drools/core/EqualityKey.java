@@ -20,110 +20,81 @@ package org.drools.core;
 
 import org.drools.core.util.LinkedList;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 /**
- * Upon instantiation the EqualityKey caches the first Object's hashCode
- * this can never change. The EqualityKey has an internal datastructure
- * which references all the handles which are equal. It also records
- * Whether the referenced facts are JUSTIFIED or STATED
+ * Caches the first Object's hashCode on instantiation — this can never change.
+ * Internally references all handles that are equal, and tracks whether facts
+ * are STATED or JUSTIFIED (TMS will be redesigned as a specialised DataSource in vol2).
  */
-public abstract class EqualityKey<T> extends LinkedList<ObjectHandleImpl<T>> {
-    public final static int    STATED    = 1;
-    public final static int    JUSTIFIED = 2;
+// ObjectHandleImpl<T> extends TupleImpl<T> which implements DoubleLinkedNode<TupleImpl<T>>,
+// so LinkedList must be parameterised with TupleImpl<T>, not ObjectHandleImpl<T>.
+public abstract class EqualityKey<T> extends LinkedList<TupleImpl<T>> {
 
-    /** This is cached in the constructor from the first added Object */
-    private int          hashCode;
+    public static final int STATED    = 1;
+    public static final int JUSTIFIED = 2;
 
-    /** Tracks whether this Fact is Stated or Justified */
-    private int          status;
-    
-    public EqualityKey() {
+    private int hashCode;
+    private int status;
 
-    }
+    public EqualityKey() { }
 
     public EqualityKey(final ObjectHandleImpl<T> handle) {
-        super( ( ObjectHandleImpl<T>  ) handle );
-        this.hashCode = handle.getObjectHashCode();
+        super(handle);
+        this.hashCode = handle.hashCode(); // ObjectHandleImpl.hashCode() returns object's hashCode
     }
 
-    public EqualityKey(final InternalFactHandle handle,
-                       final int status) {
-        super( ( ObjectHandleImpl<T>  ) handle );
-        this.hashCode = handle.getObjectHashCode();
+    public EqualityKey(final ObjectHandleImpl<T> handle, final int status) {
+        super(handle);
+        this.hashCode = handle.hashCode();
         this.status = status;
     }
 
-    public abstract InternalFactHandle getLogicalFactHandle();
+    public abstract ObjectHandleImpl<T> getLogicalFactHandle();
 
-    public abstract void setLogicalFactHandle(InternalFactHandle logicalFactHandle);
+    public abstract void setLogicalFactHandle(ObjectHandleImpl<T> logicalFactHandle);
 
-    public InternalFactHandle getFactHandle() {
-        return getFirst();
+    @SuppressWarnings("unchecked")
+    public ObjectHandleImpl<T> getFactHandle() {
+        return (ObjectHandleImpl<T>) getFirst();
     }
 
-    public void addFactHandle(final InternalFactHandle handle) {
-        add( ( DefaultFactHandle ) handle );
+    public void addFactHandle(final ObjectHandleImpl<T> handle) {
+        add(handle);
     }
 
-    public void removeFactHandle(final InternalFactHandle handle) {
-        remove( ( DefaultFactHandle ) handle );
+    public void removeFactHandle(final ObjectHandleImpl<T> handle) {
+        remove(handle);
     }
 
-    /**
-     * @return the status
-     */
     public int getStatus() {
         return this.status;
-    }  
+    }
 
-    /**
-     * @param status the status to set
-     */
     public void setStatus(final int status) {
         this.status = status;
     }
 
-    public String toString() {
-        String str = null;
-        switch ( this.status ) {
-            case 1 :
-                str = "STATED";
-                break;
-            case 2 :
-                str = "JUSTIFIED";
-                break;
-        }
-        return "[FactStatus status=" + str + "]";
-    }
-
-    /**
-     * Returns the cached hashCode
-     * @see Object#hashCode()
-     */
+    @Override
     public int hashCode() {
         return this.hashCode;
     }
 
-    /**
-     * Equality for the EqualityKey means two things. It returns
-     * true if the object is also an EqualityKey the of the same
-     * the same identity as this. It also returns true if the object
-     * is equal to the head FactHandle's referenced Object.
-     */
+    @Override
     public boolean equals(final Object object) {
-        if ( object == null ) {
+        if (object == null) {
             return false;
         }
-
-        if ( object instanceof EqualityKey ) {
+        if (object instanceof EqualityKey) {
             return this == object;
         }
-
         return this.getFirst().getObject().equals(object);
     }
 
+    @Override
+    public String toString() {
+        return switch (this.status) {
+            case STATED    -> "[FactStatus status=STATED]";
+            case JUSTIFIED -> "[FactStatus status=JUSTIFIED]";
+            default        -> "[FactStatus status=UNKNOWN]";
+        };
+    }
 }
