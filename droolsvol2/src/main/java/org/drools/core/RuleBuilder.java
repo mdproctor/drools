@@ -39,35 +39,35 @@ import java.util.Map;
 public class RuleBuilder<DS> {
 
     public RuleBuilder() {
-
     }
 
     private String packageName;
     private Rule rule;
-    private List<Parameter> listParams;
-    private List<Parameter> mapParams;
-    private Class params;
 
     public ParametersFirst<Void, DS> rule(String ruleName) {
         rule = new RuleImpl(ruleName);
-        return new ParametersFirst(null);
+        return new ParametersFirst<>(null, rule);
     }
 
     public <T> From1First<Void, DS, T> from(Function1<DS, DataSource<T>> f) {
-        return new From1First<>(null);
+        return new From1First<>(null, rule);
     }
 
     public <T> From1First<Void, DS, T> from(DataSource<T> fromT) {
-        return new From1First<>(null);
+        return new From1First<>(null, rule);
     }
 
-    //public From1First<Object, Object, Object> from(Function1<T, DS> persons) {}
+    // -------------------------------------------------------------------------
+    // Base
+    // -------------------------------------------------------------------------
 
-    public class BaseRuleBuilder<END> {
+    public static class BaseRuleBuilder<END> {
         private END end;
+        protected Rule rule;
 
-        public BaseRuleBuilder(END end) {
+        public BaseRuleBuilder(END end, Rule rule) {
             this.end = end;
+            this.rule = rule;
         }
 
         public Rule build() {
@@ -77,22 +77,13 @@ public class RuleBuilder<DS> {
         public END end() {
             return end;
         }
-
-//        <A, B, C> Path3<END,Tuple3<A, B, C>, A, B, C>  path3(Tuple3<A, B, C>... tuple) {
-//            return null;
-//        }
-
-//        <A, B, C, D> void path4(Tuple4<A, B, C, D>... capture) {
-//            //return null;
-//        }
     }
 
     public record Parameter(String name, String type) {
-
     }
 
     public static class ArgList {
-        private List<Object>       list = new ArrayList<>();
+        private List<Object> list = new ArrayList<>();
 
         public Object get(int index) {
             return list.get(index);
@@ -100,16 +91,24 @@ public class RuleBuilder<DS> {
     }
 
     public static class ArgMap {
-        private Map<String, Object>       map = new HashMap<>();
+        private Map<String, Object> map = new HashMap<>();
 
         public Object get(String index) {
             return map.get(index);
         }
     }
 
-    public class ParametersFirst<END, DS> extends BaseRuleBuilder<END> {
-        public ParametersFirst(END end) {
-            super(end);
+    // -------------------------------------------------------------------------
+    // Parameters
+    // -------------------------------------------------------------------------
+
+    public static class ParametersFirst<END, DS> extends BaseRuleBuilder<END> {
+        private List<Parameter> listParams;
+        private List<Parameter> mapParams;
+        private Class params;
+
+        public ParametersFirst(END end, Rule rule) {
+            super(end, rule);
         }
 
         public <T> ParametersSecond<END, DS, ArgList> param(String name, T... type) {
@@ -118,57 +117,56 @@ public class RuleBuilder<DS> {
 
         public ParametersSecond<END, DS, ArgList> list() {
             listParams = new ArrayList<>();
-            return new ParametersSecond<>(end(), listParams);
+            return new ParametersSecond<>(end(), listParams, rule);
         }
 
         public ParametersSecond<END, DS, ArgMap> map() {
             mapParams = new ArrayList<>();
-            return new ParametersSecond<>(end(), mapParams);
+            return new ParametersSecond<>(end(), mapParams, rule);
         }
 
         public <B> From1First<END, DS, B> params(B... cls) {
             params = cls.getClass().getComponentType();
-            return new From1First<>(end());
+            return new From1First<>(end(), rule);
         }
 
         public <T> From1First<Void, DS, T> from(Function1<DS, DataSource<T>> f) {
-            return new From1First<>(null);
+            return new From1First<>(null, rule);
         }
 
         public <T> From1First<Void, DS, T> from(From1First<?, DS, T> f) {
-            return new From1First<>(null);
+            return new From1First<>(null, rule);
         }
 
-        public ParametersFirst ifn(Runnable fn0) {
+        public ParametersFirst<END, DS> ifn(Runnable fn0) {
             return this;
         }
 
         public void fn(Consumer1<Context<DS>> fn1) {
-
         }
 
         public <B> From1First<END, DS, B> extendsRule(RuleExtendsPoint2<DS, B> extension2) {
-            return new From1First<>(end());
+            return new From1First<>(end(), rule);
         }
 
         public <B, C> Join2First<END, DS, B, C> extendsRule(RuleExtendsPoint3<DS, B, C> extension3) {
-            return new Join2First<>(end());
+            return new Join2First<>(end(), rule);
         }
 
         public <B, C, D> Join3First<END, DS, B, C, D> extendsRule(RuleExtendsPoint4<DS, B, C, D> extension4) {
-            return new Join3First<>(end());
+            return new Join3First<>(end(), rule);
         }
 
         public <B, C, D, E> Join4First<END, DS, B, C, D, E> extendsRule(RuleExtendsPoint5<DS, B, C, D, E> extension5) {
-            return new Join4First<>(end());
+            return new Join4First<>(end(), rule);
         }
     }
 
-    public class ParametersSecond<END, DS, B> extends BaseRuleBuilder<END>  {
+    public static class ParametersSecond<END, DS, B> extends BaseRuleBuilder<END> {
         private List<Parameter> parameters;
 
-        public ParametersSecond(END end, List<Parameter> list) {
-            super(end);
+        public ParametersSecond(END end, List<Parameter> list, Rule rule) {
+            super(end, rule);
             parameters = list;
         }
 
@@ -181,27 +179,23 @@ public class RuleBuilder<DS> {
             return this;
         }
 
-        //Function1<DS, DataSource<F>> fromF
         public <C> Join2First<Void, DS, B, C> join(From1First<END, DS, C> fromC) {
-            return new Join2First<>(null);
+            return new Join2First<>(null, rule);
         }
 
         public <C> Join2First<Void, DS, B, C> join(Function1<DS, DataSource<C>> fromC) {
-            return new Join2First<>(null);
+            return new Join2First<>(null, rule);
         }
-
-//        public <A, B> OOPathBuilderA2<ParametersSecond<DS, B>, A, B> path(Function1<A,?> fn1,
-//                                                                          Predicate1<B> flt1) {
-////            OOPathBuilder1<> a = new OOPathBuilder1<>(AccessType.OBJECT, null, o -> true);
-////            return new OOPathBuilderA2<>(new OOPathBuilder2<>(accessType, fn1, flt1, b1));
-//            return null;
-//        }
     }
 
-    public class From1First<END, DS, B> extends BaseRuleBuilder<END> {
+    // -------------------------------------------------------------------------
+    // From1First
+    // -------------------------------------------------------------------------
 
-        public From1First(END end) {
-            super(end);
+    public static class From1First<END, DS, B> extends BaseRuleBuilder<END> {
+
+        public From1First(END end, Rule rule) {
+            super(end, rule);
         }
 
         public RuleExtendsPoint2<DS, B> extensionPoint() {
@@ -209,7 +203,7 @@ public class RuleBuilder<DS> {
         }
 
         public <T extends B> From1First<END, DS, T> type(Class<T>... cls) {
-            return new From1First<>(end());
+            return new From1First<>(end(), rule);
         }
 
         public From1First<END, DS, B> filter(Predicate2<Context<DS>, B> prd2) {
@@ -217,11 +211,11 @@ public class RuleBuilder<DS> {
         }
 
         public <C> Join2First<END, DS, B, C> join(From1First<?, DS, C> fromC) {
-            return new Join2First<>(end());
+            return new Join2First<>(end(), rule);
         }
 
         public <C> Join2First<END, DS, B, C> join(Function1<DS, DataSource<C>> fromC) {
-            return new Join2First<>(end());
+            return new Join2First<>(end(), rule);
         }
 
         public <C> Join2First<END, DS, B, C> not(From1First<Void, DS, C> fromC) {
@@ -231,7 +225,6 @@ public class RuleBuilder<DS> {
         public <C> Join2First<END, DS, B, C> not(Function1<DS, DataSource<C>> fromC) {
             return null;
         }
-
 
         public <C, D> Join3First<END, DS, B, C, D> join(Join2Second<Void, DS, C, D> fromCD) {
             return null;
@@ -246,37 +239,39 @@ public class RuleBuilder<DS> {
         }
 
         public void fn(Consumer2<Context<DS>, B> fn2) {
-
         }
 
-        <PB, PC, PD, PE, PF> Path6<Join2First<END, DS, B, Tuple6<B, PB, PC, PD, PE, PF>>, Tuple6<B, PB, PC, PD, PE, PF>, B, PB, PC,PD, PE, PF> path6() {
+        <PB, PC, PD, PE, PF> Path6<Join2First<END, DS, B, Tuple6<B, PB, PC, PD, PE, PF>>, Tuple6<B, PB, PC, PD, PE, PF>, B, PB, PC, PD, PE, PF> path6() {
             return new Path6<>(null, null, null);
         }
 
-        <PB, PC, PD, PE> Path4<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple5<B, PB, PC, PD, PE>>, B,?> fn2,
-                                                                                                                                  Predicate2<PathContext<Tuple5<B, PB, PC, PD, PE>>,PB> flt2) {
-            Path5<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, B, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
+        <PB, PC, PD, PE> Path4<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, PB, PC, PD, PE> path5(Function2<PathContext<Tuple5<B, PB, PC, PD, PE>>, B, ?> fn2,
+                                                                                                                                      Predicate2<PathContext<Tuple5<B, PB, PC, PD, PE>>, PB> flt2) {
+            Path5<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, B, PB, PC, PD, PE> path5 = new Path5<>(null, null, null);
             return path5.path(fn2, flt2);
         }
 
-        <PB, PC, PD> Path4<Join2First<END, DS, B, Tuple3<B, PB, PC>>, Tuple3<B, PB, PC>, B, PB, PC,PD> path4() {
+        <PB, PC, PD> Path4<Join2First<END, DS, B, Tuple4<B, PB, PC, PD>>, Tuple4<B, PB, PC, PD>, B, PB, PC, PD> path4() {
             return new Path4<>(null, null, null);
         }
 
-        <PB, PC> Path3<Join2First<END, DS, B, Tuple3<B, PB, PC>>,Tuple2<B, PB>, B, PB, PC>  path3() {
+        <PB, PC> Path3<Join2First<END, DS, B, Tuple3<B, PB, PC>>, Tuple2<B, PB>, B, PB, PC> path3() {
             return new Path3<>(null, null, null);
         }
 
-        <PB> Path2<Join2First<END, DS, B, Tuple2<B, PB>>,Tuple1<B>, B, PB> path2() {
+        <PB> Path2<Join2First<END, DS, B, Tuple2<B, PB>>, Tuple1<B>, B, PB> path2() {
             return new Path2<>(null, null, null);
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Join2
+    // -------------------------------------------------------------------------
 
-    public class Join2First<END, DS, B, C> extends Join2Second<END, DS, B, C>  {
+    public static class Join2First<END, DS, B, C> extends Join2Second<END, DS, B, C> {
 
-        public Join2First(END end) {
-            super(end);
+        public Join2First(END end, Rule rule) {
+            super(end, rule);
         }
 
         public Join2First<END, DS, B, C> filter(Predicate2<Context<DS>, C> predicate2) {
@@ -292,12 +287,12 @@ public class RuleBuilder<DS> {
         }
 
         public <V1, V2> Join2First<END, DS, B, C> filter(Variable<V1> v1, Variable<V2> v2,
-                                                         Predicate3<Context<DS>, V1, V2> predicate3) {
+                                                          Predicate3<Context<DS>, V1, V2> predicate3) {
             return this;
         }
 
         public <V1, V2, V3> Join2First<END, DS, B, C> filter(Variable<V1> v1, Variable<V2> v2, Variable<V2> v3,
-                                                             Predicate4<Context<DS>, V1, V2, V3> predicate4) {
+                                                              Predicate4<Context<DS>, V1, V2, V3> predicate4) {
             return this;
         }
 
@@ -306,9 +301,10 @@ public class RuleBuilder<DS> {
         }
     }
 
-    public class Join2Second<END, DS, B, C>  extends BaseRuleBuilder<END>  {
-        public Join2Second(END end) {
-            super(end);
+    public static class Join2Second<END, DS, B, C> extends BaseRuleBuilder<END> {
+
+        public Join2Second(END end, Rule rule) {
+            super(end, rule);
         }
 
         public RuleExtendsPoint3<DS, B, C> extensionPoint() {
@@ -320,17 +316,15 @@ public class RuleBuilder<DS> {
         }
 
         public Not2<Join2Second<END, DS, B, C>, DS, B, C> not() {
-               Not2<Join2Second<END, DS, B, C>, DS, B, C> not = new Not2<>(this);
-            return not;
+            return new Not2<>(this, rule);
         }
 
-
         public <D> Join3First<END, DS, B, C, D> join(From1First<Void, DS, D> fromD) {
-            return new Join3First<>(end());
+            return new Join3First<>(end(), rule);
         }
 
         public <D> Join3First<END, DS, B, C, D> join(Function1<DS, DataSource<D>> fromD) {
-            return new Join3First<>(end());
+            return new Join3First<>(end(), rule);
         }
 
         public <D, E> Join4First<END, DS, B, C, D, E> join(Join2First<?, DS, D, E> joinDE) {
@@ -341,104 +335,53 @@ public class RuleBuilder<DS> {
             return this;
         }
 
-        public BaseRuleBuilder<END>  fn(Consumer3<Context<DS>, B, C> fn3) {
+        public BaseRuleBuilder<END> fn(Consumer3<Context<DS>, B, C> fn3) {
             return this;
         }
 
-        <PB, PC, PD, PE, PF> Path6<Join3First<END, DS, B, C, Tuple6<C, PB, PC, PD, PE, PF>>, Tuple6<C, PB, PC, PD, PE, PF>, C, PB, PC,PD, PE, PF> path6() {
+        <PB, PC, PD, PE, PF> Path6<Join3First<END, DS, B, C, Tuple6<C, PB, PC, PD, PE, PF>>, Tuple6<C, PB, PC, PD, PE, PF>, C, PB, PC, PD, PE, PF> path6() {
             return new Path6<>(null, null, null);
         }
 
-        <PB, PC, PD, PE> Path4<Join3First<END, DS, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple5<C, PB, PC, PD, PE>>,C,?> fn2,
-                                                                                                                           Predicate2<PathContext<Tuple5<C, PB, PC, PD, PE>>,PB> flt2) {
-            Path5<Join3First<END, DS, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, C, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
+        <PB, PC, PD, PE> Path4<Join3First<END, DS, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, PB, PC, PD, PE> path5(Function2<PathContext<Tuple5<C, PB, PC, PD, PE>>, C, ?> fn2,
+                                                                                                                                         Predicate2<PathContext<Tuple5<C, PB, PC, PD, PE>>, PB> flt2) {
+            Path5<Join3First<END, DS, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, C, PB, PC, PD, PE> path5 = new Path5<>(null, null, null);
             return path5.path(fn2, flt2);
         }
 
-        <PB, PC, PD> Path4<Join3First<END, DS, B, C, Tuple4<C, PB, PC, PD>>, Tuple4<C, PB, PC, PD>, C, PB, PC,PD> path4() {
+        <PB, PC, PD> Path4<Join3First<END, DS, B, C, Tuple4<C, PB, PC, PD>>, Tuple4<C, PB, PC, PD>, C, PB, PC, PD> path4() {
             return new Path4<>(null, null, null);
         }
 
-        <PB, PC> Path3<Join3First<END, DS, B, C, Tuple3<C, PB, PC>>,Tuple3<C, PB, PC>, C, PB, PC>  path3() {
+        <PB, PC> Path3<Join3First<END, DS, B, C, Tuple3<C, PB, PC>>, Tuple3<C, PB, PC>, C, PB, PC> path3() {
             return new Path3<>(null, null, null);
         }
 
-        <PB> Path2<Join3First<END, DS, B, C, Tuple2<B, PB>>,Tuple2<C, PB>, C, PB> path2() {
+        <PB> Path2<Join3First<END, DS, B, C, Tuple2<B, PB>>, Tuple2<C, PB>, C, PB> path2() {
             return new Path2<>(null, null, null);
         }
     }
 
-//    public static class Group2First<END, DS, B, C>  extends BaseRuleBuilder   {
-//        private Join2First<DS, B, C> join;
-//
-//        public <D> Join3<DS, B, C, D> join(From1First<DS, D> fromD) {
-//            return null;
-//        }
-//    }
-
-    public class Not2<END, DS, B, C>  extends Group2<END, DS, B, C>   {
-        public Not2(END end) {
-            super(end);
+    public static class Not2<END, DS, B, C> extends Group2<END, DS, B, C> {
+        public Not2(END end, Rule rule) {
+            super(end, rule);
         }
     }
 
-    public class Group2<END, DS, B, C> extends Join2Second<END, DS, B, C> {
-
-        public Group2(END end) {
-            super(end);
+    public static class Group2<END, DS, B, C> extends Join2Second<END, DS, B, C> {
+        public Group2(END end, Rule rule) {
+            super(end, rule);
         }
-
-//        public Group2<END, DS, B, C> filter(Predicate3<Context<DS>, B, C> predicate3) {
-//            super.filter(predicate3);
-//            return this;
-//        }
-
-//        public <D> Join2First<DS, B, C> not(From1First<DS, D> fromD) {
-//            return this;
-//        }
-//
-//        public <D> Join3<DS, B, C, D> join(From1First<DS, D> fromD) {
-//            return null;
-//        }
-//
-//        public <D, E> Join4<DS, B, C, D, E> join(Join2First<DS, D, E> joinDE) {
-//            return null;
-//        }
-//
-//        public Join2First<DS, B, C> ifn(Consumer3<Context<DS>, B, C> fn3) {
-//            return this;
-//        }
-//
-//        public void fn(Consumer3<Context<DS>, B, C> fn3) {
-//
-//        }
-//
-//        <PB, PC, PD, PE, PF> Path6<Join3<DS, B, C, Tuple6<C, PB, PC, PD, PE, PF>>, Tuple6<C, PB, PC, PD, PE, PF>, C, PB, PC,PD, PE, PF> path6() {
-//            return new Path6<>(null, null, null);
-//        }
-//
-//        <PB, PC, PD, PE> Path4<Join3<DS, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple5<C, PB, PC, PD, PE>>,C,?> fn2,
-//                                                                                                                           Predicate2<PathContext<Tuple5<C, PB, PC, PD, PE>>,PB> flt2) {
-//            Path5<Join3<DS, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, C, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
-//            return path5.path(fn2, flt2);
-//        }
-//
-//        <PB, PC, PD> Path4<Join3<DS, B, C, Tuple4<C, PB, PC, PD>>, Tuple4<C, PB, PC, PD>, C, PB, PC,PD> path4() {
-//            return new Path4<>(null, null, null);
-//        }
-//
-//        <PB, PC> Path3<Join3<DS, B, C, Tuple3<C, PB, PC>>,Tuple3<C, PB, PC>, C, PB, PC>  path3() {
-//            return new Path3<>(null, null, null);
-//        }
-//
-//        <PB> Path2<Join3<DS, B, C, Tuple2<B, PB>>,Tuple2<C, PB>, C, PB> path2() {
-//            return new Path2<>(null, null, null);
-//        }
     }
 
-    public class Join3First <END, DS, B, C, D> extends Join3Second<END, DS, B, C, D> {
-        public Join3First(END end) {
-            super(end);
+    // -------------------------------------------------------------------------
+    // Join3
+    // -------------------------------------------------------------------------
+
+    public static class Join3First<END, DS, B, C, D> extends Join3Second<END, DS, B, C, D> {
+
+        public Join3First(END end, Rule rule) {
+            super(end, rule);
         }
 
         public Join3First<END, DS, B, C, D> filter(Predicate2<Context<DS>, D> predicate2) {
@@ -454,12 +397,12 @@ public class RuleBuilder<DS> {
         }
 
         public <V1, V2> Join3First<END, DS, B, C, D> filter(Variable<V1> v1, Variable<V2> v2,
-                                                            Predicate3<Context<DS>, V1, V2> predicate3) {
+                                                             Predicate3<Context<DS>, V1, V2> predicate3) {
             return this;
         }
 
         public <V1, V2, V3> Join3First<END, DS, B, C, D> filter(Variable<V1> v1, Variable<V2> v2, Variable<V2> v3,
-                                                                Predicate4<Context<DS>, V1, V2, V3> predicate4) {
+                                                                 Predicate4<Context<DS>, V1, V2, V3> predicate4) {
             return this;
         }
 
@@ -468,62 +411,61 @@ public class RuleBuilder<DS> {
         }
     }
 
-    public class Join3Second<END, DS, B, C, D> extends BaseRuleBuilder<END>  {
+    public static class Join3Second<END, DS, B, C, D> extends BaseRuleBuilder<END> {
 
-        public Join3Second(END end) {
-            super(end);
+        public Join3Second(END end, Rule rule) {
+            super(end, rule);
         }
 
         public RuleExtendsPoint4<DS, B, C, D> extensionPoint() {
             return new RuleExtendsPoint4<>(rule);
         }
 
-
         public <E> Join4First<END, DS, B, C, D, E> join(From1First<Void, DS, E> fromE) {
-            return new Join4First<>(end());
+            return new Join4First<>(end(), rule);
         }
 
         public <E> Join4First<END, DS, B, C, D, E> join(Function1<DS, DataSource<E>> fromE) {
-            return new Join4First<>(end());
+            return new Join4First<>(end(), rule);
         }
-
-//        public <E, F> Join5First<END, DS, B, C, D, E, F> join(Join2First<?, DS, D, E> joinDE) {
-//            return null;
-//        }
 
         public void fn(Consumer4<Context<DS>, B, C, D> fn4) {
-
         }
 
-        <PB, PC, PD, PE, PF> Path6<Join4First<END, DS, B, C, D, Tuple6<D, PB, PC, PD, PE, PF>>, Tuple6<D, PB, PC, PD, PE, PF>, D, PB, PC,PD, PE, PF> path6() {
+        <PB, PC, PD, PE, PF> Path6<Join4First<END, DS, B, C, D, Tuple6<D, PB, PC, PD, PE, PF>>, Tuple6<D, PB, PC, PD, PE, PF>, D, PB, PC, PD, PE, PF> path6() {
             return new Path6<>(null, null, null);
         }
 
-        <PB, PC, PD, PE> Path4<Join4First<END, DS, B, C, D, Tuple5<D, PB, PC, PD, PE>>, Tuple5<D, PB, PC, PD, PE>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple5<D, PB, PC, PD, PE>>,D,?> fn2,
-                                                                                                                             Predicate2<PathContext<Tuple5<D, PB, PC, PD, PE>>,PB> flt2) {
-            Path5<Join4First<END, DS, B, C, D, Tuple5<D, PB, PC, PD, PE>>, Tuple5<D, PB, PC, PD, PE>, D, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
+        <PB, PC, PD, PE> Path4<Join4First<END, DS, B, C, D, Tuple5<D, PB, PC, PD, PE>>, Tuple5<D, PB, PC, PD, PE>, PB, PC, PD, PE> path5(Function2<PathContext<Tuple5<D, PB, PC, PD, PE>>, D, ?> fn2,
+                                                                                                                                            Predicate2<PathContext<Tuple5<D, PB, PC, PD, PE>>, PB> flt2) {
+            Path5<Join4First<END, DS, B, C, D, Tuple5<D, PB, PC, PD, PE>>, Tuple5<D, PB, PC, PD, PE>, D, PB, PC, PD, PE> path5 = new Path5<>(null, null, null);
             return path5.path(fn2, flt2);
         }
 
-        <PB, PC, PD> Path4<Join4First<END, DS, B, C, D, Tuple4<D, PB, PC, PD>>, Tuple4<D, PB, PC, PD>, D, PB, PC,PD> path4() {
+        <PB, PC, PD> Path4<Join4First<END, DS, B, C, D, Tuple4<D, PB, PC, PD>>, Tuple4<D, PB, PC, PD>, D, PB, PC, PD> path4() {
             return new Path4<>(null, null, null);
         }
 
-        <PB, PC> Path3<Join4First<END, DS, B, C, D, Tuple3<D, PB, PC>>,Tuple3<D, PB, PC>, D, PB, PC>  path3() {
+        <PB, PC> Path3<Join4First<END, DS, B, C, D, Tuple3<D, PB, PC>>, Tuple3<D, PB, PC>, D, PB, PC> path3() {
             return new Path3<>(null, null, null);
         }
 
-        <PB> Path2<Join4First<END, DS, B, C, D, Tuple2<D, PB>>,Tuple2<D, PB>, D, PB> path2() {
+        <PB> Path2<Join4First<END, DS, B, C, D, Tuple2<D, PB>>, Tuple2<D, PB>, D, PB> path2() {
             return new Path2<>(null, null, null);
         }
     }
 
-    public class Join4First<END, DS, B, C, D, E> extends Join4Second<END, DS, B, C, D, E> {
-        public Join4First(END end) {
-            super(end);
+    // -------------------------------------------------------------------------
+    // Join4
+    // -------------------------------------------------------------------------
+
+    public static class Join4First<END, DS, B, C, D, E> extends Join4Second<END, DS, B, C, D, E> {
+
+        public Join4First(END end, Rule rule) {
+            super(end, rule);
         }
 
-        public Join4First<END, DS, B, C, D, E> filter(Predicate2<Context<DS>,E> predicate2) {
+        public Join4First<END, DS, B, C, D, E> filter(Predicate2<Context<DS>, E> predicate2) {
             return this;
         }
 
@@ -532,12 +474,12 @@ public class RuleBuilder<DS> {
         }
 
         public <V1, V2> Join4First<END, DS, B, C, D, E> filter(Variable<V1> v1, Variable<V2> v2,
-                                                               Predicate3<Context<DS>, V1, V2> predicate3) {
+                                                                Predicate3<Context<DS>, V1, V2> predicate3) {
             return this;
         }
 
         public <V1, V2, V3> Join4First<END, DS, B, C, D, E> filter(Variable<V1> v1, Variable<V2> v2, Variable<V2> v3,
-                                                                   Predicate4<Context<DS>, V1, V2, V3> predicate4) {
+                                                                    Predicate4<Context<DS>, V1, V2, V3> predicate4) {
             return this;
         }
 
@@ -546,9 +488,10 @@ public class RuleBuilder<DS> {
         }
     }
 
-    public class Join4Second<END, DS, B, C, D, E> extends BaseRuleBuilder<END> {
-        public Join4Second(END end) {
-            super(end);
+    public static class Join4Second<END, DS, B, C, D, E> extends BaseRuleBuilder<END> {
+
+        public Join4Second(END end, Rule rule) {
+            super(end, rule);
         }
 
         public RuleExtendsPoint5<DS, B, C, D, E> extensionPoint() {
@@ -556,40 +499,44 @@ public class RuleBuilder<DS> {
         }
 
         public <F> Join5First<END, DS, B, C, D, E, F> join(From1First<Void, DS, F> fromF) {
-            return new Join5First<>(end());
+            return new Join5First<>(end(), rule);
         }
 
         public <F> Join5First<END, DS, B, C, D, E, F> join(Function1<DS, DataSource<F>> fromF) {
-            return new Join5First<>(end());
+            return new Join5First<>(end(), rule);
         }
 
-        <PB, PC, PD, PE, PF> Path6<Join2First<END, DS, B, Tuple6<B, PB, PC, PD, PE, PF>>, Tuple6<B, PB, PC, PD, PE, PF>, B, PB, PC,PD, PE, PF> path6() {
+        <PB, PC, PD, PE, PF> Path6<Join2First<END, DS, B, Tuple6<B, PB, PC, PD, PE, PF>>, Tuple6<B, PB, PC, PD, PE, PF>, B, PB, PC, PD, PE, PF> path6() {
             return new Path6<>(null, null, null);
         }
 
-        <PB, PC, PD, PE> Path4<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, PB, PC,PD, PE> path5(Function2<PathContext<Tuple5<B, PB, PC, PD, PE>>,B,?> fn2,
-                                                                                                                            Predicate2<PathContext<Tuple5<B, PB, PC, PD, PE>>,PB> flt2) {
-            Path5<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, B, PB, PC,PD, PE> path5 = new Path5<>(null, null, null);
+        <PB, PC, PD, PE> Path4<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, PB, PC, PD, PE> path5(Function2<PathContext<Tuple5<B, PB, PC, PD, PE>>, B, ?> fn2,
+                                                                                                                                      Predicate2<PathContext<Tuple5<B, PB, PC, PD, PE>>, PB> flt2) {
+            Path5<Join2First<END, DS, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, B, PB, PC, PD, PE> path5 = new Path5<>(null, null, null);
             return path5.path(fn2, flt2);
         }
 
-        <PB, PC, PD> Path4<Join2First<END, DS, B, Tuple4<B, PB, PC, PD>>, Tuple4<B, PB, PC, PD>, B, PB, PC,PD> path4() {
+        <PB, PC, PD> Path4<Join2First<END, DS, B, Tuple4<B, PB, PC, PD>>, Tuple4<B, PB, PC, PD>, B, PB, PC, PD> path4() {
             return new Path4<>(null, null, null);
         }
 
-        <PB, PC> Path3<Join2First<END, DS, B, Tuple3<B, PB, PC>>,Tuple3<B, PB, PC>, B, PB, PC>  path3() {
+        <PB, PC> Path3<Join2First<END, DS, B, Tuple3<B, PB, PC>>, Tuple3<B, PB, PC>, B, PB, PC> path3() {
             return new Path3<>(null, null, null);
         }
 
-        <PB> Path2<Join2First<END, DS, B, Tuple2<B, PB>>,Tuple2<B, PB>, B, PB> path2() {
+        <PB> Path2<Join2First<END, DS, B, Tuple2<B, PB>>, Tuple2<B, PB>, B, PB> path2() {
             return new Path2<>(null, null, null);
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Join5
+    // -------------------------------------------------------------------------
 
-    public class Join5First<END, DS, B, C, D, E, F> extends Join5Second<END, DS, B, C, D, E, F> {
-        public Join5First(END end) {
-            super(end);
+    public static class Join5First<END, DS, B, C, D, E, F> extends Join5Second<END, DS, B, C, D, E, F> {
+
+        public Join5First(END end, Rule rule) {
+            super(end, rule);
         }
 
         public Join5First<END, DS, B, C, D, E, F> filter(Predicate2<Context<DS>, F> predicate2) {
@@ -601,12 +548,12 @@ public class RuleBuilder<DS> {
         }
 
         public <V1, V2> Join5First<END, DS, B, C, D, E, F> filter(Variable<V1> v1, Variable<V2> v2,
-                                                                  Predicate3<Context<DS>, V1, V2> predicate3) {
+                                                                   Predicate3<Context<DS>, V1, V2> predicate3) {
             return this;
         }
 
         public <V1, V2, V3> Join5First<END, DS, B, C, D, E, F> filter(Variable<V1> v1, Variable<V2> v2, Variable<V2> v3,
-                                                                      Predicate4<Context<DS>, V1, V2, V3> predicate4) {
+                                                                       Predicate4<Context<DS>, V1, V2, V3> predicate4) {
             return this;
         }
 
@@ -615,15 +562,14 @@ public class RuleBuilder<DS> {
         }
     }
 
-    public class Join5Second<END, DS, B, C, D, E, F> extends BaseRuleBuilder<END> {
-        public Join5Second(END end) {
-            super(end);
+    public static class Join5Second<END, DS, B, C, D, E, F> extends BaseRuleBuilder<END> {
+
+        public Join5Second(END end, Rule rule) {
+            super(end, rule);
         }
 
         public RuleExtendsPoint6<DS, B, C, D, E, F> extensionPoint() {
             return new RuleExtendsPoint6<>(rule);
         }
     }
-
-
 }
