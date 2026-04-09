@@ -14,11 +14,12 @@ public class FilterNode<DS, T> extends BaseNode {
         super(id, 0, -1);
     }
 
-    @Override\n    public BaseNode getParent() {
+    @Override
+    public BaseNode getParent() {
         return parent;
     }
 
-    public void setParent(NetworkNode parent) {
+    public void setParent(BaseNode parent) {
         this.parent = parent;
     }
 
