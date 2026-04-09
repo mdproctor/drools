@@ -11,4 +11,5 @@ public class TupleStartEqualsConstraint implements BetaConstraint<Object> {
     @Override public boolean isAllowedCachedRight(BaseTuple tuple, Object context) { return true; }
     @Override public Object createContext() { return null; }
     @Override public BetaConstraint<Object> cloneIfInUse() { return this; }
+    @Override public boolean isTemporal() { return false; }
 }
