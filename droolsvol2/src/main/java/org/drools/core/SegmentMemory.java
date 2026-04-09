@@ -21,6 +21,8 @@ package org.drools.core;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.util.DoubleLinkedNode;
 import org.drools.core.util.LinkedList;
+
+import static org.drools.core.BuildtimeSegmentUtilities.nextNodePosMask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -340,14 +342,14 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         if (NodeTypeEnums.TupleToObjectNode == pmem.getNodeType()) {
             for (PathEndNode endNode : pmem.getPathEndNode().getPathEndNodes()) {
                 if (NodeTypeEnums.isTerminalNode(endNode)) {
-                    if (proto.getRootNode().hasAssociatedTerminal((AbstractTerminalNode) endNode)) {
+                    if (proto.getRootNode().hasAssociatedTerminal((TerminalNode) endNode)) {
                         return true;
                     }
                 }
             }
             return false;
         }
-        return proto.getRootNode().hasAssociatedTerminal((AbstractTerminalNode) pmem.getPathEndNode());
+        return proto.getRootNode().hasAssociatedTerminal((TerminalNode) pmem.getPathEndNode());
     }
 
     public void removePathMemory(PathMemory pathMemory) {

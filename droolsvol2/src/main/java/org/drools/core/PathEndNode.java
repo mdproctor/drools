@@ -28,32 +28,24 @@ import java.io.Serializable;
 import static org.drools.core.BuildtimeSegmentUtilities.nextNodePosMask;
 
 public interface PathEndNode extends NetworkNode, MemoryFactory<PathMemory> {
-//    BaseNode[] getPathNodes();
-//
-//    void nullPathMemSpec();
-//
-//    BaseNode getStartTupleSource();
-//
-//    boolean hasPathNode(BaseNode node);
-//
-//    void setPathEndNodes(PathEndNode[] pathEndNodes);
+
+    void setPathEndNodes(PathEndNode[] pathEndNodes);
     PathEndNode[] getPathEndNodes();
-//
-//    void setSegmentPrototypes(SegmentPrototype[] smems);
-//
-//    SegmentPrototype[] getSegmentPrototypes();
-//
-//    SegmentPrototype[] getEagerSegmentPrototypes();
-//
-//    void setEagerSegmentPrototypes(SegmentPrototype[] eagerSegmentPrototypes);
-//
-//    PathMemSpec getPathMemSpec();
-//
-//    PathMemSpec getPathMemSpec(TerminalNode removingTN);
-//
-//    void resetPathMemSpec(TerminalNode removingTN);
-//
-//    void setPathMemSpec(PathMemSpec pathMemSpec);
+
+    void setSegmentPrototypes(SegmentPrototype[] smems);
+    SegmentPrototype[] getSegmentPrototypes();
+
+    SegmentPrototype[] getEagerSegmentPrototypes();
+    void setEagerSegmentPrototypes(SegmentPrototype[] eagerSegmentPrototypes);
+
+    BaseNode getStartLeftInput();
+
+    // PathMemSpec methods commented out until PathMemSpec is defined in vol2
+    //    PathMemSpec getPathMemSpec();
+    //    PathMemSpec getPathMemSpec(TerminalNode removingTN);
+    //    void resetPathMemSpec(TerminalNode removingTN);
+    //    void setPathMemSpec(PathMemSpec pathMemSpec);
+    //    void nullPathMemSpec();
 //
 //    class PathMemSpec implements Serializable {
 //        long allLinkedTestMask;

@@ -56,7 +56,6 @@ import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 
 public class FromNode<T extends FromNode.FromMemory> extends BaseNode
     implements
-    BaseNode,
     MemoryFactory<T> {
     private static final long          serialVersionUID = 510l;
 

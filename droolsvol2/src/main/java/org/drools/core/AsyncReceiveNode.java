@@ -41,7 +41,6 @@ import org.drools.core.util.index.TupleList;
 
 public class AsyncReceiveNode extends BaseNode
         implements
-        BaseNode,
         MemoryFactory<AsyncReceiveNode.AsyncReceiveMemory> {
 
     private static final long serialVersionUID = 510l;

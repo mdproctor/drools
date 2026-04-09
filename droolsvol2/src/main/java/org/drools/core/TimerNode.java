@@ -37,7 +37,6 @@ import org.drools.core.util.index.TupleList;
 
 public class TimerNode extends BaseNode
         implements
-        BaseNode,
         MemoryFactory<TimerNode.TimerNodeMemory> {
 
     private static final long serialVersionUID = 510l;

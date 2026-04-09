@@ -44,7 +44,6 @@ import org.kie.api.definition.rule.Rule;
  */
 public class TupleToObjectNode extends BaseNode
                                implements
-                               BaseNode,
                                PathEndNode {
 
     private static final long serialVersionUID = 510l;

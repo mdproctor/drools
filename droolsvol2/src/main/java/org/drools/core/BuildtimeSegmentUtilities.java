@@ -126,7 +126,7 @@ public class BuildtimeSegmentUtilities {
         do {
             // iterate to find the actual segment root
             while (!BuildtimeSegmentUtilities.isRootNode(segmentRoot, removingTn)) {
-                segmentRoot = segmentRoot.getLeftTupleSource();
+                segmentRoot = segmentRoot.getLeftInput();
             }
 
             // Store all nodes for the main path in reverse order (we're starting from the terminal node).
@@ -138,7 +138,7 @@ public class BuildtimeSegmentUtilities {
             smems.add(0, smem);
 
             // this is the new segment so set both to same, and it iterates for the actual segmentRoot next loop.
-            segmentRoot = segmentRoot.getLeftTupleSource();
+            segmentRoot = segmentRoot.getLeftInput();
             segmentTip = segmentRoot;
         } while (segmentRoot != null); // it's after lian
 
@@ -165,7 +165,7 @@ public class BuildtimeSegmentUtilities {
             if (tupleSource.getType() == NodeTypeEnums.ConditionalBranchNode) {
                 conditionalBranch = tupleSource;
             }
-            tupleSource = tupleSource.getLeftTupleSource();
+            tupleSource = tupleSource.getLeftInput();
         }
         return conditionalBranch;
     }
@@ -429,7 +429,7 @@ public class BuildtimeSegmentUtilities {
      * if the rule had already been removed from the network.
      */
     public static boolean isRootNode(BaseNode node, TerminalNode ignoreTn) {
-        return NodeTypeEnums.isLeftInputAdapterNode(node) || isTipNode(node.getLeftTupleSource(), ignoreTn);
+        return NodeTypeEnums.isLeftInputAdapterNode(node) || isTipNode(node.getLeftInput(), ignoreTn);
     }
 
     /**
