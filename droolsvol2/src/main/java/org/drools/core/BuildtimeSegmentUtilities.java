@@ -241,7 +241,7 @@ public class BuildtimeSegmentUtilities {
 
             nodePosMask = nextNodePosMask(nodePosMask);
 
-            if (node == segmentTip || !(NodeTypeEnums.isBaseNode(node))) {
+            if (node == segmentTip) {
                 break;
             }
 

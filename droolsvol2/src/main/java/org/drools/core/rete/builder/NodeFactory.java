@@ -178,4 +178,9 @@ public interface NodeFactory {
                                             AlphaNodeFieldConstraint[] alphaNodeFieldConstraints,
                                             BetaConstraints betaConstraints,
                                             BuildContext context );
+
+    /** TODO #6650: vol2 right input (bi-linear adapter) node not yet implemented. */
+    default TupleToObjectNode buildRightInputNode(int id, BaseNode leftInput, BaseNode objectSource, BuildContext context) {
+        return new TupleToObjectNode(id, leftInput != null ? leftInput.getPathIndex() + 1 : 0, 0);
+    }
 }

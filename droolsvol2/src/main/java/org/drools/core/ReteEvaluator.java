@@ -1,14 +1,15 @@
 package org.drools.core;
 
-import org.drools.base.common.NetworkNode;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.time.TimerService;
 
 /**
  * Vol2 ReteEvaluator — the runtime session evaluator.
+ * Implements ValueResolver for compatibility with drools-base timer infrastructure.
  * TODO #6650: implement vol2 ReteEvaluator once evaluation engine is built.
- * Methods are stubs; real implementation will wire to container queue and DataSources.
  */
-public class ReteEvaluator {
+public class ReteEvaluator implements ValueResolver {
 
     public TimerService getTimerService() {
         throw new UnsupportedOperationException("vol2 stub — see #6650");
@@ -27,6 +28,22 @@ public class ReteEvaluator {
     }
 
     public void addPropagation(Runnable action) {
+        throw new UnsupportedOperationException("vol2 stub — see #6650");
+    }
+
+    // ValueResolver implementation
+    @Override
+    public long getCurrentTime() {
+        throw new UnsupportedOperationException("vol2 stub — see #6650");
+    }
+
+    @Override
+    public GlobalResolver getGlobalResolver() {
+        throw new UnsupportedOperationException("vol2 stub — see #6650");
+    }
+
+    @Override
+    public org.drools.base.RuleBase getRuleBase() {
         throw new UnsupportedOperationException("vol2 stub — see #6650");
     }
 }

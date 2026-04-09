@@ -244,7 +244,7 @@ public class RuleBaseConfiguration  extends BaseConfiguration<KieBaseOption, Sin
 
     public void readExternal(ObjectInput in) throws IOException,
                                                     ClassNotFoundException {
-        super.readExternal(in);
+
         sequential = in.readBoolean();
         sequentialAgenda = (SequentialAgenda) in.readObject();
         maintainTms = in.readBoolean();

@@ -76,19 +76,8 @@ public class DurationTimer extends BaseTimer
         return new Declaration[][] { new Declaration[] { getEventFactHandleDeclaration()}, null };
     }
 
-    public Trigger createTrigger(InternalMatch item, InternalWorkingMemory wm) {
-        long timestamp;
-        if (eventFactHandle != null) {
-            TupleImpl       leftTuple = item.getTuple();
-            EventHandleImpl fh        = (EventHandleImpl) leftTuple.get(eventFactHandle);
-            timestamp = fh.getStartTimestamp();
-        } else {
-            timestamp = wm.getTimerService().getCurrentTime();
-        }
-        String[] calendarNames = item.getRule().getCalendars();
-        Calendars calendars = wm.getCalendars();
-        return createTrigger(timestamp, calendarNames, calendars);
-    }
+    // createTrigger(InternalMatch, InternalWorkingMemory) removed — vol1 concepts not in vol2
+    // public Trigger createTrigger(InternalMatch item, InternalWorkingMemory wm) { ... }
 
     public Trigger createTrigger(long timestamp,
                                  BaseTuple leftTuple,
@@ -102,7 +91,7 @@ public class DurationTimer extends BaseTimer
 
     long getEventTimestamp(BaseTuple leftTuple, long timestamp) {
         return eventFactHandle != null ?
-               ((DefaultEventHandle) leftTuple.get(eventFactHandle)).getStartTimestamp() :
+               ((EventHandleImpl) leftTuple.get(eventFactHandle)).getStartTimestamp() :
                timestamp;
     }
 
