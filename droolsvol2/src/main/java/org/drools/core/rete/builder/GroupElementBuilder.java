@@ -147,44 +147,44 @@ public class GroupElementBuilder
         }
 
         public static void buildTupleSource(BuildContext context, BuildUtils utils, boolean terminal) {
-            // if a previous object source was bound, but no tuple source
-            if (context.getRightInput() != null && context.getLeftInput() == null) {
-                // we know this is the root OTN, so record it
-                BaseNode source = context.getRightInput();
-                while ( !(source.getType() ==  NodeTypeEnums.ObjectTypeNode ) ) {
+            // if a previous object source was bound, but no tuple source yet
+            if (context.getObjectSource() != null && context.getLeftInput() == null) {
+                // walk up to find the root OTN and record it
+                BaseNode source = context.getObjectSource();
+                while (source != null && source.getType() != NodeTypeEnums.ObjectTypeNode) {
                     source = source.getLeftInput();
                 }
-                context.setRootObjectTypeNode( (ObjectTypeNode) source);
+                if (source != null) {
+                    context.setRootObjectTypeNode((ObjectTypeNode) source);
+                }
 
-
-                // adapt it to a Tuple source
+                // create a LeftInputAdapterNode to convert the object network to a tuple network
                 context.setLeftInput(utils.attachNode(context,
-                                                      CoreComponentFactory.get().getNodeFactoryService()
-                                                                 .buildLeftInputAdapterNode( context.getNextNodeId(),
-                                                                                             context.getRightInput(),
-                                                                                             context, terminal )));
-                context.setRightInput(null);
+                        CoreComponentFactory.get().getNodeFactoryService()
+                                .buildLeftInputAdapterNode(context.getNextNodeId(),
+                                                           context.getObjectSource(),
+                                                           context, terminal)));
+                context.setObjectSource(null);
             }
         }
 
         public static void buildJoinNode(BuildContext context, BuildUtils utils) {
-            // if there was a previous tuple source, then a join node is needed
-            if (context.getRightInput() != null && context.getLeftInput() != null) {
-                // so, create the tuple source and clean up the constraints and object source
-                final BetaConstraints betaConstraints = utils.createBetaNodeConstraint( context,
-                                                                                        context.getBetaconstraints(),
-                                                                                        false );
+            // if there is both a tuple source (leftInput) and an object source, create a join
+            if (context.getObjectSource() != null && context.getLeftInput() != null) {
+                final BetaConstraints betaConstraints = utils.createBetaNodeConstraint(context,
+                                                                                       context.getBetaconstraints(),
+                                                                                       false);
 
                 JoinNode joinNode = CoreComponentFactory.get()
-                                           .getNodeFactoryService().buildJoinNode( context.getNextNodeId(),
-                                                                                   context.getLeftInput(),
-                                                                                   context.getRightInput(),
-                                                                                   betaConstraints,
-                                                                                   context);
+                        .getNodeFactoryService().buildJoinNode(context.getNextNodeId(),
+                                                               context.getLeftInput(),
+                                                               context.getObjectSource(),
+                                                               betaConstraints,
+                                                               context);
 
                 context.setLeftInput(utils.attachNode(context, joinNode));
-                context.setBetaconstraints( null );
-                context.setRightInput(null);
+                context.setBetaconstraints(null);
+                context.setObjectSource(null);
             }
         }
 
