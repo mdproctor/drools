@@ -1,4 +1,7 @@
 package org.drools.core;
+
+import org.drools.core.rete.builder.NodeFactory;
+
 /** TODO #6650: Temporary stub — vol2 component factory not yet implemented. */
 public class CoreComponentFactory {
     private static final CoreComponentFactory INSTANCE = new CoreComponentFactory();
