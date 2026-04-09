@@ -18,16 +18,28 @@
  */
 package org.drools.core.function;
 
+import io.quarkiverse.permuplate.Permute;
+import io.quarkiverse.permuplate.PermuteConst;
+import io.quarkiverse.permuplate.PermuteParam;
+import io.quarkiverse.permuplate.PermuteReturn;
+import io.quarkiverse.permuplate.PermuteTypeParam;
+
 import java.io.Serializable;
 
-public interface Predicate2<A, B> extends Predicate, Serializable {
-    boolean test(A a, B b);
+@Permute(varName = "i", from = 3, to = 10, className = "Predicate${i}")
+public interface Predicate2<A, @PermuteTypeParam(varName = "j", from = "2", to = "${i}", name = "${alpha(j)}") B>
+        extends Predicate, Serializable {
+
+    @PermuteConst("${i}") int ARITY = 2;
+
+    boolean test(A a, @PermuteParam(varName = "j", from = "2", to = "${i}", type = "${alpha(j)}", name = "${lower(j)}") B b);
 
     default int getArity() {
-        return 2;
+        return ARITY;
     }
 
+    @PermuteReturn(className = "Predicate${i}", typeArgVarName = "j", typeArgFrom = "1", typeArgTo = "${i}", typeArgName = "${alpha(j)}")
     default Predicate2<A, B> negate() {
-        return (a, b) -> !test( a, b );
+        return (A a, @PermuteParam(varName = "j", from = "2", to = "${i}", type = "${alpha(j)}", name = "${lower(j)}") B b) -> !test(a, b);
     }
 }

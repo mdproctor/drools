@@ -18,12 +18,22 @@
  */
 package org.drools.core.function;
 
+import io.quarkiverse.permuplate.Permute;
+import io.quarkiverse.permuplate.PermuteConst;
+import io.quarkiverse.permuplate.PermuteParam;
+import io.quarkiverse.permuplate.PermuteTypeParam;
+
 import java.io.Serializable;
 
-public interface Function2<A, B, R> extends Function, Serializable {
-    R apply(A a, B b);
+@Permute(varName = "i", from = 3, to = 10, className = "Function${i}")
+public interface Function2<A, @PermuteTypeParam(varName = "j", from = "2", to = "${i}", name = "${alpha(j)}") B, R>
+        extends Function, Serializable {
+
+    @PermuteConst("${i}") int ARITY = 2;
+
+    R apply(A a, @PermuteParam(varName = "j", from = "2", to = "${i}", type = "${alpha(j)}", name = "${lower(j)}") B b);
 
     default int getArity() {
-        return 2;
+        return ARITY;
     }
 }
