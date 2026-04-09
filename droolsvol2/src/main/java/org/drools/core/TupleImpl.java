@@ -24,7 +24,19 @@ import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.kie.api.runtime.rule.FactHandle;
 
 public class TupleImpl<T> extends AbstractDoubleLinkedNode<TupleImpl<T>> { //Tuple<TupleImpl<T>> {
-    private static final long          serialVersionUID = 540l;
+    private static final long serialVersionUID = 540l;
+
+    // Staged type constants — used by TupleSets to track evaluation state
+    public static final short NONE             = 0;
+    public static final short INSERT           = 1;
+    public static final short UPDATE           = 2;
+    public static final short DELETE           = 3;
+    public static final short NORMALIZED_DELETE = 4;
+
+    // Staged state — used by TupleSetsImpl to link tuples into insert/update/delete queues
+    private short     stagedType;
+    protected TupleImpl stagedNext;
+    protected TupleImpl stagedPrevious;
 
     /**
      * The children linked list
@@ -46,6 +58,36 @@ public class TupleImpl<T> extends AbstractDoubleLinkedNode<TupleImpl<T>> { //Tup
 
     public Object getObject(Declaration declaration) {
         return getObject(declaration.getTupleIndex());
+    }
+
+    public short getStagedType() {
+        return stagedType;
+    }
+
+    public void setStagedType(short stagedType) {
+        this.stagedType = stagedType;
+    }
+
+    public TupleImpl getStagedNext() {
+        return stagedNext;
+    }
+
+    public void setStagedNext(TupleImpl stagedNext) {
+        this.stagedNext = stagedNext;
+    }
+
+    public TupleImpl getStagedPrevious() {
+        return stagedPrevious;
+    }
+
+    public void setStagedPrevious(TupleImpl stagedPrevious) {
+        this.stagedPrevious = stagedPrevious;
+    }
+
+    public void clearStaged() {
+        this.stagedType = NONE;
+        this.stagedNext = null;
+        this.stagedPrevious = null;
     }
 
     public TupleImpl getFirstChild() {

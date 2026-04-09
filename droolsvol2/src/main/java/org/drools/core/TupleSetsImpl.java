@@ -18,8 +18,6 @@
  */
 package org.drools.core;
 
-import org.drools.core.reteoo.Tuple;
-import org.drools.core.reteoo.TupleImpl;
 
 public class TupleSetsImpl implements TupleSets {
 
@@ -27,13 +25,13 @@ public class TupleSetsImpl implements TupleSets {
         TupleSets leftTupleSets = new TupleSetsImpl();
         if (leftTuple != null) {
             switch (stagedType) {
-                case Tuple.INSERT:
+                case TupleImpl.INSERT:
                     leftTupleSets.addInsert(leftTuple);
                     break;
-                case Tuple.DELETE:
+                case TupleImpl.DELETE:
                     leftTupleSets.addDelete(leftTuple);
                     break;
-                case Tuple.UPDATE:
+                case TupleImpl.UPDATE:
                     leftTupleSets.addUpdate(leftTuple);
                     break;
             }
@@ -103,12 +101,12 @@ public class TupleSetsImpl implements TupleSets {
     }
 
     public boolean addInsert(TupleImpl tuple) {
-        if ( getStagedType( tuple ) == Tuple.UPDATE) {
+        if ( getStagedType( tuple ) == TupleImpl.UPDATE) {
             // do nothing, it's already staged as an update, which means it's already scheduled for eval too.
             return false;
         }
 
-        setStagedType( tuple, Tuple.INSERT );
+        setStagedType( tuple, TupleImpl.INSERT );
         if ( insertFirst == null ) {
             insertFirst = tuple;
             insertSize = 1;
@@ -124,15 +122,15 @@ public class TupleSetsImpl implements TupleSets {
     public boolean addDelete(TupleImpl tuple) {
         switch ( getStagedType( tuple ) ) {
             // handle clash with already staged entries
-            case Tuple.INSERT:
+            case TupleImpl.INSERT:
                 removeInsert( tuple );
                 return deleteFirst == null;
-            case Tuple.UPDATE:
+            case TupleImpl.UPDATE:
                 removeUpdate( tuple );
                 break;
         }
 
-        setStagedType( tuple, Tuple.DELETE );
+        setStagedType( tuple, TupleImpl.DELETE );
         if ( deleteFirst == null ) {
             deleteFirst = tuple;
             return true;
@@ -144,7 +142,7 @@ public class TupleSetsImpl implements TupleSets {
     }
 
     public boolean addNormalizedDelete(TupleImpl tuple) {
-        setStagedType( tuple, Tuple.NORMALIZED_DELETE );
+        setStagedType( tuple, TupleImpl.NORMALIZED_DELETE );
         if ( normalizedDeleteFirst == null ) {
             normalizedDeleteFirst = tuple;
             return true;
@@ -156,12 +154,12 @@ public class TupleSetsImpl implements TupleSets {
     }
 
     public boolean addUpdate(TupleImpl tuple) {
-        if ( getStagedType( tuple ) != Tuple.NONE) {
+        if ( getStagedType( tuple ) != TupleImpl.NONE) {
             // do nothing, it's already staged as insert, which means it's already scheduled for eval too.
             return false;
         }
 
-        setStagedType( tuple, Tuple.UPDATE );
+        setStagedType( tuple, TupleImpl.UPDATE );
         if ( updateFirst == null ) {
             updateFirst = tuple;
             return true;
