@@ -231,7 +231,7 @@ public class PathMemory extends AbstractDoubleLinkedNode<Memory>
     }
     
     public void addSegmentToPathMemory(SegmentMemory smem) {
-        if (smem.getRootNode().getPathIndex() >= getPathEndNode().getStartTupleSource().getPathIndex()) {
+        if (smem.getRootNode().getPathIndex() >= getPathEndNode().getStartLeftInput().getPathIndex()) {
             smem.addPathMemory(this);
             setSegmentMemory(smem.getPos(), smem);
         }

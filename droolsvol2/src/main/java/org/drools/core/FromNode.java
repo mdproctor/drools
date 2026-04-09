@@ -17,356 +17,59 @@
  * under the License.
  */
 package org.drools.core;
-import org.drools.core.rete.builder.ReteBuilder;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import org.drools.base.base.ObjectType;
-import org.drools.base.common.NetworkNode;
-import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.base.rule.From;
-import org.drools.base.rule.Pattern;
-import org.drools.base.rule.accessor.DataProvider;
-import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.BetaConstraints;
-import org.drools.core.EmptyBetaConstraints;
-import org.drools.core.InternalDataHandle;
-import org.drools.core.Memory;
-import org.drools.core.MemoryFactory;
-import org.drools.core.PropagationContext;
-import org.drools.core.ReteEvaluator;
-import org.drools.core.UpdateContext;
-import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.AbstractDoubleLinkedNode;
-import org.drools.core.util.index.TupleList;
-import org.drools.util.bitmask.AllSetBitMask;
-import org.drools.util.bitmask.BitMask;
 
-import static org.drools.base.reteoo.PropertySpecificUtil.calculateNegativeMask;
-import static org.drools.base.reteoo.PropertySpecificUtil.calculatePositiveMask;
-import static org.drools.base.reteoo.PropertySpecificUtil.getAccessibleProperties;
-import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
+/**
+ * Vol2 from-node — outer class is a stub pending vol2 data source integration.
+ * TODO #6650: implement vol2 FromNode (DataSource-aware, no BetaConstraints dependency)
+ * Inner FromMemory is needed by SegmentMemory prototype machinery.
+ */
+public class FromNode<T extends FromNode.FromMemory> extends BaseNode implements MemoryFactory<T> {
 
-public class FromNode<T extends FromNode.FromMemory> extends BaseNode
-    implements
-    MemoryFactory<T> {
-    private static final long          serialVersionUID = 510l;
+    public FromNode() { }
 
-    protected DataProvider               dataProvider;
-    protected AlphaNodeFieldConstraint[] alphaConstraints;
-    protected BetaConstraints            betaConstraints;
-
-    protected BaseNode          previousTupleSinkNode;
-    protected BaseNode          nextTupleSinkNode;
-    
-    protected From                       from;
-
-    protected boolean                    tupleMemoryEnabled;
-
-    protected transient ObjectTypeConf   objectTypeConf;
-
-    public FromNode() {
-    }
-
-    public FromNode(final int id,
-                    final DataProvider dataProvider,
-                    final BaseNode tupleSource,
-                    final AlphaNodeFieldConstraint[] constraints,
-                    final BetaConstraints binder,
-                    final boolean tupleMemoryEnabled,
-                    final BuildContext context,
-                    final From from) {
-        super(id, context);
-        this.dataProvider = dataProvider;
-        setBaseNode(tupleSource);
-        this.setObjectCount(leftInput.getObjectCount() + 1); // 'from' node increases the object count
-
-        this.alphaConstraints = constraints;
-        this.betaConstraints = (binder == null) ? EmptyBetaConstraints.getInstance() : binder;
-        this.betaConstraints.init(context, getType());
-        this.tupleMemoryEnabled = tupleMemoryEnabled;
-        this.from = from;
-
-        initMasks(context);
-
-        hashcode = calculateHashCode();
-    }
-
-    private int calculateHashCode() {
-        int hash = ( 23 * leftInput.hashCode() ) + ( 29 * dataProvider.hashCode() );
-        if (from.getResultPattern() != null) {
-            hash += 31 * from.getResultPattern().hashCode();
-        }
-        if (alphaConstraints != null) {
-            hash += 37 * Arrays.hashCode( alphaConstraints );
-        }
-        if (betaConstraints != null) {
-            hash += 41 * betaConstraints.hashCode();
-        }
-        return hash;
+    public FromNode(int id, int pathIndex, int objectIndex) {
+        super(id, pathIndex, objectIndex);
     }
 
     @Override
-    public boolean equals( Object object ) {
-        if (this == object) {
-            return true;
-        }
-
-        if (((NetworkNode)object).getType() != NodeTypeEnums.FromNode || this.hashCode() != object.hashCode()) {
-            return false;
-        }
-
-        FromNode other = (FromNode) object;
-
-        return this.leftInput.getId() == other.leftInput.getId() &&
-               dataProvider.equals( other.dataProvider ) &&
-               Objects.equals(from.getResultPattern(), other.from.getResultPattern() ) &&
-               Arrays.equals( alphaConstraints, other.alphaConstraints ) &&
-               betaConstraints.equals( other.betaConstraints );
-    }
-
-    public DataProvider getDataProvider() {
-        return dataProvider;
-    }
-
-    public AlphaNodeFieldConstraint[] getAlphaConstraints() {
-        return alphaConstraints;
-    }
-
-    public BetaConstraints getBetaConstraints() {
-        return betaConstraints;
-    }
-
-    @Override
-    protected void initDeclaredMask(BuildContext context) {
-        super.initDeclaredMask(context);
-
-        if ( declaredMask.isAllSet() ) {
-            return;
-        }
-
-        if ( context == null || context.getLastBuiltPatterns() == null ) {
-            // only happens during unit tests
-            declaredMask = AllSetBitMask.get();
-            return;
-        }
-
-        Pattern pattern = context.getLastBuiltPatterns()[1];
-        if ( pattern == null ) {
-            return;
-        }
-
-        ObjectType objectType = pattern.getObjectType();
-
-        // if pattern is null (e.g. for eval or query nodes) we cannot calculate the mask, so we set it all
-        if ( isPropertyReactive( context.getRuleBase(), objectType ) ) {
-            Collection<String> leftListenedProperties = pattern.getListenedProperties();
-            List<String> accessibleProperties = getAccessibleProperties( context.getRuleBase(), objectType );
-            declaredMask = declaredMask.setAll(calculatePositiveMask(objectType, leftListenedProperties, accessibleProperties));
-            negativeMask = negativeMask.setAll(calculateNegativeMask(objectType, leftListenedProperties, accessibleProperties));
-        }
-    }
-
-    @Override
-    protected Pattern getLeftInputPattern( BuildContext context ) {
-        return context.getLastBuiltPatterns()[0];
-    }
-
-    @Override
-    protected BitMask setNodeConstraintsPropertyReactiveMask( BitMask mask, ObjectType objectType, List<String> accessibleProperties) {
-        for (int i = 0; i < alphaConstraints.length; i++) {
-            mask = mask.setAll(alphaConstraints[i].getListenedPropertyMask(Optional.empty(), objectType, accessibleProperties));
-        }
-        return mask;
-    }
-
-    public Class< ? > getResultClass() {
-        return from.getResultClass();
-    }
-
-    public void networkUpdated(UpdateContext updateContext) {
-        this.leftInput.networkUpdated(updateContext);
-    }
-
     @SuppressWarnings("unchecked")
-    public TupleImpl createTupleImpl(final TupleImpl leftTuple,
-                                       final PropagationContext context,
-                                       final ReteEvaluator reteEvaluator,
-                                       final Object object) {
-        return new TupleImpl(createFactHandle(reteEvaluator, object) );
+    public T createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
+        return (T) new FromMemory();
     }
 
-    public InternalDataHandle createFactHandle( ReteEvaluator reteEvaluator, Object object ) {
-        InternalDataHandle handle = reteEvaluator.getFactHandle(object);
-        if (handle != null && handle.getObject() == object) {
-            return handle;
-        }
+    public static class FromMemory extends AbstractDoubleLinkedNode<Memory> implements SegmentNodeMemory {
 
-        if ( objectTypeConf == null ) {
-            // use default entry point and object class. Notice that at this point object is assignable to resultClass
-            objectTypeConf = new ClassObjectTypeConf( reteEvaluator.getDefaultEntryPointId(), getResultClass(), reteEvaluator.getKnowledgeBase() );
-        }
-
-        return reteEvaluator.createFactHandle(object, objectTypeConf, null );
-    }
-
-
-    public void addToCreatedHandlesMap(final Map<Object, TupleImpl> matches,
-                                       final TupleImpl rightTuple) {
-        if ( rightTuple.getFactHandle().isValid() ) {
-            Object object = rightTuple.getFactHandle().getObject();
-            // keeping a list of matches
-            TupleImpl existingMatch = matches.get(object);
-            if ( existingMatch != null ) {
-                // this is for the obscene case where two or more objects returned by "from"
-                // have the same hash code and evaluate equals() to true, so we need to preserve
-                // all of them to avoid leaks
-                rightTuple.setNext(existingMatch);
-            }
-            matches.put( object,
-                         rightTuple );
-        }
-    }
-
-
-    public T createMemory(final RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
-        BetaMemory beta = new BetaMemory(new TupleList(),
-                                         null,
-                                         this.betaConstraints.createContext(),
-                                         NodeTypeEnums.FromNode );
-        return (T) new FromMemory( beta,
-                                   this.dataProvider );
-    }
-
-    public boolean isLeftTupleMemoryEnabled() {
-        return tupleMemoryEnabled;
-    }
-
-    /**
-     * Returns the next node
-     * @return
-     *      The next TupleSinkNode
-     */
-    public BaseNode getNextBaseNode() {
-        return this.nextTupleSinkNode;
-    }
-
-    /**
-     * Sets the next node
-     * @param next
-     *      The next TupleSinkNode
-     */
-    public void setNextBaseNode(final BaseNode next) {
-        this.nextTupleSinkNode = next;
-    }
-
-    /**
-     * Returns the previous node
-     * @return
-     *      The previous TupleSinkNode
-     */
-    public BaseNode getPreviousBaseNode() {
-        return this.previousTupleSinkNode;
-    }
-
-    /**
-     * Sets the previous node
-     * @param previous
-     *      The previous TupleSinkNode
-     */
-    public void setPreviousBaseNode(final BaseNode previous) {
-        this.previousTupleSinkNode = previous;
-    }
-
-    public int getType() {
-        return NodeTypeEnums.FromNode;
-    } 
-
-    public static class FromMemory extends AbstractDoubleLinkedNode<Memory>
-        implements
-        Serializable,
-        SegmentNodeMemory {
-        private static final long serialVersionUID = 510l;
-
-        private DataProvider      dataProvider;
-
-        private final BetaMemory betaMemory;
-        public        Object         providerContext;
-
-        public FromMemory(BetaMemory betaMemory,
-                          DataProvider dataProvider) {
-            this.betaMemory = betaMemory;
-            this.dataProvider = dataProvider;
-            this.providerContext = dataProvider.createContext();
-        }
-
-        public int getNodeType() {
-            return NodeTypeEnums.FromNode;
-        }
-
-        public SegmentMemory getSegmentMemory() {
-            return betaMemory.getSegmentMemory();
-        }
-
-        public void setSegmentMemory(SegmentMemory segmentMemory) {
-            betaMemory.setSegmentMemory(segmentMemory);
-        }
-
-        public BetaMemory<Object> getBetaMemory() {
-            return betaMemory;
-        }
-
-        public void reset() {
-            this.betaMemory.reset();
-            this.providerContext = dataProvider.createContext();
-        }
+        private SegmentMemory memory;
+        private long          nodePosMaskBit;
 
         @Override
-        public long getNodePosMaskBit() {
-            return betaMemory.getNodePosMaskBit();
-        }
+        public int getNodeType() { return 0; }
 
         @Override
-        public void setNodePosMaskBit( long segmentPos ) {
-            betaMemory.setNodePosMaskBit( segmentPos );
-        }
+        public SegmentMemory getSegmentMemory() { return memory; }
+
+        @Override
+        public void setSegmentMemory(SegmentMemory smem) { this.memory = smem; }
+
+        @Override
+        public long getNodePosMaskBit() { return nodePosMaskBit; }
+
+        @Override
+        public void setNodePosMaskBit(long segmentPos) { this.nodePosMaskBit = segmentPos; }
 
         @Override
         public void setNodeDirtyWithoutNotify() {
-            betaMemory.setNodeDirtyWithoutNotify();
+            if (memory != null) memory.updateDirtyNodeMask(nodePosMaskBit);
         }
 
         @Override
         public void setNodeCleanWithoutNotify() {
-            betaMemory.setNodeCleanWithoutNotify();
+            if (memory != null) memory.updateCleanNodeMask(nodePosMaskBit);
         }
+
+        @Override
+        public void reset() { }
     }
-
-    @Override
-    public ObjectTypeNode getObjectTypeNode() {
-        return leftInput.getObjectTypeNode();
-    }
-
-    public void doAttach( BuildContext context ) {
-        super.doAttach(context);
-        this.leftInput.addTupleSink( this, context );
-    }
-
-    protected boolean doRemove(final RuleRemovalContext context,
-                               final ReteBuilder builder) {
-
-        if ( !this.isInUse() ) {
-            getBaseNode().removeTupleSink( this );
-            return true;
-        }
-        return false;
-    }
-
 }
