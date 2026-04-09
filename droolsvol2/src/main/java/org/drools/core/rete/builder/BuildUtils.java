@@ -193,10 +193,12 @@ public class BuildUtils {
         return builder != null || cls.getSuperclass() == null ? builder : getBuilderFor(cls.getSuperclass());
     }
 
-    /** TODO #6650: vol2 beta constraint creation not yet implemented. */
     public org.drools.core.BetaConstraints createBetaNodeConstraint(BuildContext context,
                                                                     java.util.List<org.drools.base.rule.constraint.BetaConstraint> list,
                                                                     boolean disableIndexing) {
-        return null;
+        if (list == null || list.isEmpty()) {
+            return new org.drools.core.SimpleBetaConstraints(java.util.Collections.emptyList());
+        }
+        return new org.drools.core.SimpleBetaConstraints(list);
     }
 }

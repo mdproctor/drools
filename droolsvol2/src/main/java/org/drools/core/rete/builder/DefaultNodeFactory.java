@@ -114,6 +114,7 @@ public class DefaultNodeFactory implements NodeFactory {
         JoinNode node = new JoinNode(id, pathIndex, objectIndex);
         node.setLeftInput(leftInput);
         node.setRightInput(rightInput);
+        node.setConstraints(binder);
         return node;
     }
 

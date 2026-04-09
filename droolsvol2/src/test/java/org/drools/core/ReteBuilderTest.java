@@ -8,7 +8,9 @@ import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.reteoo.BaseTuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.rule.FactHandle;
@@ -267,6 +269,40 @@ public class ReteBuilderTest {
         assertThat(id2).isGreaterThan(id1);
     }
 
+    @Test
+    public void testBetaConstraintStoredOnJoinNode() {
+        RuleImpl rule = new RuleImpl("r1");
+        GroupElement lhs = GroupElementFactory.newAndInstance();
+
+        Pattern p1 = new Pattern(0, new ClassObjectType(Person.class));
+        Pattern p2 = new Pattern(1, new ClassObjectType(String.class));
+        TestBetaConstraint betaConstraint = new TestBetaConstraint("person.name == string");
+        p2.addConstraint(betaConstraint);
+        lhs.addChild(p1);
+        lhs.addChild(p2);
+        rule.setLhs(lhs);
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        JoinNode joinNode = (JoinNode) terminals.get(0).getLeftInput();
+        assertThat(joinNode.getConstraints()).isNotNull();
+        assertThat(joinNode.getConstraints().getConstraints()).hasSize(1);
+        assertThat(joinNode.getConstraints().getConstraints().get(0))
+                .isInstanceOf(TestBetaConstraint.class);
+    }
+
+    @Test
+    public void testNoBetaConstraintUsesEmptyConstraints() {
+        // No constraints on patterns → join has empty BetaConstraints, not null
+        RuleImpl rule = ruleWithPattern("r1", Person.class, String.class);
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        JoinNode joinNode = (JoinNode) terminals.get(0).getLeftInput();
+        assertThat(joinNode.getConstraints()).isNotNull();
+        assertThat(joinNode.getConstraints().getConstraints()).isEmpty();
+    }
+
     /** Minimal AlphaNodeFieldConstraint for use in tests. */
     static class TestAlphaConstraint implements AlphaNodeFieldConstraint {
         private final String expression;
@@ -286,5 +322,26 @@ public class ReteBuilderTest {
         @Override public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException { }
 
         @Override public String toString() { return "AlphaConstraint(" + expression + ")"; }
+    }
+
+    /** Minimal BetaConstraint for use in tests. */
+    @SuppressWarnings("unchecked")
+    static class TestBetaConstraint implements BetaConstraint<Object> {
+        private final String expression;
+        TestBetaConstraint(String expression) { this.expression = expression; }
+
+        @Override public boolean isAllowedCachedLeft(Object context, FactHandle handle) { return true; }
+        @Override public boolean isAllowedCachedRight(BaseTuple tuple, Object context) { return true; }
+        @Override public Object createContext() { return null; }
+        @Override public BetaConstraint<Object> cloneIfInUse() { return this; }
+        @Override public boolean isTemporal() { return false; }
+        @Override public Constraint.ConstraintType getType() { return Constraint.ConstraintType.BETA; }
+        @Override public Declaration[] getRequiredDeclarations() { return new Declaration[0]; }
+        @Override public void replaceDeclaration(Declaration oldDecl, Declaration newDecl) { }
+        @Override public Constraint clone() { return this; }
+        @Override public void writeExternal(ObjectOutput out) throws IOException { }
+        @Override public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException { }
+
+        @Override public String toString() { return "BetaConstraint(" + expression + ")"; }
     }
 }

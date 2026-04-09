@@ -1,3 +1,15 @@
 package org.drools.core;
-/** TODO #6650: Temporary stub — vol2 beta constraints not yet implemented. */
-public interface BetaConstraints {}
+
+import org.drools.base.rule.constraint.BetaConstraint;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Vol2 BetaConstraints — wraps the cross-pattern constraints evaluated at a JoinNode.
+ */
+public interface BetaConstraints {
+    default List<BetaConstraint> getConstraints() {
+        return Collections.emptyList();
+    }
+}

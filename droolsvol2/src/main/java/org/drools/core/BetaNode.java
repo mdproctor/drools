@@ -6,7 +6,8 @@ package org.drools.core;
  */
 public class BetaNode extends BaseNode {
 
-    private BaseNode rightInput;
+    private BaseNode      rightInput;
+    private BetaConstraints constraints;
 
     public BetaNode() { }
 
@@ -17,7 +18,8 @@ public class BetaNode extends BaseNode {
     public BaseNode getRightInput() { return rightInput; }
     public void setRightInput(BaseNode rightInput) { this.rightInput = rightInput; }
 
-    /** TODO #6650: beta constraints not yet integrated in vol2 */
-    public BetaConstraints getConstraints() { return null; }
+    public BetaConstraints getConstraints() { return constraints; }
+    public void setConstraints(BetaConstraints constraints) { this.constraints = constraints; }
+
     public boolean isRightInputPassive() { return false; }
 }
