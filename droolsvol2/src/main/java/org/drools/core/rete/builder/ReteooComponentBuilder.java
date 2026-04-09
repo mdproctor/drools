@@ -5,7 +5,7 @@ import org.drools.base.rule.RuleElement;
 
 public interface ReteooComponentBuilder {
 
-    boolean requiresLeftActivation(BuildUtils buildUtils, GroupElement subrule);
+    boolean requiresLeftActivation(BuildUtils buildUtils, RuleElement subrule);
 
     void build(BuildContext ctx, BuildUtils buildUtils, RuleElement subrule);
 }

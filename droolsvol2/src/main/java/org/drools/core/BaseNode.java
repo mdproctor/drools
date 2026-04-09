@@ -111,6 +111,12 @@ public abstract class BaseNode implements NetworkNode {
     /** Vol2: right-input passivity — returns false by default */
     public boolean isRightInputPassive() { return false; }
 
+    /** TODO #6650: first sink traversal not yet implemented in vol2 */
+    public BaseNode getFirstLeftTupleSinkIgnoreRemoving(TerminalNode removingTn) { return null; }
+
+    /** TODO #6650: vol2 uses arrays not linked-list sinks */
+    public BaseNode getNextLeftTupleSinkNode() { return null; }
+
     /**
      * Returns true in case the current node is in use (is referenced by any other node)
      */

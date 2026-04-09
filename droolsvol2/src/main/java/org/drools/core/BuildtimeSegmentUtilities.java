@@ -459,7 +459,7 @@ public class BuildtimeSegmentUtilities {
 
         // we know the sink size is greater than 1 and that there is a removingRule that needs to be ignored.
         int count = 0;
-        for (LeftTupleSinkNode sink = sinkPropagator.getFirstLeftTupleSink(); sink != null; sink = sink
+        for (BaseNode sink = sinkPropagator.getFirstLeftTupleSink(); sink != null; sink = (BaseNode)(Object)sink
                 .getNextLeftTupleSinkNode()) {
             if (sinkNotExclusivelyAssociatedWithTerminal(sink, removingTN)) {
                 count++;

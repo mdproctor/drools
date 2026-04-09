@@ -121,7 +121,7 @@ public class KnowledgeBaseConfigurationImpl extends BaseConfiguration<KieBaseOpt
 
     public void readExternal(ObjectInput in) throws IOException,
                                                     ClassNotFoundException {
-        super.readExternal(in);
+
         mutabilityEnabled = in.readBoolean();
     }
     public boolean setInternalProperty(String name, String value) {

@@ -10,6 +10,8 @@ public class WindowNode extends BaseNode implements MemoryFactory<WindowNode.Win
     public static class WindowMemory implements Memory {
         private WindowFilterContext[] filterContext;
         private SegmentMemory segmentMemory;
+        private Memory previous;
+        private Memory next;
         public WindowFilterContext[] getFilterContext() { return filterContext; }
         public void setFilterContext(WindowFilterContext[] ctx) { this.filterContext = ctx; }
         @Override public int getNodeType() { return 0; }
@@ -17,5 +19,9 @@ public class WindowNode extends BaseNode implements MemoryFactory<WindowNode.Win
         @Override public void clear() { }
         @Override public void setSegmentMemory(SegmentMemory sm) { this.segmentMemory = sm; }
         @Override public SegmentMemory getSegmentMemory() { return segmentMemory; }
+        @Override public Memory getPrevious() { return previous; }
+        @Override public void setPrevious(Memory previous) { this.previous = previous; }
+        @Override public Memory getNext() { return next; }
+        @Override public void setNext(Memory next) { this.next = next; }
     }
 }

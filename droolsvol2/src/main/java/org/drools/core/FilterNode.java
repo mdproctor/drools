@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterNode<DS, T> extends BaseNode {
-    private NetworkNode                parent;
+    private BaseNode                parent;
     private Predicate2<Context<DS>, T> predicate;
     private List<NetworkNode>          children;
 
@@ -14,7 +14,7 @@ public class FilterNode<DS, T> extends BaseNode {
         super(id, 0, -1);
     }
 
-    public NetworkNode getParent() {
+    @Override\n    public BaseNode getParent() {
         return parent;
     }
 

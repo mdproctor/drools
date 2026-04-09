@@ -40,12 +40,12 @@ public interface PathEndNode extends NetworkNode, MemoryFactory<PathMemory> {
 
     BaseNode getStartLeftInput();
 
-    // PathMemSpec methods commented out until PathMemSpec is defined in vol2
-    //    PathMemSpec getPathMemSpec();
-    //    PathMemSpec getPathMemSpec(TerminalNode removingTN);
-    //    void resetPathMemSpec(TerminalNode removingTN);
-    //    void setPathMemSpec(PathMemSpec pathMemSpec);
-    //    void nullPathMemSpec();
+    // PathMemSpec methods — PathMemSpec is now defined as a stub in vol2
+    default PathMemSpec getPathMemSpec() { return null; }
+    default PathMemSpec getPathMemSpec(TerminalNode removingTN) { return null; }
+    default void resetPathMemSpec(TerminalNode removingTN) { }
+    default void setPathMemSpec(PathMemSpec pathMemSpec) { }
+    default void nullPathMemSpec() { }
 //
 //    class PathMemSpec implements Serializable {
 //        long allLinkedTestMask;
