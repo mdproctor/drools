@@ -17,252 +17,66 @@
  * under the License.
  */
 package org.drools.core;
-import org.drools.core.rete.builder.ReteBuilder;
 
-import java.util.Arrays;
-
-import org.drools.base.common.NetworkNode;
 import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.base.rule.Declaration;
-import org.drools.base.rule.Pattern;
-import org.drools.base.time.impl.Timer;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.Memory;
-import org.drools.core.MemoryFactory;
-import org.drools.core.ReteEvaluator;
-import org.drools.core.UpdateContext;
-import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.index.TupleList;
 
-public class TimerNode extends BaseNode
-        implements
-        MemoryFactory<TimerNode.TimerNodeMemory> {
+/**
+ * Vol2 timer node — outer class is a stub pending vol2 timer/async infrastructure.
+ * TODO #6650: implement vol2 timer node (replaces vol1 TimerNode + timer-via-container-queue design)
+ * The inner TimerNodeMemory is needed by SegmentMemory prototype machinery.
+ */
+public class TimerNode extends BaseNode implements MemoryFactory<TimerNode.TimerNodeMemory> {
 
-    private static final long serialVersionUID = 510l;
-    private Timer             timer;
-    private String[]          calendarNames;
-    private boolean           tupleMemoryEnabled;
-    private Declaration[][]   startEndDeclarations;
-    private BaseNode previousTupleSinkNode;
-    private BaseNode nextTupleSinkNode;
+    public TimerNode() { }
 
-    // ------------------------------------------------------------
-    // Constructors
-    // ------------------------------------------------------------
-    public TimerNode() {
-
-    }
-
-    public TimerNode(final int id,
-                     final BaseNode tupleSource,
-                     final Timer timer,
-                     final String[] calendarNames,
-                     final Declaration[][] startEndDeclarations,
-                     final BuildContext context) {
-        super(id, context);
-        setBaseNode(tupleSource);
-        this.setObjectCount(leftInput.getObjectCount()); // 'timer' node does increase the object count
-        this.timer = timer;
-        this.calendarNames = calendarNames;
-        this.startEndDeclarations = startEndDeclarations;
-        this.tupleMemoryEnabled = context.isTupleMemoryEnabled();
-
-        initMasks(context);
-
-        hashcode = calculateHashCode();
-
-    }
-
-    public void doAttach(BuildContext context) {
-        super.doAttach(context);
-        this.leftInput.addTupleSink(this, context);
-    }
-
-    public void networkUpdated(UpdateContext updateContext) {
-        this.leftInput.networkUpdated(updateContext);
-    }
-
-    public Timer getTimer() {
-        return this.timer;
-    }
-
-    public String[] getCalendarNames() {
-        return this.calendarNames;
-    }
-
-    public Declaration[][] getStartEndDeclarations() {
-        return this.startEndDeclarations;
+    public TimerNode(int id, int pathIndex, int objectIndex) {
+        super(id, pathIndex, objectIndex);
     }
 
     @Override
-    protected Pattern getLeftInputPattern( BuildContext context ) {
-        return context.getLastBuiltPatterns()[0];
-    }
-
-    /**
-     * Produce a debug string.
-     *
-     * @return The debug string.
-     */
-    public String toString() {
-        return "[TimerNode(" + this.id + "): cond=" + this.timer + " calendars=" + ((calendarNames == null) ? "null" : Arrays.asList(calendarNames)) + "]";
-    }
-
-    private int calculateHashCode() {
-        int hash = this.leftInput.hashCode() ^ this.timer.hashCode();
-        if (calendarNames != null) {
-            for ( String calendarName : calendarNames ) {
-                hash = hash ^ calendarName.hashCode();
-            }
-        }
-        return hash;
-    }
-
-    @Override
-    public boolean equals(final Object object) {
-        if (this == object) {
-            return true;
-        }
-
-        if (((NetworkNode)object).getType() != NodeTypeEnums.TimerConditionNode || this.hashCode() != object.hashCode()) {
-            return false;
-        }
-
-        TimerNode other = (TimerNode) object;
-        if (this.leftInput.getId() != other.leftInput.getId()) {
-            return false;
-        }
-        if (calendarNames != null) {
-            if (other.getCalendarNames() == null || other.getCalendarNames().length != calendarNames.length) {
-                return false;
-            }
-
-            for (int i = 0; i < calendarNames.length; i++) {
-                if (!other.getCalendarNames()[i].equals(calendarNames[i])) {
-                    return false;
-                }
-            }
-        }
-
-        return Arrays.deepEquals(startEndDeclarations, other.startEndDeclarations) &&
-                this.timer.equals(other.timer);
-    }
-
-    public TimerNodeMemory createMemory(final RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
+    public TimerNodeMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
         return new TimerNodeMemory();
     }
 
-    protected boolean doRemove(final RuleRemovalContext context,
-                               final ReteBuilder builder) {
-        if (!this.isInUse()) {
-            getBaseNode().removeTupleSink(this);
-            return true;
-        }
-        return false;
-    }
+    public static class TimerNodeMemory extends AbstractDoubleLinkedNode<Memory> implements SegmentNodeMemory {
 
-    public boolean isLeftTupleMemoryEnabled() {
-        return tupleMemoryEnabled;
-    }
-
-    /**
-     * Returns the next node
-     *
-     * @return The next TupleSinkNode
-     */
-    public BaseNode getNextBaseNode() {
-        return this.nextTupleSinkNode;
-    }
-
-    /**
-     * Sets the next node
-     *
-     * @param next The next TupleSinkNode
-     */
-    public void setNextBaseNode(final BaseNode next) {
-        this.nextTupleSinkNode = next;
-    }
-
-    /**
-     * Returns the previous node
-     *
-     * @return The previous TupleSinkNode
-     */
-    public BaseNode getPreviousBaseNode() {
-        return this.previousTupleSinkNode;
-    }
-
-    /**
-     * Sets the previous node
-     *
-     * @param previous The previous TupleSinkNode
-     */
-    public void setPreviousBaseNode(final BaseNode previous) {
-        this.previousTupleSinkNode = previous;
-    }
-
-    public int getType() {
-        return NodeTypeEnums.TimerConditionNode;
-    }
-
-    @Override
-    public ObjectTypeNode getObjectTypeNode() {
-        return leftInput.getObjectTypeNode();
-    }
-
-    public static class TimerNodeMemory extends AbstractDoubleLinkedNode<Memory>
-            implements
-            SegmentNodeMemory {
-
-        private static final long serialVersionUID = 510l;
-        private TupleList insertOrUpdateLeftTuples;
-        private TupleList deleteLeftTuples;
+        private TupleList     insertOrUpdateLeftTuples;
+        private TupleList     deleteLeftTuples;
         private SegmentMemory memory;
         private long          nodePosMaskBit;
-
 
         public TimerNodeMemory() {
             this.insertOrUpdateLeftTuples = new TupleList();
             this.deleteLeftTuples = new TupleList();
         }
 
-        public TupleList getInsertOrUpdateLeftTuples() {
-            return this.insertOrUpdateLeftTuples;
-        }
+        public TupleList getInsertOrUpdateLeftTuples() { return this.insertOrUpdateLeftTuples; }
+        public TupleList getDeleteLeftTuples() { return this.deleteLeftTuples; }
 
-        public TupleList getDeleteLeftTuples() {
-            return this.deleteLeftTuples;
-        }
+        @Override
+        public int getNodeType() { return NodeTypeEnums.TimerConditionNode; }
 
-        public int getNodeType() {
-            return NodeTypeEnums.TimerConditionNode;
-        }
+        @Override
+        public SegmentMemory getSegmentMemory() { return this.memory; }
 
-        public SegmentMemory getSegmentMemory() {
-            return this.memory;
-        }
+        @Override
+        public void setSegmentMemory(SegmentMemory smem) { this.memory = smem; }
 
-        public void setSegmentMemory(SegmentMemory smem) {
-            this.memory = smem;
-        }
+        @Override
+        public long getNodePosMaskBit() { return nodePosMaskBit; }
 
-        public long getNodePosMaskBit() {
-            return nodePosMaskBit;
-        }
+        @Override
+        public void setNodePosMaskBit(long segmentPos) { this.nodePosMaskBit = segmentPos; }
 
-        public void setNodePosMaskBit(long segmentPos) {
-            this.nodePosMaskBit = segmentPos;
-        }
+        @Override
+        public void setNodeDirtyWithoutNotify() { memory.updateDirtyNodeMask(nodePosMaskBit); }
 
-        public void setNodeDirtyWithoutNotify() {
-            memory.updateDirtyNodeMask( nodePosMaskBit );
-        }
+        @Override
+        public void setNodeCleanWithoutNotify() { memory.updateCleanNodeMask(nodePosMaskBit); }
 
-        public void setNodeCleanWithoutNotify() {
-            memory.updateCleanNodeMask( nodePosMaskBit );
-        }
-
+        @Override
         public void reset() {
             insertOrUpdateLeftTuples.clear();
             deleteLeftTuples.clear();

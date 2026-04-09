@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class BaseNode implements NetworkNode {
-    private int id;
-    private int pathIndex;
-    private int size;
-    private int objectIndex;
-    private int walkBack;
-    private int biLinearRightOffset;
+    protected int id;
+    protected int pathIndex;
+    protected int size;
+    protected int objectIndex;
+    protected int walkBack;
+    protected int biLinearRightOffset;
 
     protected RuleBasePartitionId partitionId;
 
@@ -26,7 +26,7 @@ public abstract class BaseNode implements NetworkNode {
 
     protected int                        hashcode;
 
-    private BaseNode leftInput;
+    protected BaseNode leftInput;
 
     public BaseNode() {
         this(0, 0, 0);

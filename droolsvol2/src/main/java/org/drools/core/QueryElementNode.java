@@ -13,7 +13,6 @@ public class QueryElementNode extends BaseNode implements MemoryFactory<QueryEle
         super(0, 0, 0);
     }
 
-    @Override
     public QueryElementNodeMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
         return new QueryElementNodeMemory(this);
     }
@@ -56,5 +55,8 @@ public class QueryElementNode extends BaseNode implements MemoryFactory<QueryEle
 
         @Override
         public void setNodeCleanWithoutNotify() { }
+
+        @Override
+        public void reset() { }
     }
 }

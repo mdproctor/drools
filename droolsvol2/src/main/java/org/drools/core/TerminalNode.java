@@ -181,8 +181,8 @@ public class TerminalNode extends BaseNode implements PathEndNode, BaseTerminalN
 
     @Override
     public PathMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
-        // TODO #6650: wire activation/agenda once vol2 evaluation engine is built
-        throw new UnsupportedOperationException("vol2 stub — see #6650");
+        // TODO #6650: wire path memory creation once vol2 evaluation engine is built
+        return new PathMemory(this, reteEvaluator);
     }
 
     public boolean isInUse() {

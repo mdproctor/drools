@@ -17,292 +17,70 @@
  * under the License.
  */
 package org.drools.core;
-import org.drools.core.rete.builder.ReteBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-
-import org.drools.base.common.NetworkNode;
 import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.base.rule.AsyncReceive;
-import org.drools.base.rule.Pattern;
-import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.BetaConstraints;
-import org.drools.core.EmptyBetaConstraints;
-import org.drools.core.Memory;
-import org.drools.core.MemoryFactory;
-import org.drools.core.ReteEvaluator;
-import org.drools.core.UpdateContext;
-import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.index.TupleList;
 
-public class AsyncReceiveNode extends BaseNode
-        implements
-        MemoryFactory<AsyncReceiveNode.AsyncReceiveMemory> {
+import java.util.ArrayList;
+import java.util.List;
 
-    private static final long serialVersionUID = 510l;
+/**
+ * Vol2 async receive node — outer class is a stub pending vol2 async/container-queue infrastructure.
+ * TODO #6650: implement vol2 async receive node (messages arrive via container queue, not AsyncMessagesCoordinator)
+ * The inner AsyncReceiveMemory is needed by SegmentMemory prototype machinery.
+ */
+public class AsyncReceiveNode extends BaseNode implements MemoryFactory<AsyncReceiveNode.AsyncReceiveMemory> {
 
-    private String messageId;
-    private boolean tupleMemoryEnabled;
-
-    private AlphaNodeFieldConstraint[] alphaConstraints;
-    private BetaConstraints betaConstraints;
-
-    private BaseNode previousTupleSinkNode;
-    private BaseNode nextTupleSinkNode;
-
-    private AsyncReceive receive;
-    private transient ObjectTypeConf objectTypeConf;
-
-    // ------------------------------------------------------------
-    // Constructors
-    // ------------------------------------------------------------
     public AsyncReceiveNode() { }
 
-    public AsyncReceiveNode( final int id,
-                             final BaseNode tupleSource,
-                             final AsyncReceive receive,
-                             final AlphaNodeFieldConstraint[] constraints,
-                             final BetaConstraints binder,
-                             final BuildContext context ) {
-        super( id, context );
-        this.messageId = receive.getMessageId();
-        this.receive = receive;
-        this.tupleMemoryEnabled = context.isTupleMemoryEnabled();
-        setBaseNode( tupleSource );
-        this.setObjectCount(leftInput.getObjectCount() + 1); // 'async receive' node increases the object count
-        this.alphaConstraints = constraints;
-        this.betaConstraints = (binder == null) ? EmptyBetaConstraints.getInstance() : binder;
-        this.betaConstraints.init(context, getType());
-
-        initMasks( context );
-
-        hashcode = calculateHashCode();
-    }
-
-    public void doAttach( BuildContext context ) {
-        super.doAttach(context);
-        this.leftInput.addTupleSink( this, context );
-        context.getRuleBase().addReceiveNode(this);
-    }
-
-    public AlphaNodeFieldConstraint[] getAlphaConstraints() {
-        return alphaConstraints;
-    }
-
-    public BetaConstraints getBetaConstraints() {
-        return betaConstraints;
-    }
-
-    public Class<?> getResultClass() {
-        return receive.getResultClass();
-    }
-
-    public ObjectTypeConf getObjectTypeConf( ReteEvaluator reteEvaluator ) {
-        if ( objectTypeConf == null ) {
-            // use default entry point and object class. Notice that at this point object is assignable to resultClass
-            objectTypeConf = new ClassObjectTypeConf( reteEvaluator.getDefaultEntryPointId(), getResultClass(), reteEvaluator.getKnowledgeBase() );
-        }
-        return objectTypeConf;
-    }
-
-    public static class AsyncReceiveAction extends PropagationEntry.AbstractPropagationEntry {
-
-        private final AsyncReceiveNode asyncReceiveNode;
-        private final Object object;
-
-        private AsyncReceiveAction( AsyncReceiveNode asyncReceiveNode, Object object ) {
-            this.asyncReceiveNode = asyncReceiveNode;
-            this.object = object;
-        }
-
-        @Override
-        public void internalExecute(final ReteEvaluator reteEvaluator ) {
-            AsyncReceiveMemory memory = reteEvaluator.getNodeMemory( asyncReceiveNode );
-            memory.addMessage( object );
-            memory.setNodeDirtyWithoutNotify();
-
-            for (final PathMemory pmem : memory.getSegmentMemory().getPathMemories()) {
-                if (pmem.getPathEndNode().getAssociatedTerminalsSize() == 0) {
-                    // if the corresponding rule has been removed avoid to link and notify this pmem
-                    continue;
-                }
-                pmem.doLinkRule();
-            }
-        }
-    }
-
-    public void networkUpdated( UpdateContext updateContext ) {
-        this.leftInput.networkUpdated( updateContext );
+    public AsyncReceiveNode(int id, int pathIndex, int objectIndex) {
+        super(id, pathIndex, objectIndex);
     }
 
     @Override
-    protected Pattern getLeftInputPattern( BuildContext context ) {
-        return context.getLastBuiltPatterns()[0];
+    public AsyncReceiveMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
+        return new AsyncReceiveMemory();
     }
 
-    public String toString() {
-        return "[AsyncReceiveNode(" + this.id + "): messageId=" + messageId + "]";
-    }
-
-    private int calculateHashCode() {
-        return this.leftInput.hashCode() ^ this.messageId.hashCode();
-    }
-
-    @Override
-    public boolean equals( final Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-
-        if (((NetworkNode)object).getType() != NodeTypeEnums.AsyncReceiveNode || this.hashCode() != object.hashCode() ) {
-            return false;
-        }
-
-        AsyncReceiveNode other = ( AsyncReceiveNode ) object;
-        return this.leftInput.getId() != other.leftInput.getId() && this.messageId.equals( other.messageId );
-    }
-
-    public AsyncReceiveMemory createMemory( final RuleBaseConfiguration config, ReteEvaluator reteEvaluator ) {
-        return new AsyncReceiveMemory(this, reteEvaluator);
-    }
-
-    protected boolean doRemove( final RuleRemovalContext context,
-                                final ReteBuilder builder ) {
-        if ( !this.isInUse() ) {
-            getBaseNode().removeTupleSink( this );
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isLeftTupleMemoryEnabled() {
-        return tupleMemoryEnabled;
-    }
-
-    /**
-     * Returns the next node
-     *
-     * @return The next TupleSinkNode
-     */
-    public BaseNode getNextBaseNode() {
-        return this.nextTupleSinkNode;
-    }
-
-    /**
-     * Sets the next node
-     *
-     * @param next The next TupleSinkNode
-     */
-    public void setNextBaseNode( final BaseNode next ) {
-        this.nextTupleSinkNode = next;
-    }
-
-    /**
-     * Returns the previous node
-     *
-     * @return The previous TupleSinkNode
-     */
-    public BaseNode getPreviousBaseNode() {
-        return this.previousTupleSinkNode;
-    }
-
-    /**
-     * Sets the previous node
-     *
-     * @param previous The previous TupleSinkNode
-     */
-    public void setPreviousBaseNode( final BaseNode previous ) {
-        this.previousTupleSinkNode = previous;
-    }
-
-    public int getType() {
-        return NodeTypeEnums.AsyncReceiveNode;
-    }
-
-    @Override
-    public ObjectTypeNode getObjectTypeNode() {
-        return leftInput.getObjectTypeNode();
-    }
-
-    public static class AsyncReceiveMemory extends AbstractDoubleLinkedNode<Memory>
-            implements
-            SegmentNodeMemory {
-
-        private static final long serialVersionUID = 510l;
-
-        private final Consumer<AsyncMessage> receiver;
-        private final String messageId;
+    public static class AsyncReceiveMemory extends AbstractDoubleLinkedNode<Memory> implements SegmentNodeMemory {
 
         private final TupleList insertOrUpdateLeftTuples = new TupleList();
         private final List<Object> messages = new ArrayList<>();
-
         private SegmentMemory memory;
-        private long nodePosMaskBit;
+        private long          nodePosMaskBit;
 
-        public AsyncReceiveMemory(AsyncReceiveNode node, ReteEvaluator reteEvaluator) {
-            this.messageId = node.messageId;
-            this.receiver = asyncMessage -> reteEvaluator.addPropagation( new AsyncReceiveAction( node, asyncMessage.getObject() ) );
-            AsyncMessagesCoordinator.get().registerReceiver( node.messageId, receiver );
-        }
+        public TupleList getInsertOrUpdateLeftTuples() { return insertOrUpdateLeftTuples; }
+        public List<Object> getMessages() { return messages; }
 
-        public void addMessage(Object message) {
-            messages.add(message);
-        }
+        public void addMessage(Object message) { messages.add(message); }
 
-        public List<Object> getMessages() {
-            return messages;
-        }
+        @Override
+        public int getNodeType() { return NodeTypeEnums.AsyncReceiveNode; }
 
-        public TupleList getInsertOrUpdateLeftTuples() {
-            return insertOrUpdateLeftTuples;
-        }
+        @Override
+        public SegmentMemory getSegmentMemory() { return this.memory; }
 
-        public void addInsertOrUpdateLeftTuple(TupleImpl leftTuple) {
-            insertOrUpdateLeftTuples.add( leftTuple );
-        }
+        @Override
+        public void setSegmentMemory(SegmentMemory smem) { this.memory = smem; }
 
-        public int getNodeType() {
-            return NodeTypeEnums.AsyncReceiveNode;
-        }
+        @Override
+        public long getNodePosMaskBit() { return nodePosMaskBit; }
 
-        public SegmentMemory getSegmentMemory() {
-            return this.memory;
-        }
+        @Override
+        public void setNodePosMaskBit(long segmentPos) { this.nodePosMaskBit = segmentPos; }
 
-        public void setSegmentMemory( SegmentMemory smem ) {
-            this.memory = smem;
-        }
-
-        public long getNodePosMaskBit() {
-            return nodePosMaskBit;
-        }
-
-        public void setNodePosMaskBit( long segmentPos ) {
-            this.nodePosMaskBit = segmentPos;
-        }
-
+        @Override
         public void setNodeDirtyWithoutNotify() {
-            if (memory != null) {
-                memory.updateDirtyNodeMask( nodePosMaskBit );
-            }
+            if (memory != null) memory.updateDirtyNodeMask(nodePosMaskBit);
         }
 
+        @Override
         public void setNodeCleanWithoutNotify() {
-            if (memory != null) {
-                memory.updateCleanNodeMask( nodePosMaskBit );
-            }
+            if (memory != null) memory.updateCleanNodeMask(nodePosMaskBit);
         }
 
-        public void reset() {
-            messages.clear();
-        }
-
-        public void dispose() {
-            AsyncMessagesCoordinator.get().deregisterReceiver( messageId, receiver );
-        }
+        @Override
+        public void reset() { messages.clear(); }
     }
 }

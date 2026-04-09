@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,286 +17,65 @@
  * under the License.
  */
 package org.drools.core;
-import org.drools.core.rete.builder.ReteBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.drools.base.base.ObjectType;
-import org.drools.base.common.NetworkNode;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.base.rule.Pattern;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.InternalWorkingMemory;
-import org.drools.core.Memory;
-import org.drools.core.PropagationContext;
-import org.drools.core.ReteEvaluator;
-import org.drools.core.UpdateContext;
-import org.drools.core.SegmentMemory.SegmentPrototype;
-import org.drools.core.rete.builder.BuildContext;
-import org.drools.util.bitmask.BitMask;
-import org.kie.api.definition.rule.Rule;
 
 /**
- * When joining a subnetwork into the main network again, TupleToObjectNode adapts the
- * subnetwork's tuple into a fact in order right join it with the tuple being propagated in
- * the main network.
+ * Vol2 tuple-to-object node — outer class is a stub pending vol2 bi-linear network infrastructure.
+ * In vol1 this was RightInputAdapterNode; in vol2 bi-linear networks replace that concept.
+ * TODO #6650: implement vol2 equivalent (input adapter for bi-linear joins, path-end for right sub-networks)
+ * The inner SubnetworkPathMemory is needed by SegmentMemory/BetaMemory prototype machinery.
  */
-public class TupleToObjectNode extends BaseNode
-                               implements
-                               PathEndNode {
-
-    private static final long serialVersionUID = 510l;
-
-    private BaseNode tupleSource;
-
-    /**
-     * This is first node inside of the subnetwork. The split, with two outs, would be the parent node.
-     */
-    private BaseNode startTupleSource;
-
-    private boolean tupleMemoryEnabled;
-
-    private BaseNode previousTupleSinkNode;
-
-    private BaseNode nextTupleSinkNode;
-
-    private BaseNode[] pathNodes;
+public class TupleToObjectNode extends BaseNode implements PathEndNode, MemoryFactory<PathMemory> {
 
     private PathEndNode[] pathEndNodes;
+    private SegmentMemory.SegmentPrototype[] segmentPrototypes;
+    private SegmentMemory.SegmentPrototype[] eagerSegmentPrototypes;
+    private BaseNode startLeftInput;
 
-    private PathMemSpec pathMemSpec;
+    public TupleToObjectNode() { }
 
-    private SegmentPrototype[] segmentPrototypes;
-
-    private SegmentPrototype[] eagerSegmentPrototypes;
-
-    private int objectCount;
-
-    public TupleToObjectNode() {}
-
-    /**
-     * Constructor specifying the unique id of the node in the Rete network, the position of the propagating <code>FactHandleImpl</code> in
-     * <code>ReteTuple</code> and the source that propagates the receive <code>ReteTuple<code>s.
-     *
-     * @param id
-     *      Unique id
-     * @param source
-     *      The <code>TupleSource</code> which propagates the received <code>ReteTuple</code>
-     */
-    public TupleToObjectNode(final int id,
-                             final BaseNode source,
-                             final BaseNode startTupleSource,
-                             final BuildContext context) {
-        super(id, context.getPartitionId());
-        this.tupleSource = source;
-        this.tupleMemoryEnabled = context.isTupleMemoryEnabled();
-        this.startTupleSource = startTupleSource;
-
-        hashcode = calculateHashCode();
-        initMemoryId(context);
+    public TupleToObjectNode(int id, int pathIndex, int objectIndex) {
+        super(id, pathIndex, objectIndex);
     }
 
     @Override
-    public PathMemSpec getPathMemSpec() {
-        return getPathMemSpec(null);
-    }
-
-    /**
-     * used during network build time, potentially during rule removal time.
-     * @param removingTN
-     * @return
-     */
-    @Override
-    public PathMemSpec getPathMemSpec(TerminalNode removingTN) {
-        if (pathMemSpec == null) {
-            pathMemSpec = calculatePathMemSpec(startTupleSource, removingTN);
-        }
-        return pathMemSpec;
+    public PathMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
+        return new SubnetworkPathMemory(this, reteEvaluator);
     }
 
     @Override
-    public void nullPathMemSpec() {
-        pathMemSpec = null;
-    }
+    public void setPathEndNodes(PathEndNode[] pathEndNodes) { this.pathEndNodes = pathEndNodes; }
 
     @Override
-    public void setPathMemSpec(PathMemSpec pathMemSpec) {
-        this.pathMemSpec = pathMemSpec;
-    }
+    public PathEndNode[] getPathEndNodes() { return pathEndNodes; }
 
     @Override
-    public void resetPathMemSpec(TerminalNode removingTN) {
-        nullPathMemSpec();
-        pathMemSpec = getPathMemSpec(removingTN);
-    }
+    public void setSegmentPrototypes(SegmentMemory.SegmentPrototype[] smems) { this.segmentPrototypes = smems; }
 
     @Override
-    public void setSegmentPrototypes(SegmentPrototype[] smems) {
-        this.segmentPrototypes = smems;
-    }
+    public SegmentMemory.SegmentPrototype[] getSegmentPrototypes() { return segmentPrototypes; }
 
     @Override
-    public SegmentPrototype[] getSegmentPrototypes() {
-        return segmentPrototypes;
-    }
+    public SegmentMemory.SegmentPrototype[] getEagerSegmentPrototypes() { return eagerSegmentPrototypes; }
 
     @Override
-    public SegmentPrototype[] getEagerSegmentPrototypes() {
-        return eagerSegmentPrototypes;
-    }
-
-    @Override
-    public void setEagerSegmentPrototypes(SegmentPrototype[] eagerSegmentPrototypes) {
+    public void setEagerSegmentPrototypes(SegmentMemory.SegmentPrototype[] eagerSegmentPrototypes) {
         this.eagerSegmentPrototypes = eagerSegmentPrototypes;
     }
 
     @Override
-    public void setPathEndNodes(PathEndNode[] pathEndNodes) {
-        this.pathEndNodes = pathEndNodes;
-    }
-
-    @Override
-    public PathEndNode[] getPathEndNodes() {
-        return pathEndNodes;
-    }
-
-    public BaseNode getStartTupleSource() {
-        return startTupleSource;
-    }
-
-    public int getPathIndex() {
-        return tupleSource.getPathIndex() + 1;
-    }
-
-    public int getObjectCount() {
-        return objectCount;
-    }
-
-    public void setObjectCount(int count) {
-        objectCount = count;
-    }
+    public BaseNode getStartLeftInput() { return startLeftInput; }
 
     /**
-     * Creates and return the node memory
+     * Subnetwork path memory — holds the PathMemory for a right sub-network in a bi-linear join.
+     * TODO #6650: wire doLinkRule/doUnlinkRule once vol2 subnetwork propagation is built.
      */
-    public SubnetworkPathMemory createMemory(final RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
-        return (SubnetworkPathMemory) AbstractTerminalNode.initPathMemory(this, new SubnetworkPathMemory(this,
-                reteEvaluator));
-    }
-
-    public void doAttach(BuildContext context) {
-        this.tupleSource.addTupleSink(this, context);
-    }
-
-    public void networkUpdated(UpdateContext updateContext) {
-        this.tupleSource.networkUpdated(updateContext);
-    }
-
-    protected boolean doRemove(final RuleRemovalContext context,
-                               final ReteBuilder builder) {
-        if (!isInUse()) {
-            tupleSource.removeTupleSink(this);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isLeftTupleMemoryEnabled() {
-        return tupleMemoryEnabled;
-    }
-
-    /**
-     * Returns the next node
-     * @return
-     *      The next TupleSinkNode
-     */
-    public BaseNode getNextBaseNode() {
-        return this.nextTupleSinkNode;
-    }
-
-    /**
-     * Sets the next node
-     * @param next
-     *      The next TupleSinkNode
-     */
-    public void setNextBaseNode(final BaseNode next) {
-        this.nextTupleSinkNode = next;
-    }
-
-    /**
-     * Returns the previous node
-     * @return
-     *      The previous TupleSinkNode
-     */
-    public BaseNode getPreviousBaseNode() {
-        return this.previousTupleSinkNode;
-    }
-
-    /**
-     * Sets the previous node
-     * @param previous
-     *      The previous TupleSinkNode
-     */
-    public void setPreviousBaseNode(final BaseNode previous) {
-        this.previousTupleSinkNode = previous;
-    }
-
-    public int getType() {
-        return NodeTypeEnums.TupleToObjectNode;
-    }
-
-    private int calculateHashCode() {
-        return (this.tupleSource.hashCode() * 17 + ((this.tupleMemoryEnabled) ? 1234 : 4321)) * 31
-               + this.startTupleSource.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) {
-            return true;
-        }
-
-        return ((NetworkNode) object).getType() == NodeTypeEnums.TupleToObjectNode && this.hashCode() == object
-                .hashCode() &&
-               this.tupleSource.getId() == ((TupleToObjectNode) object).tupleSource.getId() &&
-               this.startTupleSource.getId() == ((TupleToObjectNode) object).startTupleSource.getId() &&
-               this.tupleMemoryEnabled == ((TupleToObjectNode) object).tupleMemoryEnabled;
-    }
-
-    @Override
-    public String toString() {
-        return "[TupleToObjectNode(" + id + ")]";
-    }
-
-    public BaseNode getBaseNode() {
-        return this.tupleSource;
-    }
-
-    public void setTupleSource(BaseNode tupleSource) {
-        this.tupleSource = tupleSource;
-    }
-
-    public ObjectTypeNodeId getInputOtnId() {
-        throw new UnsupportedOperationException();
-    }
-
-    public void setInputOtnId(ObjectTypeNodeId leftInputOtnId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BitMask calculateDeclaredMask(Pattern pattern, ObjectType modifiedType, List<String> settableProperties) {
-        throw new UnsupportedOperationException();
-    }
-
     public static class SubnetworkPathMemory extends PathMemory implements Memory {
-
-        private ReteEvaluator reteEvaluator;
 
         public SubnetworkPathMemory(PathEndNode pathEndNode, ReteEvaluator reteEvaluator) {
             super(pathEndNode, reteEvaluator);
-            this.reteEvaluator = reteEvaluator;
         }
 
         @Override
@@ -318,12 +97,12 @@ public class TupleToObjectNode extends BaseNode
 
         @Override
         public void doLinkRule() {
-            getTupleToObjectNode().getBaseNodePropagator().doLinkSubnetwork(reteEvaluator);
+            // TODO #6650: vol2 subnetwork link propagation not yet implemented
         }
 
         @Override
         public void doUnlinkRule() {
-            getTupleToObjectNode().getBaseNodePropagator().doUnlinkSubnetwork(reteEvaluator);
+            // TODO #6650: vol2 subnetwork unlink propagation not yet implemented
         }
 
         @Override
@@ -331,63 +110,9 @@ public class TupleToObjectNode extends BaseNode
             return NodeTypeEnums.TupleToObjectNode;
         }
 
+        @Override
         public String toString() {
-            return "TupleToObjectNodeMem(" + getTupleToObjectNode().getId() + ") [" + RuleNameExtractor.getRuleNames(
-                    getTupleToObjectNode().getBaseNodePropagator().getSinks()) + "]";
+            return "SubnetworkPathMemory(tton=" + getTupleToObjectNode().getId() + ")";
         }
     }
-
-    public BitMask getInferredMask() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void updateSink(BaseNode sink, PropagationContext context, InternalWorkingMemory wm) {
-        throw new UnsupportedOperationException();
-    }
-
-    public BaseNode[] getPathNodes() {
-        if (pathNodes == null) {
-            pathNodes = AbstractTerminalNode.getPathNodes(this);
-        }
-        return pathNodes;
-    }
-
-    public boolean hasPathNode(BaseNode node) {
-        for (BaseNode pathNode : getPathNodes()) {
-            if (node.getId() == pathNode.getId()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public LeftTupleSinkPropagator getSinkPropagator() {
-        return EmptyLeftTupleSinkAdapter.getInstance();
-    }
-
-    @Override
-    public void addAssociation(Rule rule, BuildContext context) {
-        super.addAssociation(rule, context);
-        context.addPathEndNode(this);
-    }
-
-    @Override
-    public boolean removeAssociation(Rule rule, RuleRemovalContext context) {
-        boolean result = super.associations.remove(rule);
-        if (getAssociationsSize() == 0) {
-            // avoid to recalculate the pathEndNodes if this node is going to be removed
-            return result;
-        }
-
-        List<PathEndNode> remainingPathNodes = new ArrayList<>();
-        for (PathEndNode pathEndNode : pathEndNodes) {
-            if (pathEndNode.getAssociatedTerminalsSize() > 0) {
-                remainingPathNodes.add(pathEndNode);
-            }
-        }
-        pathEndNodes = remainingPathNodes.toArray(new PathEndNode[remainingPathNodes.size()]);
-        return result;
-    }
-
 }
