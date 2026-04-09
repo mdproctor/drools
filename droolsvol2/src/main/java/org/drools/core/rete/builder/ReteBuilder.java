@@ -1,9 +1,11 @@
 package org.drools.core.rete.builder;
 
 
+import org.drools.base.base.ClassObjectType;
 import org.drools.base.common.NetworkNode;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.Pattern;
 import org.drools.base.rule.InvalidPatternException;
 import org.drools.base.rule.LogicTransformer;
 import org.drools.core.PathEndNode;
@@ -119,7 +121,8 @@ public class ReteBuilder {
     }
 
     private void addInitialFactPattern(GroupElement subrule) {
-
+        final Pattern pattern = new Pattern(0, ClassObjectType.InitialFact_ObjectType);
+        subrule.addChild(0, pattern);
     }
 
     public IdGenerator getNodeIdsGenerator() {
