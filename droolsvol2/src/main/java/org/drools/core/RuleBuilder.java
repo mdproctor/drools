@@ -148,19 +148,19 @@ public class RuleBuilder<DS> {
         }
 
         public <B> From1First<END, DS, B> extendsRule(RuleExtendsPoint2<DS, B> extension2) {
-            return null;
+            return new From1First<>(end());
         }
 
         public <B, C> Join2First<END, DS, B, C> extendsRule(RuleExtendsPoint3<DS, B, C> extension3) {
-            return null;
+            return new Join2First<>(end());
         }
 
         public <B, C, D> Join3First<END, DS, B, C, D> extendsRule(RuleExtendsPoint4<DS, B, C, D> extension4) {
-            return null;
+            return new Join3First<>(end());
         }
 
-        public <B, C, D, E> Join4First<END, DS, B, C, D, E> extendsRule(RuleExtendsPoint5<DS, B, C, D, E> extension4) {
-            return null;
+        public <B, C, D, E> Join4First<END, DS, B, C, D, E> extendsRule(RuleExtendsPoint5<DS, B, C, D, E> extension5) {
+            return new Join4First<>(end());
         }
     }
 
