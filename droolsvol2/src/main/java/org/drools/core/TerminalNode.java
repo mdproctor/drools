@@ -18,53 +18,36 @@
  */
 package org.drools.core;
 
-import org.drools.base.base.ObjectType;
-import org.drools.base.common.NetworkNode;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.BaseTerminalNode;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.GroupElement;
-import org.drools.base.rule.Pattern;
 import org.drools.core.rete.builder.BuildContext;
-import org.drools.util.bitmask.AllSetBitMask;
 import org.drools.util.bitmask.BitMask;
 import org.drools.util.bitmask.EmptyBitMask;
 
-import java.util.List;
 import java.util.Map;
 
-import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
+public class TerminalNode extends BaseNode implements PathEndNode, BaseTerminalNode {
 
-public class TerminalNode extends BaseNode implements PathEndNode {
-
-    /** The rule to invoke upon match. */
     private RuleImpl rule;
-
-    /**
-     * the subrule reference is needed to resolve declarations
-     * because declarations may have different offsets in each subrule
-     */
     private GroupElement subrule;
     private int          subruleIndex;
     private Declaration[] allDeclarations;
     protected Declaration[] requiredDeclarations;
 
-    // leftInput is inherited from BaseNode — do not redeclare
     private BaseNode startLeftInput;
 
     private BitMask declaredMask = EmptyBitMask.get();
     private BitMask inferredMask = EmptyBitMask.get();
     private BitMask negativeMask = EmptyBitMask.get();
 
-    // LeftTupleNode[] pathNodes — commented out until LeftTupleNode is defined in vol2
-
     private transient PathEndNode[] pathEndNodes;
 
     private SegmentMemory.SegmentPrototype[] segmentPrototypes;
     private SegmentMemory.SegmentPrototype[] eagerSegmentPrototypes;
-
-    // PathMemSpec pathMemSpec — commented out until PathMemSpec is defined in vol2
 
     private int objectCount;
 
@@ -78,16 +61,13 @@ public class TerminalNode extends BaseNode implements PathEndNode {
         this.rule = rule;
         this.subrule = subrule;
         this.subruleIndex = subruleIndex;
-        this.setObjectCount(getLeftInput().getObjectCount()); // terminal nodes do not increase the count
+        this.objectCount = getLeftInput().getObjectCount();
         context.addPathEndNode(this);
         initMemoryId(context);
-        initDeclaredMask(context);
-        initInferredMask();
 
         Map<String, Declaration> decls = this.subrule.getOuterDeclarations();
         this.allDeclarations = decls.values().toArray(new Declaration[decls.size()]);
-        // vol2 has no field bindings — requiredDeclarations not needed
-        this.requiredDeclarations = new Declaration[0];
+        this.requiredDeclarations = new Declaration[0]; // vol2 has no field bindings
 
         BaseNode current = getLeftInput();
         while (current.getLeftInput() != null) {
@@ -96,37 +76,65 @@ public class TerminalNode extends BaseNode implements PathEndNode {
         startLeftInput = current;
     }
 
-    @Override
-    public BaseNode getParent() {
-        return leftInput;
-    }
-
     // PathMemSpec methods commented out until PathMemSpec is defined in vol2
-    //
     // public PathMemSpec getPathMemSpec() { ... }
     // public void setPathMemSpec(PathMemSpec pathMemSpec) { ... }
     // public PathMemSpec getPathMemSpec(TerminalNode removingTN) { ... }
     // public void resetPathMemSpec(TerminalNode removingTN) { ... }
     // public void nullPathMemSpec() { ... }
 
+    @Override
     public RuleImpl getRule() {
         return this.rule;
     }
 
+    @Override
     public GroupElement getSubRule() {
         return this.subrule;
     }
 
+    @Override
     public int getSubruleIndex() {
         return subruleIndex;
     }
 
+    @Override
     public Declaration[] getAllDeclarations() {
         return this.allDeclarations;
     }
 
+    @Override
     public Declaration[] getRequiredDeclarations() {
         return this.requiredDeclarations;
+    }
+
+    @Override
+    public Declaration[] getSalienceDeclarations() {
+        return new Declaration[0]; // vol2 — TBD
+    }
+
+    @Override
+    public boolean isFireDirect() {
+        return false; // vol2 — TBD
+    }
+
+    @Override
+    public void initInferredMask() {
+        // vol2 TODO: mask initialisation depends on property reactivity model
+        inferredMask = declaredMask;
+    }
+
+    @Override
+    public BitMask getNegativeMask() {
+        return negativeMask;
+    }
+
+    public BitMask getDeclaredMask() {
+        return declaredMask;
+    }
+
+    public BitMask getInferredMask() {
+        return inferredMask;
     }
 
     public BaseNode getStartLeftInput() {
@@ -153,16 +161,14 @@ public class TerminalNode extends BaseNode implements PathEndNode {
         return segmentPrototypes;
     }
 
+    @Override
     public SegmentMemory.SegmentPrototype[] getEagerSegmentPrototypes() {
         return eagerSegmentPrototypes;
     }
 
+    @Override
     public void setEagerSegmentPrototypes(SegmentMemory.SegmentPrototype[] eagerSegmentPrototypes) {
         this.eagerSegmentPrototypes = eagerSegmentPrototypes;
-    }
-
-    public int getPathIndex() {
-        return leftInput.getPathIndex() + 1;
     }
 
     public int getObjectCount() {
@@ -173,84 +179,16 @@ public class TerminalNode extends BaseNode implements PathEndNode {
         objectCount = count;
     }
 
-    protected void initDeclaredMask(BuildContext context) {
-        if (!(NodeTypeEnums.isLeftInputAdapterNode(unwrapLeftInput()))) {
-            // terminal nodes not after LIANode are not relevant for property specific
-            declaredMask = AllSetBitMask.get();
-            return;
-        }
-
-        Pattern pattern = context.getLastBuiltPatterns()[0];
-        ObjectType objectType = pattern.getObjectType();
-
-        if (isPropertyReactive(context.getRuleBase(), objectType)) {
-            List<String> accessibleProperties = pattern.getAccessibleProperties(context.getRuleBase());
-            declaredMask = pattern.getPositiveWatchMask(accessibleProperties);
-            negativeMask = pattern.getNegativeWatchMask(accessibleProperties);
-        } else {
-            declaredMask = AllSetBitMask.get();
-        }
+    @Override
+    public PathMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
+        // TODO #6650: wire activation/agenda once vol2 evaluation engine is built
+        throw new UnsupportedOperationException("vol2 stub — see #6650");
     }
-
-    public void initInferredMask() {
-        BaseNode unwrapped = unwrapLeftInput();
-        if (NodeTypeEnums.isLeftInputAdapterNode(unwrapped) &&
-                ((LeftInputAdapterNode) unwrapped).getParentObjectSource().getType() == NodeTypeEnums.AlphaNode) {
-            AlphaNode alphaNode = (AlphaNode) ((LeftInputAdapterNode) unwrapped).getParentObjectSource();
-            inferredMask = alphaNode.updateMask(getDeclaredMask());
-        } else {
-            inferredMask = getDeclaredMask();
-        }
-
-        inferredMask = getInferredMask().resetAll(getNegativeMask());
-        if (getNegativeMask().isAllSet() && !getDeclaredMask().isAllSet()) {
-            inferredMask = getInferredMask().setAll(getDeclaredMask());
-        }
-    }
-
-    public BaseNode unwrapLeftInput() {
-        return leftInput.getType() == NodeTypeEnums.FromNode ? leftInput.getLeftInput() : leftInput;
-    }
-
-    // createMemory commented out until RuleBaseConfiguration is defined in vol2
-    // public PathMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) { ... }
-
-    // initPathMemory commented out until PathMemSpec is defined in vol2
-    // public static PathMemory initPathMemory(PathEndNode pathEndNode, PathMemory pmem) { ... }
-
-    // doRemove commented out until ReteBuilder reference and removeTupleSink/removeOutput are resolved
-    // protected boolean doRemove(final RuleRemovalContext context, final ReteBuilder builder) { ... }
-
-    public BitMask getDeclaredMask() {
-        return declaredMask;
-    }
-
-    public BitMask getInferredMask() {
-        return inferredMask;
-    }
-
-    public BitMask getNegativeMask() {
-        return negativeMask;
-    }
-
-    // networkUpdated commented out until UpdateContext is defined in vol2
-    // public void networkUpdated(UpdateContext updateContext) { ... }
 
     public boolean isInUse() {
         return false;
     }
 
-    public boolean isLeftTupleMemoryEnabled() {
-        return false;
-    }
-
-    // getPathNodes / hasPathNode / visitLeftTupleNodes commented out until LeftTupleNode is defined in vol2
-    // public static BaseNode[] getPathNodes(PathEndNode endNode) { ... }
-    // public BaseNode[] getPathNodes() { ... }
-    // public boolean hasPathNode(BaseNode node) { ... }
-    // public void visitLeftTupleNodes(Consumer<BaseNode> func) { ... }
-
-    @Override
     public final void setPartitionIdWithSinks(RuleBasePartitionId partitionId) {
         this.partitionId = partitionId;
     }

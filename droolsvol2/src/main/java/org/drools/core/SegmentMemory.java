@@ -19,6 +19,10 @@
 package org.drools.core;
 
 import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.core.TimerNode.TimerNodeMemory;
+import org.drools.core.TupleToObjectNode.SubnetworkPathMemory;
+import org.drools.core.QueryElementNode.QueryElementNodeMemory;
+import org.drools.core.AsyncReceiveNode.AsyncReceiveMemory;
 import org.drools.core.util.DoubleLinkedNode;
 import org.drools.core.util.LinkedList;
 

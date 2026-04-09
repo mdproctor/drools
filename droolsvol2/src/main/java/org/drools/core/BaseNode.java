@@ -28,6 +28,10 @@ public abstract class BaseNode implements NetworkNode {
 
     private BaseNode leftInput;
 
+    public BaseNode() {
+        this(0, 0, 0);
+    }
+
     public BaseNode(int id, int pathIndex, int objectIndex) {
         this.id          = id;
         this.pathIndex   = pathIndex;
@@ -72,6 +76,14 @@ public abstract class BaseNode implements NetworkNode {
 
     public void setLeftInput(BaseNode leftInput) {
         this.leftInput = leftInput;
+    }
+
+    public int getObjectCount() {
+        return objectIndex;
+    }
+
+    public void initMemoryId(org.drools.core.rete.builder.BuildContext context) {
+        // Memory ID initialisation — TBD in vol2 evaluation engine
     }
 
     public int getType() {
