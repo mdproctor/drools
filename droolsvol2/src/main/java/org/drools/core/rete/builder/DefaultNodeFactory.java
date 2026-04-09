@@ -107,7 +107,14 @@ public class DefaultNodeFactory implements NodeFactory {
 
     @Override
     public JoinNode buildJoinNode(int id, BaseNode leftInput, BaseNode rightInput, BetaConstraints binder, BuildContext context) {
-        throw new UnsupportedOperationException("vol2 TODO #6648: JoinNode not yet implemented");
+        // leftInput:  LIA (tuple side — left sub-network end)
+        // rightInput: OTN or alpha chain (object side — right sub-network entry, bi-linear adapter)
+        int pathIndex   = leftInput.getPathIndex() + 1;
+        int objectIndex = leftInput.getObjectCount() + 1; // one more object added by right side
+        JoinNode node = new JoinNode(id, pathIndex, objectIndex);
+        node.setLeftInput(leftInput);
+        node.setRightInput(rightInput);
+        return node;
     }
 
     @Override

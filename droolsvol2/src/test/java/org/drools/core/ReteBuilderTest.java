@@ -127,6 +127,48 @@ public class ReteBuilderTest {
     }
 
     @Test
+    public void testTwoPatternRuleProducesJoinNode() {
+        RuleImpl rule = ruleWithPattern("r1", Person.class, String.class);
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        assertThat(terminals).hasSize(1);
+
+        BaseNode joinNode = terminals.get(0).getLeftInput();
+        assertThat(joinNode).isInstanceOf(JoinNode.class);
+
+        // left side: LIA for first pattern (Person)
+        assertThat(joinNode.getLeftInput()).isInstanceOf(LeftInputAdapterNode.class);
+        ObjectTypeNode leftOtn = (ObjectTypeNode) joinNode.getLeftInput().getLeftInput();
+        assertThat(((ClassObjectType) leftOtn.getObjectType()).getClassType()).isEqualTo(Person.class);
+
+        // right side: OTN for second pattern (String) — direct object input (bi-linear)
+        assertThat(((JoinNode) joinNode).getRightInput()).isInstanceOf(ObjectTypeNode.class);
+        ObjectTypeNode rightOtn = (ObjectTypeNode) ((JoinNode) joinNode).getRightInput();
+        assertThat(((ClassObjectType) rightOtn.getObjectType()).getClassType()).isEqualTo(String.class);
+    }
+
+    @Test
+    public void testThreePatternRuleProducesNestedJoins() {
+        RuleImpl rule = ruleWithPattern("r1", Person.class, String.class, Integer.class);
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        assertThat(terminals).hasSize(1);
+
+        // terminal → join2 → join1 (nested)
+        BaseNode join2 = terminals.get(0).getLeftInput();
+        assertThat(join2).isInstanceOf(JoinNode.class);
+
+        BaseNode join1 = join2.getLeftInput();
+        assertThat(join1).isInstanceOf(JoinNode.class);
+
+        // rightmost OTN is Integer
+        ObjectTypeNode rightOtn2 = (ObjectTypeNode) ((JoinNode) join2).getRightInput();
+        assertThat(((ClassObjectType) rightOtn2.getObjectType()).getClassType()).isEqualTo(Integer.class);
+    }
+
+    @Test
     public void testNodeIdsAreMonotonicallyIncreasing() {
         // Each addRule() call should allocate new, unique, increasing node IDs
         RuleImpl r1 = ruleWithPattern("r1", Person.class);
