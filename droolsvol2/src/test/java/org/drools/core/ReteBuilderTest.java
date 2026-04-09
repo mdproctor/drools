@@ -107,4 +107,38 @@ public class ReteBuilderTest {
         assertThat(((ClassObjectType) otn2.getObjectType()).getClassType()).isEqualTo(String.class);
         assertThat(otn1).isNotSameAs(otn2);
     }
+
+    @Test
+    public void testConsequenceOnlyRuleUsesInitialFact() {
+        // A rule with no patterns — empty LHS — requires an InitialFact pattern
+        // (addInitialFactPattern injects it so the network has a root to attach to)
+        RuleImpl rule = new RuleImpl("noPatterns");
+        rule.setLhs(GroupElementFactory.newAndInstance()); // empty AND
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        assertThat(terminals).hasSize(1);
+        // The LIA's OTN should match InitialFact
+        BaseNode lia = terminals.get(0).getLeftInput();
+        assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
+        ObjectTypeNode otn = (ObjectTypeNode) lia.getLeftInput();
+        assertThat(((ClassObjectType) otn.getObjectType()).getClassType().getName())
+                .contains("InitialFact");
+    }
+
+    @Test
+    public void testNodeIdsAreMonotonicallyIncreasing() {
+        // Each addRule() call should allocate new, unique, increasing node IDs
+        RuleImpl r1 = ruleWithPattern("r1", Person.class);
+        RuleImpl r2 = ruleWithPattern("r2", String.class);
+
+        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
+        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
+
+        int id1 = t1.get(0).getId();
+        int id2 = t2.get(0).getId();
+
+        assertThat(id1).isGreaterThan(0);
+        assertThat(id2).isGreaterThan(id1);
+    }
 }
