@@ -22,10 +22,10 @@ import org.drools.core.Memory;
 import org.drools.core.ReteEvaluator;
 import org.drools.core.TupleSets;
 import org.drools.core.TupleSetsImpl;
-import org.drools.core.reteoo.TupleToObjectNode.SubnetworkPathMemory;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.core.TupleToObjectNode.SubnetworkPathMemory;
+import org.drools.core.util.AbstractDoubleLinkedNode;
 
-public class BetaMemory<C> extends AbstractLinkedListNode<Memory> implements SegmentNodeMemory {
+public class BetaMemory<C> extends AbstractDoubleLinkedNode<Memory> implements SegmentNodeMemory {
 
     private              TupleMemory leftTupleMemory;
     private              TupleMemory rightTupleMemory;

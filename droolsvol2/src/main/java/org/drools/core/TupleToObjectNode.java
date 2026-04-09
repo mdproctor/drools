@@ -17,6 +17,7 @@
  * under the License.
  */
 package org.drools.core;
+import org.drools.core.rete.builder.ReteBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,7 @@ import org.drools.core.Memory;
 import org.drools.core.PropagationContext;
 import org.drools.core.ReteEvaluator;
 import org.drools.core.UpdateContext;
-import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
+import org.drools.core.SegmentMemory.SegmentPrototype;
 import org.drools.core.rete.builder.BuildContext;
 import org.drools.util.bitmask.BitMask;
 import org.kie.api.definition.rule.Rule;
@@ -41,9 +42,9 @@ import org.kie.api.definition.rule.Rule;
  * subnetwork's tuple into a fact in order right join it with the tuple being propagated in
  * the main network.
  */
-public class TupleToObjectNode extends ObjectSource
+public class TupleToObjectNode extends BaseNode
                                implements
-                               LeftTupleSinkNode,
+                               BaseNode,
                                PathEndNode {
 
     private static final long serialVersionUID = 510l;
@@ -57,9 +58,9 @@ public class TupleToObjectNode extends ObjectSource
 
     private boolean tupleMemoryEnabled;
 
-    private LeftTupleSinkNode previousTupleSinkNode;
+    private BaseNode previousTupleSinkNode;
 
-    private LeftTupleSinkNode nextTupleSinkNode;
+    private BaseNode nextTupleSinkNode;
 
     private BaseNode[] pathNodes;
 
@@ -194,7 +195,7 @@ public class TupleToObjectNode extends ObjectSource
     }
 
     protected boolean doRemove(final RuleRemovalContext context,
-                               final ReteooBuilder builder) {
+                               final ReteBuilder builder) {
         if (!isInUse()) {
             tupleSource.removeTupleSink(this);
             return true;
@@ -211,7 +212,7 @@ public class TupleToObjectNode extends ObjectSource
      * @return
      *      The next TupleSinkNode
      */
-    public LeftTupleSinkNode getNextLeftTupleSinkNode() {
+    public BaseNode getNextBaseNode() {
         return this.nextTupleSinkNode;
     }
 
@@ -220,7 +221,7 @@ public class TupleToObjectNode extends ObjectSource
      * @param next
      *      The next TupleSinkNode
      */
-    public void setNextLeftTupleSinkNode(final LeftTupleSinkNode next) {
+    public void setNextBaseNode(final BaseNode next) {
         this.nextTupleSinkNode = next;
     }
 
@@ -229,7 +230,7 @@ public class TupleToObjectNode extends ObjectSource
      * @return
      *      The previous TupleSinkNode
      */
-    public LeftTupleSinkNode getPreviousLeftTupleSinkNode() {
+    public BaseNode getPreviousBaseNode() {
         return this.previousTupleSinkNode;
     }
 
@@ -238,7 +239,7 @@ public class TupleToObjectNode extends ObjectSource
      * @param previous
      *      The previous TupleSinkNode
      */
-    public void setPreviousLeftTupleSinkNode(final LeftTupleSinkNode previous) {
+    public void setPreviousBaseNode(final BaseNode previous) {
         this.previousTupleSinkNode = previous;
     }
 
@@ -318,12 +319,12 @@ public class TupleToObjectNode extends ObjectSource
 
         @Override
         public void doLinkRule() {
-            getTupleToObjectNode().getObjectSinkPropagator().doLinkSubnetwork(reteEvaluator);
+            getTupleToObjectNode().getBaseNodePropagator().doLinkSubnetwork(reteEvaluator);
         }
 
         @Override
         public void doUnlinkRule() {
-            getTupleToObjectNode().getObjectSinkPropagator().doUnlinkSubnetwork(reteEvaluator);
+            getTupleToObjectNode().getBaseNodePropagator().doUnlinkSubnetwork(reteEvaluator);
         }
 
         @Override
@@ -333,7 +334,7 @@ public class TupleToObjectNode extends ObjectSource
 
         public String toString() {
             return "TupleToObjectNodeMem(" + getTupleToObjectNode().getId() + ") [" + RuleNameExtractor.getRuleNames(
-                    getTupleToObjectNode().getObjectSinkPropagator().getSinks()) + "]";
+                    getTupleToObjectNode().getBaseNodePropagator().getSinks()) + "]";
         }
     }
 
@@ -342,7 +343,7 @@ public class TupleToObjectNode extends ObjectSource
     }
 
     @Override
-    public void updateSink(ObjectSink sink, PropagationContext context, InternalWorkingMemory wm) {
+    public void updateSink(BaseNode sink, PropagationContext context, InternalWorkingMemory wm) {
         throw new UnsupportedOperationException();
     }
 

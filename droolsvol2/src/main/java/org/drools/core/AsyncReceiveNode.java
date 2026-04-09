@@ -17,6 +17,7 @@
  * under the License.
  */
 package org.drools.core;
+import org.drools.core.rete.builder.ReteBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,14 +35,13 @@ import org.drools.core.Memory;
 import org.drools.core.MemoryFactory;
 import org.drools.core.ReteEvaluator;
 import org.drools.core.UpdateContext;
-import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.rete.builder.BuildContext;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.index.TupleList;
 
 public class AsyncReceiveNode extends BaseNode
         implements
-        LeftTupleSinkNode,
+        BaseNode,
         MemoryFactory<AsyncReceiveNode.AsyncReceiveMemory> {
 
     private static final long serialVersionUID = 510l;
@@ -52,8 +52,8 @@ public class AsyncReceiveNode extends BaseNode
     private AlphaNodeFieldConstraint[] alphaConstraints;
     private BetaConstraints betaConstraints;
 
-    private LeftTupleSinkNode previousTupleSinkNode;
-    private LeftTupleSinkNode nextTupleSinkNode;
+    private BaseNode previousTupleSinkNode;
+    private BaseNode nextTupleSinkNode;
 
     private AsyncReceive receive;
     private transient ObjectTypeConf objectTypeConf;
@@ -172,7 +172,7 @@ public class AsyncReceiveNode extends BaseNode
     }
 
     protected boolean doRemove( final RuleRemovalContext context,
-                                final ReteooBuilder builder ) {
+                                final ReteBuilder builder ) {
         if ( !this.isInUse() ) {
             getBaseNode().removeTupleSink( this );
             return true;
@@ -189,7 +189,7 @@ public class AsyncReceiveNode extends BaseNode
      *
      * @return The next TupleSinkNode
      */
-    public LeftTupleSinkNode getNextLeftTupleSinkNode() {
+    public BaseNode getNextBaseNode() {
         return this.nextTupleSinkNode;
     }
 
@@ -198,7 +198,7 @@ public class AsyncReceiveNode extends BaseNode
      *
      * @param next The next TupleSinkNode
      */
-    public void setNextLeftTupleSinkNode( final LeftTupleSinkNode next ) {
+    public void setNextBaseNode( final BaseNode next ) {
         this.nextTupleSinkNode = next;
     }
 
@@ -207,7 +207,7 @@ public class AsyncReceiveNode extends BaseNode
      *
      * @return The previous TupleSinkNode
      */
-    public LeftTupleSinkNode getPreviousLeftTupleSinkNode() {
+    public BaseNode getPreviousBaseNode() {
         return this.previousTupleSinkNode;
     }
 
@@ -216,7 +216,7 @@ public class AsyncReceiveNode extends BaseNode
      *
      * @param previous The previous TupleSinkNode
      */
-    public void setPreviousLeftTupleSinkNode( final LeftTupleSinkNode previous ) {
+    public void setPreviousBaseNode( final BaseNode previous ) {
         this.previousTupleSinkNode = previous;
     }
 
@@ -229,7 +229,7 @@ public class AsyncReceiveNode extends BaseNode
         return leftInput.getObjectTypeNode();
     }
 
-    public static class AsyncReceiveMemory extends AbstractLinkedListNode<Memory>
+    public static class AsyncReceiveMemory extends AbstractDoubleLinkedNode<Memory>
             implements
             SegmentNodeMemory {
 

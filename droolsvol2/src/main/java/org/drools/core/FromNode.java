@@ -17,6 +17,7 @@
  * under the License.
  */
 package org.drools.core;
+import org.drools.core.rete.builder.ReteBuilder;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -36,14 +37,14 @@ import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.BetaConstraints;
 import org.drools.core.EmptyBetaConstraints;
-import org.drools.core.InternalFactHandle;
+import org.drools.core.InternalDataHandle;
 import org.drools.core.Memory;
 import org.drools.core.MemoryFactory;
 import org.drools.core.PropagationContext;
 import org.drools.core.ReteEvaluator;
 import org.drools.core.UpdateContext;
 import org.drools.core.rete.builder.BuildContext;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.index.TupleList;
 import org.drools.util.bitmask.AllSetBitMask;
 import org.drools.util.bitmask.BitMask;
@@ -55,7 +56,7 @@ import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 
 public class FromNode<T extends FromNode.FromMemory> extends BaseNode
     implements
-    LeftTupleSinkNode,
+    BaseNode,
     MemoryFactory<T> {
     private static final long          serialVersionUID = 510l;
 
@@ -63,8 +64,8 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
     protected AlphaNodeFieldConstraint[] alphaConstraints;
     protected BetaConstraints            betaConstraints;
 
-    protected LeftTupleSinkNode          previousTupleSinkNode;
-    protected LeftTupleSinkNode          nextTupleSinkNode;
+    protected BaseNode          previousTupleSinkNode;
+    protected BaseNode          nextTupleSinkNode;
     
     protected From                       from;
 
@@ -196,15 +197,15 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
     }
 
     @SuppressWarnings("unchecked")
-    public RightTuple createRightTuple(final TupleImpl leftTuple,
+    public TupleImpl createTupleImpl(final TupleImpl leftTuple,
                                        final PropagationContext context,
                                        final ReteEvaluator reteEvaluator,
                                        final Object object) {
-        return new RightTuple(createFactHandle(reteEvaluator, object) );
+        return new TupleImpl(createFactHandle(reteEvaluator, object) );
     }
 
-    public InternalFactHandle createFactHandle( ReteEvaluator reteEvaluator, Object object ) {
-        InternalFactHandle handle = reteEvaluator.getFactHandle(object);
+    public InternalDataHandle createFactHandle( ReteEvaluator reteEvaluator, Object object ) {
+        InternalDataHandle handle = reteEvaluator.getFactHandle(object);
         if (handle != null && handle.getObject() == object) {
             return handle;
         }
@@ -218,12 +219,12 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
     }
 
 
-    public void addToCreatedHandlesMap(final Map<Object, RightTuple> matches,
-                                       final RightTuple rightTuple) {
+    public void addToCreatedHandlesMap(final Map<Object, TupleImpl> matches,
+                                       final TupleImpl rightTuple) {
         if ( rightTuple.getFactHandle().isValid() ) {
             Object object = rightTuple.getFactHandle().getObject();
             // keeping a list of matches
-            RightTuple existingMatch = matches.get(object);
+            TupleImpl existingMatch = matches.get(object);
             if ( existingMatch != null ) {
                 // this is for the obscene case where two or more objects returned by "from"
                 // have the same hash code and evaluate equals() to true, so we need to preserve
@@ -254,7 +255,7 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
      * @return
      *      The next TupleSinkNode
      */
-    public LeftTupleSinkNode getNextLeftTupleSinkNode() {
+    public BaseNode getNextBaseNode() {
         return this.nextTupleSinkNode;
     }
 
@@ -263,7 +264,7 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
      * @param next
      *      The next TupleSinkNode
      */
-    public void setNextLeftTupleSinkNode(final LeftTupleSinkNode next) {
+    public void setNextBaseNode(final BaseNode next) {
         this.nextTupleSinkNode = next;
     }
 
@@ -272,7 +273,7 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
      * @return
      *      The previous TupleSinkNode
      */
-    public LeftTupleSinkNode getPreviousLeftTupleSinkNode() {
+    public BaseNode getPreviousBaseNode() {
         return this.previousTupleSinkNode;
     }
 
@@ -281,7 +282,7 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
      * @param previous
      *      The previous TupleSinkNode
      */
-    public void setPreviousLeftTupleSinkNode(final LeftTupleSinkNode previous) {
+    public void setPreviousBaseNode(final BaseNode previous) {
         this.previousTupleSinkNode = previous;
     }
 
@@ -289,7 +290,7 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
         return NodeTypeEnums.FromNode;
     } 
 
-    public static class FromMemory extends AbstractLinkedListNode<Memory>
+    public static class FromMemory extends AbstractDoubleLinkedNode<Memory>
         implements
         Serializable,
         SegmentNodeMemory {
@@ -360,7 +361,7 @@ public class FromNode<T extends FromNode.FromMemory> extends BaseNode
     }
 
     protected boolean doRemove(final RuleRemovalContext context,
-                               final ReteooBuilder builder) {
+                               final ReteBuilder builder) {
 
         if ( !this.isInUse() ) {
             getBaseNode().removeTupleSink( this );

@@ -38,14 +38,12 @@ import org.drools.base.rule.accessor.Accumulator;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.BetaConstraints;
-import org.drools.core.InternalFactHandle;
+import org.drools.core.InternalDataHandle;
 import org.drools.core.Memory;
 import org.drools.core.PropagationContext;
 import org.drools.core.ReteEvaluator;
-import org.drools.core.impl.InternalRuleBase;
-import org.drools.core.phreak.PhreakAccumulateNode;
 import org.drools.core.rete.builder.BuildContext;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.index.TupleList;
 import org.drools.core.util.index.TupleListWithContext;
 import org.drools.util.bitmask.BitMask;
@@ -138,11 +136,11 @@ public class AccumulateNode extends BetaNode {
         return resultBinder;
     }
 
-    public InternalFactHandle createResultFactHandle(final PropagationContext context,
+    public InternalDataHandle createResultFactHandle(final PropagationContext context,
                                                      final ReteEvaluator reteEvaluator,
                                                      final TupleImpl leftTuple,
                                                      final Object result) {
-        InternalFactHandle handle = null;
+        InternalDataHandle handle = null;
         if ( context.getReaderContext() != null ) {
             handle = context.getReaderContext().createAccumulateHandle( context.getEntryPoint(), reteEvaluator, leftTuple, result, getId() );
         }
@@ -195,7 +193,7 @@ public class AccumulateNode extends BetaNode {
         return memory;
     }
 
-    public static abstract class AccumulateMemory extends AbstractLinkedListNode<Memory>
+    public static abstract class AccumulateMemory extends AbstractDoubleLinkedNode<Memory>
         implements
         SegmentNodeMemory {
 
