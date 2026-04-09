@@ -78,6 +78,12 @@ public abstract class BaseNode implements NetworkNode {
         return 0;
     }
 
+    @Override
+    public org.drools.base.common.NetworkNode[] getSinks() {
+        // Vol2 uses outputs arrays, not linked-list sinks — return null for compatibility
+        return null;
+    }
+
     /**
      * Returns true in case the current node is in use (is referenced by any other node)
      */
