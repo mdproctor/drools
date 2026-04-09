@@ -18,13 +18,21 @@
  */
 package org.drools.core;
 
-import org.drools.core.Memory;
+import org.kie.api.runtime.rule.ConsequenceExceptionHandler;
+import org.kie.api.runtime.rule.Match;
+import org.kie.api.runtime.rule.RuleRuntime;
 
-public interface SegmentNodeMemory extends Memory {
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
-    long getNodePosMaskBit();
-    void setNodePosMaskBit(long segmentPos);
+public class DefaultConsequenceExceptionHandler implements ConsequenceExceptionHandler {
 
-    void setNodeDirtyWithoutNotify();
-    void setNodeCleanWithoutNotify();
+    public void handleException(Match activation,
+                                RuleRuntime workingMemory,
+                                Exception exception) {
+        throw new org.kie.api.runtime.rule.ConsequenceException(exception, workingMemory, activation );
+    }
+
 }

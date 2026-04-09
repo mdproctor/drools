@@ -114,7 +114,7 @@ public class PathMemory extends AbstractDoubleLinkedNode<Memory>
     }
 
     private TerminalNode ensureAgendaItemCreated() {
-        AbstractTerminalNode rtn = (AbstractTerminalNode) getPathEndNode();
+        TerminalNode rtn = (TerminalNode) getPathEndNode();
         if (agendaItem == null) {
             int salience = rtn.getRule().getSalience().isDynamic() ? 0 : rtn.getRule().getSalience().getValue();
             agendaItem = activationsManager.createRuleAgendaItem(salience, this, rtn);
@@ -163,9 +163,8 @@ public class PathMemory extends AbstractDoubleLinkedNode<Memory>
             ag.add(agendaItem);
         }
 
-        if (agendaItem.getRule().isQuery()) {
-            activationsManager.addQueryAgendaItem(agendaItem);
-        } else if (agendaItem.getRule().isEager()) {
+        // isQuery() removed — queries are unified with rules in vol2
+        if (agendaItem.getRule().isEager()) {
             activationsManager.addEagerRuleAgendaItem(agendaItem);
         }
     }

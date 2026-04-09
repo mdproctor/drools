@@ -18,13 +18,12 @@
  */
 package org.drools.core;
 
-import org.drools.core.Memory;
-
-public interface SegmentNodeMemory extends Memory {
-
-    long getNodePosMaskBit();
-    void setNodePosMaskBit(long segmentPos);
-
-    void setNodeDirtyWithoutNotify();
-    void setNodeCleanWithoutNotify();
+/**
+ * TODO #6650: Temporary interface — vol2 segment memory initialisation not yet implemented.
+ * Adapts vol1 SegmentMemorySupport (LeftTupleSource/LeftTupleNode → BaseNode).
+ */
+public interface SegmentMemorySupport {
+    SegmentMemory createSegmentMemoryLazily(BaseNode segmentRoot);
+    SegmentMemory createChildSegment(BaseNode node);
+    SegmentMemory createChildSegmentLazily(BaseNode node);
 }

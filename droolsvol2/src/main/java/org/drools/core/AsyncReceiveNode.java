@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.reteoo;
+package org.drools.core;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +28,18 @@ import org.drools.base.rule.AsyncReceive;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.common.BetaConstraints;
-import org.drools.core.common.EmptyBetaConstraints;
-import org.drools.core.common.Memory;
-import org.drools.core.common.MemoryFactory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.UpdateContext;
+import org.drools.core.BetaConstraints;
+import org.drools.core.EmptyBetaConstraints;
+import org.drools.core.Memory;
+import org.drools.core.MemoryFactory;
+import org.drools.core.ReteEvaluator;
+import org.drools.core.UpdateContext;
 import org.drools.core.phreak.PropagationEntry;
-import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.AbstractLinkedListNode;
 import org.drools.core.util.index.TupleList;
 
-public class AsyncReceiveNode extends LeftTupleSource
+public class AsyncReceiveNode extends BaseNode
         implements
         LeftTupleSinkNode,
         MemoryFactory<AsyncReceiveNode.AsyncReceiveMemory> {
@@ -64,7 +64,7 @@ public class AsyncReceiveNode extends LeftTupleSource
     public AsyncReceiveNode() { }
 
     public AsyncReceiveNode( final int id,
-                             final LeftTupleSource tupleSource,
+                             final BaseNode tupleSource,
                              final AsyncReceive receive,
                              final AlphaNodeFieldConstraint[] constraints,
                              final BetaConstraints binder,
@@ -73,7 +73,7 @@ public class AsyncReceiveNode extends LeftTupleSource
         this.messageId = receive.getMessageId();
         this.receive = receive;
         this.tupleMemoryEnabled = context.isTupleMemoryEnabled();
-        setLeftTupleSource( tupleSource );
+        setBaseNode( tupleSource );
         this.setObjectCount(leftInput.getObjectCount() + 1); // 'async receive' node increases the object count
         this.alphaConstraints = constraints;
         this.betaConstraints = (binder == null) ? EmptyBetaConstraints.getInstance() : binder;
@@ -174,7 +174,7 @@ public class AsyncReceiveNode extends LeftTupleSource
     protected boolean doRemove( final RuleRemovalContext context,
                                 final ReteooBuilder builder ) {
         if ( !this.isInUse() ) {
-            getLeftTupleSource().removeTupleSink( this );
+            getBaseNode().removeTupleSink( this );
             return true;
         }
         return false;

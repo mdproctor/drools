@@ -16,18 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.reteoo;
+package org.drools.core;
 
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.From;
 import org.drools.base.rule.accessor.DataProvider;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.common.BetaConstraints;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.TupleSets;
-import org.drools.core.common.TupleSetsImpl;
-import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.core.BetaConstraints;
+import org.drools.core.ReteEvaluator;
+import org.drools.core.TupleSets;
+import org.drools.core.TupleSetsImpl;
+import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.index.TupleList;
 
 public class ReactiveFromNode extends FromNode<ReactiveFromNode.ReactiveFromMemory> {
@@ -35,7 +35,7 @@ public class ReactiveFromNode extends FromNode<ReactiveFromNode.ReactiveFromMemo
 
     public ReactiveFromNode(final int id,
                             final DataProvider dataProvider,
-                            final LeftTupleSource tupleSource,
+                            final BaseNode tupleSource,
                             final AlphaNodeFieldConstraint[] constraints,
                             final BetaConstraints binder,
                             final boolean tupleMemoryEnabled,

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.reteoo;
+package org.drools.core;
 
 import java.util.Arrays;
 
@@ -26,15 +26,15 @@ import org.drools.base.rule.Declaration;
 import org.drools.base.rule.Pattern;
 import org.drools.base.time.impl.Timer;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.common.Memory;
-import org.drools.core.common.MemoryFactory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.UpdateContext;
-import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.core.Memory;
+import org.drools.core.MemoryFactory;
+import org.drools.core.ReteEvaluator;
+import org.drools.core.UpdateContext;
+import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.AbstractLinkedListNode;
 import org.drools.core.util.index.TupleList;
 
-public class TimerNode extends LeftTupleSource
+public class TimerNode extends BaseNode
         implements
         LeftTupleSinkNode,
         MemoryFactory<TimerNode.TimerNodeMemory> {
@@ -55,13 +55,13 @@ public class TimerNode extends LeftTupleSource
     }
 
     public TimerNode(final int id,
-                     final LeftTupleSource tupleSource,
+                     final BaseNode tupleSource,
                      final Timer timer,
                      final String[] calendarNames,
                      final Declaration[][] startEndDeclarations,
                      final BuildContext context) {
         super(id, context);
-        setLeftTupleSource(tupleSource);
+        setBaseNode(tupleSource);
         this.setObjectCount(leftInput.getObjectCount()); // 'timer' node does increase the object count
         this.timer = timer;
         this.calendarNames = calendarNames;
@@ -156,7 +156,7 @@ public class TimerNode extends LeftTupleSource
     protected boolean doRemove(final RuleRemovalContext context,
                                final ReteooBuilder builder) {
         if (!this.isInUse()) {
-            getLeftTupleSource().removeTupleSink(this);
+            getBaseNode().removeTupleSink(this);
             return true;
         }
         return false;

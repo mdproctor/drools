@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.reteoo;
+package org.drools.core;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,14 +37,14 @@ import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.accessor.Accumulator;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.common.BetaConstraints;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.Memory;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.core.BetaConstraints;
+import org.drools.core.InternalFactHandle;
+import org.drools.core.Memory;
+import org.drools.core.PropagationContext;
+import org.drools.core.ReteEvaluator;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.PhreakAccumulateNode;
-import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.core.rete.builder.BuildContext;
 import org.drools.core.util.AbstractLinkedListNode;
 import org.drools.core.util.index.TupleList;
 import org.drools.core.util.index.TupleListWithContext;
@@ -69,7 +69,7 @@ public class AccumulateNode extends BetaNode {
     }
 
     public AccumulateNode(final int id,
-                          final LeftTupleSource leftInput,
+                          final BaseNode leftInput,
                           final RightInputAdapterNode rightInput,
                           final AlphaNodeFieldConstraint[] resultConstraints,
                           final BetaConstraints sourceBinder,
@@ -98,7 +98,7 @@ public class AccumulateNode extends BetaNode {
 
     }
 
-    private void addAccFunctionDeclarationsToLeftMask(InternalRuleBase ruleBase, LeftTupleSource leftInput, Accumulate accumulate) {
+    private void addAccFunctionDeclarationsToLeftMask(InternalRuleBase ruleBase, BaseNode leftInput, Accumulate accumulate) {
         BitMask leftMask = getInferredMask();
         ObjectType leftObjectType = leftInput.getObjectType();
         if (leftObjectType instanceof ClassObjectType ) {

@@ -547,7 +547,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
 
     public void mergeSegment(SegmentMemory other,
                              SegmentPrototype proto1,
-                             LeftTupleNode[] origNodes) {
+                             BaseNode[] origNodes) {
         if (NodeTypeEnums.isLeftInputAdapterNode(getTipNode()) && !other.getStagedLeftTuples().isEmpty()) {
             // If a rule has not been linked, lia can still have child segments with staged tuples that did not get flushed
             // these are safe to just move to the parent SegmentMemory
@@ -575,7 +575,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         mergeBitMasks(other, origNodes, currentLinkedNodeMask);
     }
 
-    public SegmentMemory splitSegmentOn(SegmentMemory other, LeftTupleNode splitNode) {
+    public SegmentMemory splitSegmentOn(SegmentMemory other, BaseNode splitNode) {
         // Move the children of this segment to other segment
         if (getFirst() != null) {
             for (SegmentMemory sm = getFirst(); sm != null;) {

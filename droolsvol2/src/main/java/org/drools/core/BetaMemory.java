@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.reteoo;
+package org.drools.core;
 
-import org.drools.core.common.Memory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.TupleSets;
-import org.drools.core.common.TupleSetsImpl;
+import org.drools.core.Memory;
+import org.drools.core.ReteEvaluator;
+import org.drools.core.TupleSets;
+import org.drools.core.TupleSetsImpl;
 import org.drools.core.reteoo.TupleToObjectNode.SubnetworkPathMemory;
 import org.drools.core.util.AbstractLinkedListNode;
 
@@ -83,11 +83,11 @@ public class BetaMemory<C> extends AbstractLinkedListNode<Memory> implements Seg
         return context;
     }
 
-    public boolean linkNode(LeftTupleSource tupleSource, ReteEvaluator reteEvaluator) {
+    public boolean linkNode(BaseNode tupleSource, ReteEvaluator reteEvaluator) {
         return linkNode(tupleSource, reteEvaluator, true);
     }
 
-    public boolean linkNode(LeftTupleSource tupleSource, ReteEvaluator reteEvaluator, boolean notify) {
+    public boolean linkNode(BaseNode tupleSource, ReteEvaluator reteEvaluator, boolean notify) {
         if (segmentMemory == null) {
             segmentMemory = getOrCreateSegmentMemory( tupleSource, reteEvaluator );
         }
@@ -136,11 +136,11 @@ public class BetaMemory<C> extends AbstractLinkedListNode<Memory> implements Seg
         return counter--;
     }
 
-    public boolean setNodeDirty(LeftTupleSource tupleSource, ReteEvaluator reteEvaluator) {
+    public boolean setNodeDirty(BaseNode tupleSource, ReteEvaluator reteEvaluator) {
         return setNodeDirty(tupleSource, reteEvaluator, true);
     }
 
-    public boolean setNodeDirty(LeftTupleSource tupleSource, ReteEvaluator reteEvaluator, boolean notify) {
+    public boolean setNodeDirty(BaseNode tupleSource, ReteEvaluator reteEvaluator, boolean notify) {
         if (segmentMemory == null) {
             segmentMemory = getOrCreateSegmentMemory( tupleSource, reteEvaluator );
         }
