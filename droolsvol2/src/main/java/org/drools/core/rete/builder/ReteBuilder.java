@@ -6,6 +6,7 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.InvalidPatternException;
 import org.drools.base.rule.LogicTransformer;
+import org.drools.core.PathEndNode;
 import org.drools.core.RuleBase;
 import org.drools.core.TerminalNode;
 import org.drools.core.time.TemporalDependencyMatrix;
@@ -97,11 +98,24 @@ public class ReteBuilder {
     }
 
     private void attachTerminalNode(BuildContext ctx, TerminalNode terminal) {
+        ctx.getTerminals().add(terminal);
+        ctx.terminate();
+        terminal.attach(ctx);
+        setPathEndNodes(ctx, terminal);
+    }
 
+    private static void setPathEndNodes(BuildContext ctx, TerminalNode terminal) {
+        PathEndNode[] pathEndNodes = ctx.getPathEndNodes().toArray(new PathEndNode[0]);
+        for (PathEndNode endNode : pathEndNodes) {
+            endNode.setPathEndNodes(pathEndNodes);
+        }
+        // visitLeftTupleNodes (addAssociatedTerminal) commented out until path nodes are built
     }
 
     private TerminalNode buildTerminal(BuildContext ctx, GroupElement subrule, RuleImpl rule, BuildUtils buildUtils) {
-        return null;
+        TerminalNode terminal = new TerminalNode(ctx.getNextNodeId(), ctx.getLeftInput(), ctx, rule, subrule, ctx.getSubRuleIndex());
+        ctx.getNodes().add(terminal);
+        return terminal;
     }
 
     private void addInitialFactPattern(GroupElement subrule) {
