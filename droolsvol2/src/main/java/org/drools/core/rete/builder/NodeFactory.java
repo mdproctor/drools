@@ -32,14 +32,28 @@ import org.drools.base.rule.QueryElement;
 import org.drools.base.rule.accessor.DataProvider;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.base.time.impl.Timer;
+import org.drools.core.AccumulateNode;
 import org.drools.core.AlphaNode;
+import org.drools.core.AsyncReceiveNode;
+import org.drools.core.AsyncSendNode;
 import org.drools.core.BaseNode;
+import org.drools.core.BetaConstraints;
+import org.drools.core.ConditionalBranchEvaluator;
+import org.drools.core.ConditionalBranchNode;
+import org.drools.core.EntryPointNode;
 import org.drools.core.EvalConditionNode;
+import org.drools.core.ExistsNode;
+import org.drools.core.FromNode;
 import org.drools.core.JoinNode;
 import org.drools.core.LeftInputAdapterNode;
 import org.drools.core.NotNode;
 import org.drools.core.ObjectTypeNode;
+import org.drools.core.QueryElementNode;
+import org.drools.core.ReactiveFromNode;
 import org.drools.core.TerminalNode;
+import org.drools.core.TimerNode;
+import org.drools.core.WindowFilter;
+import org.drools.core.WindowNode;
 
 import java.util.List;
 
@@ -95,7 +109,7 @@ public interface NodeFactory {
                                        BuildContext context);
 
     LeftInputAdapterNode buildLeftInputAdapterNode(int nextId,
-                                                   ObjectSource objectSource,
+                                                   BaseNode objectSource,
                                                    BuildContext context,
                                                    boolean terminal);
 
@@ -139,13 +153,13 @@ public interface NodeFactory {
                               BuildContext context );
 
     ConditionalBranchNode buildConditionalBranchNode(int id,
-                                                     LeftTupleSource tupleSource,
+                                                     BaseNode tupleSource,
                                                      ConditionalBranchEvaluator branchEvaluator,
                                                      BuildContext context);
 
     WindowNode buildWindowNode(int id,
                                List<AlphaNodeFieldConstraint> constraints,
-                               List<BehaviorRuntime> behaviors,
+                               List<WindowFilter> behaviors,
                                BaseNode leftInput,
                                BuildContext context);
 
