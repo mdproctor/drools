@@ -18,7 +18,7 @@ public abstract class BaseNode implements NetworkNode {
 
     protected RuleBasePartitionId partitionId;
 
-    protected Set<Rule>           associations;
+    protected Set<Rule>           associations = new java.util.HashSet<>();
 
     private Map<Integer, TerminalNode> associatedTerminals;
 
