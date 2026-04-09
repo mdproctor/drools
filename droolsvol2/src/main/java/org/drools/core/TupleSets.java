@@ -18,8 +18,6 @@
  */
 package org.drools.core;
 
-import org.drools.core.reteoo.TupleImpl;
-
 public interface TupleSets {
     TupleImpl getInsertFirst();
     TupleImpl getDeleteFirst();
