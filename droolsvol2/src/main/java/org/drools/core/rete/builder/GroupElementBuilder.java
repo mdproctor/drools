@@ -32,13 +32,19 @@ import org.drools.base.rule.constraint.BetaConstraint;
 //import org.drools.core.reteoo.CoreComponentFactory;
 //import org.drools.core.reteoo.ExistsNode;
 //import org.drools.core.reteoo.JoinNode;
-//import org.drools.core.reteoo.LeftTupleSource;
+//import org.drools.core.reteoo.BaseNode;
 //import org.drools.core.reteoo.NotNode;
 //import org.drools.core.reteoo.ObjectTypeNode;
 //import org.drools.core.reteoo.TupleToObjectNode;
 import org.drools.core.BaseNode;
+import org.drools.core.BetaConstraints;
+import org.drools.core.CoreComponentFactory;
+import org.drools.core.ExistsNode;
+import org.drools.core.JoinNode;
 import org.drools.core.NotNode;
 import org.drools.core.ObjectTypeNode;
+import org.drools.core.TupleStartEqualsConstraint;
+import org.drools.core.TupleToObjectNode;
 import org.drools.core.conf.RuleBaseConfiguration;
 import org.kie.api.definition.rule.Propagation;
 
@@ -315,7 +321,7 @@ public class GroupElementBuilder
                           final RuleElement rce) {
             final GroupElement exists = (GroupElement) rce;
 
-            final LeftTupleSource tupleSource = context.getLeftInput();
+            final BaseNode tupleSource = context.getLeftInput();
 
             // get child
             final RuleElement child = exists.getChildren().get(0);

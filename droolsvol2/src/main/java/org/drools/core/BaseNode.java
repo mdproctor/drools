@@ -96,6 +96,21 @@ public abstract class BaseNode implements NetworkNode {
         return null;
     }
 
+    /** Vol2: leftInput is the parent — kept for compatibility with vol1 code paths. */
+    public BaseNode getParent() { return leftInput; }
+
+    /** TODO #6650: vol2 sink propagation not yet implemented */
+    public LeftTupleSinkPropagator getSinkPropagator() { return null; }
+
+    /** TODO #6650: vol2 object sink propagation not yet implemented */
+    public LeftTupleSinkPropagator getObjectSinkPropagator() { return null; }
+
+    /** TODO #6650: node attachment not yet implemented in vol2 */
+    public void attach(org.drools.core.rete.builder.BuildContext context) { }
+
+    /** Vol2: right-input passivity — returns false by default */
+    public boolean isRightInputPassive() { return false; }
+
     /**
      * Returns true in case the current node is in use (is referenced by any other node)
      */

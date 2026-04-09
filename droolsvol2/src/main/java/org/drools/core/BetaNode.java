@@ -14,11 +14,10 @@ public class BetaNode extends BaseNode {
         super(id, pathIndex, objectIndex);
     }
 
-    public BaseNode getRightInput() {
-        return rightInput;
-    }
+    public BaseNode getRightInput() { return rightInput; }
+    public void setRightInput(BaseNode rightInput) { this.rightInput = rightInput; }
 
-    public void setRightInput(BaseNode rightInput) {
-        this.rightInput = rightInput;
-    }
+    /** TODO #6650: beta constraints not yet integrated in vol2 */
+    public BetaConstraints getConstraints() { return null; }
+    public boolean isRightInputPassive() { return false; }
 }

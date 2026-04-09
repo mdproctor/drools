@@ -14,6 +14,7 @@ public class WindowNode extends BaseNode implements MemoryFactory<WindowNode.Win
         public void setFilterContext(WindowFilterContext[] ctx) { this.filterContext = ctx; }
         @Override public int getNodeType() { return 0; }
         @Override public void reset() { }
+        @Override public void clear() { }
         @Override public void setSegmentMemory(SegmentMemory sm) { this.segmentMemory = sm; }
         @Override public SegmentMemory getSegmentMemory() { return segmentMemory; }
     }

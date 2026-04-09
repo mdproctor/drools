@@ -86,4 +86,12 @@ public class RuleBase<DS> {
     public ReteBuilder getReteBuilder() {
         return reteBuilder;
     }
+
+    /** TODO #6650: vol2 Rete root node — not yet implemented */
+    public EntryPointNode getRete() { return null; }
+
+    /** TODO #6650: partition management not yet implemented in vol2 */
+    public org.drools.base.common.RuleBasePartitionId createNewPartitionId() {
+        return org.drools.base.common.RuleBasePartitionId.MAIN_PARTITION;
+    }
 }

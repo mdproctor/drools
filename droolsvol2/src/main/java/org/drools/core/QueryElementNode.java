@@ -9,9 +9,14 @@ import org.drools.core.util.AbstractDoubleLinkedNode;
  */
 public class QueryElementNode extends BaseNode implements MemoryFactory<QueryElementNode.QueryElementNodeMemory> {
 
+    private org.drools.base.rule.QueryElement queryElement;
+
     public QueryElementNode() {
         super(0, 0, 0);
     }
+
+    public org.drools.base.rule.QueryElement getQueryElement() { return queryElement; }
+    public void setQueryElement(org.drools.base.rule.QueryElement qe) { this.queryElement = qe; }
 
     public QueryElementNodeMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
         return new QueryElementNodeMemory(this);

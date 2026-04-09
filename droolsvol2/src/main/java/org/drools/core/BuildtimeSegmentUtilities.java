@@ -21,6 +21,7 @@ package org.drools.core;
 import org.drools.base.common.NetworkNode;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.SegmentMemory.AccumulateMemoryPrototype;
+import org.drools.core.SegmentMemory.ConditionalBranchMemoryPrototype;
 import org.drools.core.SegmentMemory.AsyncReceiveMemoryPrototype;
 import org.drools.core.SegmentMemory.AsyncSendMemoryPrototype;
 import org.drools.core.SegmentMemory.BetaMemoryPrototype;
@@ -240,11 +241,11 @@ public class BuildtimeSegmentUtilities {
 
             nodePosMask = nextNodePosMask(nodePosMask);
 
-            if (node == segmentTip || !(NodeTypeEnums.isLeftTupleSource(node))) {
+            if (node == segmentTip || !(NodeTypeEnums.isBaseNode(node))) {
                 break;
             }
 
-            node = ((LeftTupleSource) node).getFirstLeftTupleSinkIgnoreRemoving(removingTn);
+            node = ((BaseNode) node).getFirstLeftTupleSinkIgnoreRemoving(removingTn);
         }
         smem.setAllLinkedMaskTest(allLinkedTestMask);
 

@@ -22,11 +22,23 @@ package org.drools.core;
  * Vol2 reactive from-node — stub pending vol2 reactive DataSource integration.
  * TODO #6650: implement vol2 ReactiveFromNode (DataSource change notification)
  */
-public class ReactiveFromNode extends FromNode<FromNode.FromMemory> {
+public class ReactiveFromNode extends FromNode<ReactiveFromNode.ReactiveFromMemory> {
 
     public ReactiveFromNode() { }
 
     public ReactiveFromNode(int id, int pathIndex, int objectIndex) {
         super(id, pathIndex, objectIndex);
+    }
+
+    @Override
+    public ReactiveFromMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
+        return new ReactiveFromMemory();
+    }
+
+    /**
+     * Memory for reactive from-node — listens to DataSource changes.
+     * TODO #6650: implement reactive memory once vol2 DataSource subscription is built.
+     */
+    public static class ReactiveFromMemory extends FromMemory {
     }
 }

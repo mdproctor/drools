@@ -34,7 +34,7 @@ public class EnqueuedSelfRemovalJobContext extends SelfRemovalJobContext {
         // PropagationEntry.AbstractPropagationEntry (drools-core phreak) not available in vol2.
         // Timer fires → must enqueue onto container's async queue, then execute:
         //   timerInstances.remove( jobContext.getJobHandle().getId() );
-        getReteEvaluator().addPropagation( reteEvaluator ->
-                timerInstances.remove( jobContext.getJobHandle().getId() ) );
+        final long id = jobContext.getJobHandle().getId();
+        getReteEvaluator().addPropagation( () -> timerInstances.remove(id) );
     }
 }

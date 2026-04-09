@@ -68,6 +68,9 @@ public class TupleToObjectNode extends BaseNode implements PathEndNode, MemoryFa
     @Override
     public BaseNode getStartLeftInput() { return startLeftInput; }
 
+    /** TODO #6650: PathMemSpec not yet implemented in vol2. */
+    public PathMemSpec getPathMemSpec() { return null; }
+
     /**
      * Subnetwork path memory — holds the PathMemory for a right sub-network in a bi-linear join.
      * TODO #6650: wire doLinkRule/doUnlinkRule once vol2 subnetwork propagation is built.

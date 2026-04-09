@@ -259,7 +259,7 @@ public class SlidingTimeWindow implements WindowFilter {
      * TODO: extend vol2 propagation base class once available (replaces
      *       PropagationEntry.AbstractPropagationEntry + WorkingMemoryAction from vol1)
      */
-    public static class WindowFilterExpireAction {
+    public static class WindowFilterExpireAction implements Runnable {
         protected WindowFilter filter;
         protected WindowFilterContext context;
         protected int nodeId;
@@ -274,6 +274,7 @@ public class SlidingTimeWindow implements WindowFilter {
             this.context = context;
         }
 
+        public void run() { }
         public void internalExecute(ReteEvaluator reteEvaluator) {
             this.filter.expireFacts(context, null, reteEvaluator);
         }

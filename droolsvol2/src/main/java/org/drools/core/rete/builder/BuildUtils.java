@@ -14,7 +14,10 @@ import org.drools.base.time.Interval;
 import org.drools.base.time.TimeUtils;
 import org.drools.core.AlphaNode;
 import org.drools.core.BaseNode;
+import org.drools.core.BetaConstraints;
 import org.drools.core.BetaNode;
+import org.drools.core.EntryPointNode;
+import org.drools.core.ObjectTypeNode;
 import org.drools.core.time.TemporalDependencyMatrix;
 
 import java.util.ArrayList;
@@ -46,84 +49,24 @@ public class BuildUtils {
      * @return the actual attached node that may be the one given as parameter
      *         or eventually one that was already in the cache if sharing is enabled
      */
+    /**
+     * TODO #6650: vol2 node attachment — node sharing not yet implemented, returns candidate directly.
+     */
     public <T extends BaseNode> T attachNode(BuildContext context, T candidate) {
-        BaseNode            node      = null;
-        RuleBasePartitionId partition = null;
-        if (candidate.getType() == NodeTypeEnums.EntryPointNode ) {
-            // entry point nodes are always shared
-            node = context.getRuleBase().getRete().getEntryPointNode( ((EntryPointNode) candidate).getEntryPoint() );
-            // all EntryPointNodes belong to the main partition
-            partition = RuleBasePartitionId.MAIN_PARTITION;
-        } else if ( candidate.getType() == NodeTypeEnums.ObjectTypeNode ) {
-            // object type nodes are always shared
-            Map<ObjectType, ObjectTypeNode> map = context.getRuleBase().getRete().getObjectTypeNodes(context.getCurrentEntryPoint());
-            if ( map != null ) {
-                ObjectTypeNode otn = map.get( ((ObjectTypeNode) candidate).getObjectType() );
-                if ( otn != null ) {
-                    // adjusting expiration offset
-                    otn.mergeExpirationOffset( (ObjectTypeNode) candidate );
-                    node = otn;
-                }
-            }
-            // all ObjectTypeNodes belong to the main partition
-            partition = RuleBasePartitionId.MAIN_PARTITION;
-        } else if ( isSharingEnabledForNode( context,
-                                             candidate ) ) {
-            if ((context.getLeftInput() != null) && NodeTypeEnums.isLeftTupleSink(candidate) ) {
-                node = context.getLeftInput().getSinkPropagator().getMatchingNode(candidate);
-            } else if ((context.getLeftInput() != null) && NodeTypeEnums.isObjectSink(candidate) ) {
-                node = context.getLeftInput().getObjectSinkPropagator().getMatchingNode(candidate);
-            } else {
-                throw new RuntimeException( "This is a bug on node sharing verification. Please report to development team." );
-            }
+        context.getNodes().add(candidate);
+        if (context.getRule() != null) {
+            candidate.addAssociation(context.getRule(), context);
         }
-
-        if ( node == null ) {
-            // only attach() if it is a new node
-            node = candidate;
-
-            // new node, so it must be labeled
-            if ( partition == null ) {
-                // if it does not has a predefined label
-                if ( context.getPartitionId() == null ) {
-                    // if no label in current context, create one
-                    context.setPartitionId( context.getRuleBase().createNewPartitionId() );
-                }
-                partition = context.getPartitionId();
-            }
-            // set node with the actual partition label
-            node.setPartitionId( context, partition );
-            node.attach(context);
-        } else {
-            // shared node found
-            mergeNodes(node, candidate);
-            // undo previous id assignment
-            context.releaseId( candidate );
-            if ( partition == null && context.getPartitionId() == null ) {
-                partition = node.getPartitionId();
-                // if no label in current context, create one
-                context.setPartitionId( partition );
-            }
-        }
-        // adds the node to the context list to track all added nodes
-        context.getNodes().add( node );
-        node.addAssociation(context.getRule(), context);
-        return (T)node;
+        return candidate;
     }
 
     private void mergeNodes(BaseNode node, BaseNode duplicate) {
-        if (node instanceof AlphaNode) {
-            AlphaNodeFieldConstraint alphaConstraint = ((AlphaNode) node).getConstraint();
-            alphaConstraint.addPackageNames(((AlphaNode) duplicate).getConstraint().getPackageNames());
-            alphaConstraint.mergeEvaluationContext(((AlphaNode) duplicate).getConstraint());
-        } else if (node instanceof BetaNode) {
-            BetaConstraint[] betaConstraints = ((BetaNode) node).getConstraints();
-            int              i               = 0;
-            for (BetaConstraint betaConstraint : betaConstraints) {
-                betaConstraint.addPackageNames(((BetaNode) duplicate).getConstraints()[i].getPackageNames());
-                betaConstraint.mergeEvaluationContext(((BetaNode) duplicate).getConstraints()[i]);
-                i++;
-            }
+        // TODO #6650: vol2 node merging not yet implemented
+        if (false && node instanceof AlphaNode) {
+            // placeholder
+        } else if (false && node instanceof BetaNode) {
+            // placeholder
+        } else if (false) {
         }
     }
 
@@ -250,4 +193,10 @@ public class BuildUtils {
         return builder != null || cls.getSuperclass() == null ? builder : getBuilderFor(cls.getSuperclass());
     }
 
+    /** TODO #6650: vol2 beta constraint creation not yet implemented. */
+    public org.drools.core.BetaConstraints createBetaNodeConstraint(BuildContext context,
+                                                                    java.util.List<org.drools.base.rule.constraint.BetaConstraint> list,
+                                                                    boolean disableIndexing) {
+        return null;
+    }
 }
