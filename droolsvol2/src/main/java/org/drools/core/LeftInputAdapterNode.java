@@ -9,6 +9,10 @@ public class LeftInputAdapterNode extends BaseNode implements MemoryFactory<Left
         super(0, 0, 0);
     }
 
+    public LeftInputAdapterNode(int id, int pathIndex, int objectIndex) {
+        super(id, pathIndex, objectIndex);
+    }
+
     @Override
     public LiaNodeMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
         return new LiaNodeMemory();
