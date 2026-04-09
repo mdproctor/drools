@@ -53,10 +53,12 @@ public class BuildContext implements RuleBuildContext {
 
     private final List<TerminalNode> terminals = new ArrayList<>();
 
-    // left input to attach next node to
+    // left input to attach next node to (tuple network)
     private BaseNode leftInput;
-    // right input to attach next node to
+    // right input to attach next node to (tuple network)
     private BaseNode rightInput;
+    // current node in the object network (alpha side: EntryPointNode → OTN → AlphaNode chain)
+    private BaseNode objectSource;
 
     // object type cache to check for cross products
     private List<Pattern> patterns;
@@ -152,6 +154,14 @@ public class BuildContext implements RuleBuildContext {
      */
     public void setRightInput(final BaseNode rightInput) {
         this.rightInput = rightInput;
+    }
+
+    public BaseNode getObjectSource() {
+        return this.objectSource;
+    }
+
+    public void setObjectSource(final BaseNode objectSource) {
+        this.objectSource = objectSource;
     }
 
     public List<Pattern> getPatterns() {

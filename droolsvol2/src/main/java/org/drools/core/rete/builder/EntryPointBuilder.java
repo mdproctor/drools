@@ -1,0 +1,57 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.drools.core.rete.builder;
+
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.RuleElement;
+import org.drools.core.CoreComponentFactory;
+import org.drools.core.EntryPointNode;
+
+/**
+ * Builds the entry point into the object network for a pattern.
+ * Vol2 simplified: the Rete root IS the default entry point node.
+ * Non-default entry points will need extension when multiple entry points are needed.
+ */
+public class EntryPointBuilder implements ReteooComponentBuilder {
+
+    @Override
+    public void build(BuildContext context, BuildUtils utils, RuleElement rce) {
+        final EntryPointId entry = (EntryPointId) rce;
+        context.setCurrentEntryPoint(entry);
+
+        EntryPointNode epn = context.getRuleBase().getRete();
+
+        if (epn == null) {
+            // create a new entry point node via factory
+            epn = ((DefaultNodeFactory) CoreComponentFactory.get().getNodeFactoryService())
+                    .buildEntryPointNode(context.getNextNodeId(),
+                                         context.getRuleBase().getRete(),
+                                         context);
+            context.setObjectSource(utils.attachNode(context, epn));
+        } else {
+            // use the existing root as object source for default entry point
+            context.setObjectSource(epn);
+        }
+    }
+
+    @Override
+    public boolean requiresLeftActivation(BuildUtils utils, RuleElement rce) {
+        return true;
+    }
+}

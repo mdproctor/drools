@@ -4,6 +4,7 @@ package org.drools.core.rete.builder;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.common.NetworkNode;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.EntryPointId;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.InvalidPatternException;
@@ -31,8 +32,8 @@ public class ReteBuilder {
         this.ruleBase = ruleBase;
         this.buildUtils = new BuildUtils();
 
-        this.buildUtils.addBuilder( GroupElement.class,
-                               new GroupElementBuilder() );
+        this.buildUtils.addBuilder( GroupElement.class,    new GroupElementBuilder() );
+        this.buildUtils.addBuilder( EntryPointId.class,   new EntryPointBuilder() );
     }
 
     public List<TerminalNode> addRule(RuleImpl rule) {
