@@ -20,11 +20,9 @@ package org.drools.core;
 
 import org.drools.base.rule.EntryPointId;
 import org.drools.base.time.JobHandle;
-//import org.drools.core.WorkingMemoryEntryPoint;
-//import org.drools.core.time.TimerService;
-//import org.drools.core.time.impl.DefaultJobHandle;
-import org.drools.core.util.LinkedList;
 import org.kie.api.runtime.rule.EventHandle;
+
+import java.util.LinkedList;
 
 public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHandle, Comparable<EventHandleImpl> {
 
@@ -40,7 +38,7 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
 
     private EventHandleImpl linkedFactHandle;
 
-    private final transient LinkedList<DefaultJobHandle> jobs = new LinkedList<>();
+    private final transient LinkedList<JobHandle> jobs = new LinkedList<>();
 
     public EventHandleImpl() {
         super();
@@ -64,16 +62,9 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
      * @param timestamp the timestamp of the occurrence of this event
      * @param duration the duration of this event. May be 0 (zero) in case this is a primitive event.
      */
-    public EventHandleImpl(long id,
-                           Object object,
-                           long recency,
-                           long timestamp,
-                           long duration,
-                           WorkingMemoryEntryPoint wmEntryPoint) {
-        super( id, object, recency, wmEntryPoint );
-        this.startTimestamp = timestamp;
-        this.duration = duration;
-    }
+    // WorkingMemoryEntryPoint constructor removed — vol1 concept, no vol2 equivalent
+    // public EventHandleImpl(long id, Object object, long recency, long timestamp,
+    //                        long duration, WorkingMemoryEntryPoint wmEntryPoint) { ... }
 
     protected EventHandleImpl(long id,
                               int identityHashCode,
@@ -263,13 +254,13 @@ public class EventHandleImpl<T> extends ObjectHandleImpl<T> implements EventHand
         return (getStartTimestamp() < e.getStartTimestamp()) ? -1 : (getStartTimestamp() == e.getStartTimestamp() ? 0 : 1);
     }
 
-    public void addJob(DefaultJobHandle job) {
+    public void addJob(JobHandle job) {
         synchronized (jobs) {
             jobs.add(job);
         }
     }
 
-    public void removeJob(DefaultJobHandle job) {
+    public void removeJob(JobHandle job) {
         synchronized (jobs) {
             // the job could have been already removed if the event has been just retracted
             // and then the unscheduleAllJobs method has been invoked concurrently
