@@ -25,8 +25,7 @@ import org.drools.base.rule.Declaration;
 import org.drools.base.time.JobHandle;
 import org.drools.base.time.Trigger;
 import org.drools.base.time.impl.Timer;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.rule.consequence.InternalMatch;
+// InternalWorkingMemory and InternalMatch are vol1 concepts — not used in vol2
 import org.kie.api.runtime.Calendars;
 
 import java.io.IOException;
@@ -72,12 +71,8 @@ public class CompositeMaxDurationTimer extends BaseTimer
     }
 
 
-    public Trigger createTrigger(InternalMatch item, InternalWorkingMemory wm) {
-        long timestamp = wm.getTimerService().getCurrentTime();
-        String[] calendarNames = item.getRule().getCalendars();
-        Calendars calendars = wm.getCalendars();
-        return createTrigger( getMaxTimestamp(item.getTuple(), timestamp), calendarNames, calendars );
-    }
+    // createTrigger(InternalMatch, InternalWorkingMemory) removed —
+    // InternalMatch (vol1 activation) and InternalWorkingMemory have no vol2 equivalent yet
 
     public Trigger createTrigger(long timestamp,
                                  BaseTuple leftTuple,

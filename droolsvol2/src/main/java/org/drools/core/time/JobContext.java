@@ -20,24 +20,19 @@ package org.drools.core.time;
 
 import org.drools.base.time.JobHandle;
 import org.drools.core.ReteEvaluator;
-import org.drools.core.common.InternalKnowledgeRuntime;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
 
 import java.io.Serializable;
-import java.util.Optional;
 
 public interface JobContext extends Serializable {
     /**
      * This method should only be called by the scheduler
-     */    
+     */
     void setJobHandle(JobHandle jobHandle);
 
     JobHandle getJobHandle();
 
     ReteEvaluator getReteEvaluator();
 
-    default Optional<InternalKnowledgeRuntime> getInternalKnowledgeRuntime() {
-        return getReteEvaluator() instanceof InternalWorkingMemory ? Optional.ofNullable(((InternalWorkingMemory)getReteEvaluator()).getKnowledgeRuntime()) : Optional.empty();
-    }
+    // getInternalKnowledgeRuntime() removed — InternalKnowledgeRuntime/InternalWorkingMemory
+    // are vol1 concepts with no vol2 equivalent
 }
