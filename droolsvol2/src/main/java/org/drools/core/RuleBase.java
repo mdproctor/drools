@@ -17,24 +17,24 @@ import java.util.Map;
 
 public class RuleBase<DS> {
 
-    private ReteBuilder reteBuilder;
+    private ReteBuilder    reteBuilder;
+    private EntryPointNode root;
 
     private Map<String, RulePackage> rulePackages;
 
-    private KieBaseConfiguration baseConf;
-
-    private RuleBaseConfiguration ruleBaseConf;
-
-    //private
+    private KieBaseConfiguration    baseConf;
+    private RuleBaseConfiguration   ruleBaseConf;
 
     public RuleBase() {
         this(RuleBaseConfigurationFactory.newKnowledgeBaseConfiguration());
     }
 
     public RuleBase(KieBaseConfiguration baseConf) {
-        reteBuilder = new ReteBuilder(this);
         this.baseConf = baseConf;
         this.ruleBaseConf = baseConf.as(RuleBaseConfiguration.KEY);
+        // Create the root entry point node (id=0, the Rete root)
+        this.root = new EntryPointNode(0, 0, 0);
+        reteBuilder = new ReteBuilder(this);
     }
 
     public <DS> void apply(ChangeSetBuilder<DS> changeSetBuilder) {
@@ -87,8 +87,8 @@ public class RuleBase<DS> {
         return reteBuilder;
     }
 
-    /** TODO #6650: vol2 Rete root node — not yet implemented */
-    public EntryPointNode getRete() { return null; }
+    /** Returns the Rete root (default entry point node). */
+    public EntryPointNode getRete() { return root; }
 
     /** TODO #6650: partition management not yet implemented in vol2 */
     public org.drools.base.common.RuleBasePartitionId createNewPartitionId() {
