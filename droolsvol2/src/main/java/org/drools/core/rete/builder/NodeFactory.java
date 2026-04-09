@@ -52,6 +52,7 @@ import org.drools.core.QueryElementNode;
 import org.drools.core.ReactiveFromNode;
 import org.drools.core.TerminalNode;
 import org.drools.core.TimerNode;
+import org.drools.core.TupleToObjectNode;
 import org.drools.core.WindowFilter;
 import org.drools.core.WindowNode;
 
