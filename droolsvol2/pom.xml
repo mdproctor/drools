@@ -194,6 +194,22 @@
       </plugin>
 
       <plugin>
+        <groupId>io.quarkiverse.permuplate</groupId>
+        <artifactId>quarkus-permuplate-maven-plugin</artifactId>
+        <version>${permuplate.version}</version>
+        <executions>
+          <execution>
+            <goals><goal>generate</goal></goals>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- Disable non-inline source scan — APT handles src/main/java/ templates.
+               The plugin only processes inline templates from src/main/permuplate/. -->
+          <sourceDirectory>${project.basedir}/src/main/permuplate-disabled</sourceDirectory>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>

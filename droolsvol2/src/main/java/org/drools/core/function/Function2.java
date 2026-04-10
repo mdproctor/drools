@@ -25,7 +25,7 @@ import io.quarkiverse.permuplate.PermuteTypeParam;
 
 import java.io.Serializable;
 
-@Permute(varName = "i", from = 3, to = 10, className = "Function${i}")
+@Permute(varName = "i", from = "3", to = "10", className = "Function${i}")
 public interface Function2<A, @PermuteTypeParam(varName = "j", from = "2", to = "${i}", name = "${alpha(j)}") B, R>
         extends Function, Serializable {
 

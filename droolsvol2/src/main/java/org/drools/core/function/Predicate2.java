@@ -26,7 +26,7 @@ import io.quarkiverse.permuplate.PermuteTypeParam;
 
 import java.io.Serializable;
 
-@Permute(varName = "i", from = 3, to = 10, className = "Predicate${i}")
+@Permute(varName = "i", from = "3", to = "10", className = "Predicate${i}")
 public interface Predicate2<A, @PermuteTypeParam(varName = "j", from = "2", to = "${i}", name = "${alpha(j)}") B>
         extends Predicate, Serializable {
 

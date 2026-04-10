@@ -25,7 +25,7 @@ import io.quarkiverse.permuplate.PermuteTypeParam;
 
 import java.io.Serializable;
 
-@Permute(varName = "i", from = 3, to = 10, className = "Consumer${i}")
+@Permute(varName = "i", from = "3", to = "10", className = "Consumer${i}")
 public interface Consumer2<A, @PermuteTypeParam(varName = "j", from = "2", to = "${i}", name = "${alpha(j)}") B>
         extends Consumer, Serializable {
 

@@ -142,7 +142,7 @@ public class RuleBuilderTest {
                .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
                .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
                .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
-        .filter( (ctx, b, c) -> c.getA().name() != c.getE().content());
+        .filter( (ctx, b, c) -> c.getA().name() != ((Page) c.get(4)).content());
 
     }
 
@@ -153,12 +153,12 @@ public class RuleBuilderTest {
                .<Room, Shelf>path3()
                .path( (ctx, l) -> l.rooms(), (ctx, r) -> r.name() != null)
                .path( (ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null)
-               .filter((ctx, a, t) -> a.name() != t.getC().name());
+               .filter((ctx, a, t) -> a.name() != ((Shelf) t.get(2)).name());
 
         builder.rule("rule1").<Library>params()
                .<Room>path2()
                .path( (ctx, a) -> a.rooms(), (ctx, b) -> b.name() != null)
-               .filter((ctx, a, t) -> a.name() != t.getB().name());
+               .filter((ctx, a, t) -> a.name() != ((Room) t.get(1)).name());
 
         builder.rule("rule1").from(Ctx::persons)
                .join(builder.from(Ctx::libraries))
@@ -166,7 +166,7 @@ public class RuleBuilderTest {
                .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
                .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
                .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
-               .filter( (ctx, p, c, d) -> p.age() <= d.getD().pages().size())
+               .filter( (ctx, p, c, d) -> p.age() <= ((Book) d.get(3)).pages().size())
                .filter( (ctx, p, c, d) -> p.age() <= d.<Path>as().book().pages().size());
 
     }

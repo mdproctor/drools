@@ -131,7 +131,7 @@ public class TupleAsTest {
         Tuple2 t  = new Tuple2("val1", "val2");
         RSize2 s2 = t.as();
         assertThat(s2.fld1()).isEqualTo(t.getA());
-        assertThat(s2.fld2()).isEqualTo(t.getB());
+        assertThat(s2.fld2()).isEqualTo(t.get(1));
     }
 
     @Test
@@ -139,7 +139,7 @@ public class TupleAsTest {
         Tuple2 t  = new Tuple2("val1", "val2");
         CSize2 s2 = t.as();
         assertThat(s2.getFld1()).isEqualTo(t.getA());
-        assertThat(s2.getFld2()).isEqualTo(t.getB());
+        assertThat(s2.getFld2()).isEqualTo(t.get(1));
     }
 
     @Test
@@ -147,8 +147,8 @@ public class TupleAsTest {
         Tuple3 t  = new Tuple3("val1", "val2", "val3");
         RSize3 s2 = t.as();
         assertThat(s2.fld1()).isEqualTo(t.getA());
-        assertThat(s2.fld2()).isEqualTo(t.getB());
-        assertThat(s2.fld3()).isEqualTo(t.getC());
+        assertThat(s2.fld2()).isEqualTo(t.get(1));
+        assertThat(s2.fld3()).isEqualTo(t.get(2));
     }
 
     @Test
@@ -156,8 +156,8 @@ public class TupleAsTest {
         Tuple3 t  = new Tuple3("val1", "val2", "val3");
         CSize3 s2 = t.as();
         assertThat(s2.getFld1()).isEqualTo(t.getA());
-        assertThat(s2.getFld2()).isEqualTo(t.getB());
-        assertThat(s2.getFld3()).isEqualTo(t.getC());
+        assertThat(s2.getFld2()).isEqualTo(t.get(1));
+        assertThat(s2.getFld3()).isEqualTo(t.get(2));
     }
 
     @Test
@@ -165,9 +165,9 @@ public class TupleAsTest {
         Tuple4 t  = new Tuple4("val1", "val2", "val3", "val4");
         RSize4 s2 = t.as();
         assertThat(s2.fld1()).isEqualTo(t.getA());
-        assertThat(s2.fld2()).isEqualTo(t.getB());
-        assertThat(s2.fld3()).isEqualTo(t.getC());
-        assertThat(s2.fld4()).isEqualTo(t.getD());
+        assertThat(s2.fld2()).isEqualTo(t.get(1));
+        assertThat(s2.fld3()).isEqualTo(t.get(2));
+        assertThat(s2.fld4()).isEqualTo(t.get(3));
     }
 
     @Test
@@ -175,9 +175,9 @@ public class TupleAsTest {
         Tuple4 t  = new Tuple4("val1", "val2", "val3", "val4");
         CSize4 s2 = t.as();
         assertThat(s2.getFld1()).isEqualTo(t.getA());
-        assertThat(s2.getFld2()).isEqualTo(t.getB());
-        assertThat(s2.getFld3()).isEqualTo(t.getC());
-        assertThat(s2.getFld4()).isEqualTo(t.getD());
+        assertThat(s2.getFld2()).isEqualTo(t.get(1));
+        assertThat(s2.getFld3()).isEqualTo(t.get(2));
+        assertThat(s2.getFld4()).isEqualTo(t.get(3));
     }
 
     @Test
@@ -185,10 +185,10 @@ public class TupleAsTest {
         Tuple5 t  = new Tuple5("val1", "val2", "val3", "val4","val5");
         RSize5 s2 = t.as();
         assertThat(s2.fld1()).isEqualTo(t.getA());
-        assertThat(s2.fld2()).isEqualTo(t.getB());
-        assertThat(s2.fld3()).isEqualTo(t.getC());
-        assertThat(s2.fld4()).isEqualTo(t.getD());
-        assertThat(s2.fld5()).isEqualTo(t.getE());
+        assertThat(s2.fld2()).isEqualTo(t.get(1));
+        assertThat(s2.fld3()).isEqualTo(t.get(2));
+        assertThat(s2.fld4()).isEqualTo(t.get(3));
+        assertThat(s2.fld5()).isEqualTo(t.get(4));
     }
 
     @Test
@@ -196,9 +196,9 @@ public class TupleAsTest {
         Tuple5 t  = new Tuple5("val1", "val2", "val3", "val4","val5");
         CSize5 s2 = t.as();
         assertThat(s2.getFld1()).isEqualTo(t.getA());
-        assertThat(s2.getFld2()).isEqualTo(t.getB());
-        assertThat(s2.getFld3()).isEqualTo(t.getC());
-        assertThat(s2.getFld4()).isEqualTo(t.getD());
-        assertThat(s2.getFld5()).isEqualTo(t.getE());
+        assertThat(s2.getFld2()).isEqualTo(t.get(1));
+        assertThat(s2.getFld3()).isEqualTo(t.get(2));
+        assertThat(s2.getFld4()).isEqualTo(t.get(3));
+        assertThat(s2.getFld5()).isEqualTo(t.get(4));
     }
 }
