@@ -16,7 +16,17 @@ public class ObjectTypeNode extends BaseNode {
     }
 
     public ObjectType getObjectType() { return objectType; }
-    public void setObjectType(ObjectType objectType) { this.objectType = objectType; }
+    public void setObjectType(ObjectType objectType) {
+        this.objectType = objectType;
+        this.hashcode = objectType.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        return objectType != null && objectType.equals(((ObjectTypeNode) obj).objectType);
+    }
 
     public long getExpirationOffset() { return expirationOffset; }
     public void setExpirationOffset(long expirationOffset) { this.expirationOffset = expirationOffset; }

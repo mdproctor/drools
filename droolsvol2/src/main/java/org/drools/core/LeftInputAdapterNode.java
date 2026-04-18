@@ -14,6 +14,21 @@ public class LeftInputAdapterNode extends BaseNode implements MemoryFactory<Left
     }
 
     @Override
+    public void setLeftInput(BaseNode leftInput) {
+        super.setLeftInput(leftInput);
+        this.hashcode = 31 * getClass().hashCode() + (leftInput != null ? leftInput.getId() : 0);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        LeftInputAdapterNode other = (LeftInputAdapterNode) obj;
+        return leftInput != null && other.leftInput != null
+               && leftInput.getId() == other.leftInput.getId();
+    }
+
+    @Override
     public LiaNodeMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
         return new LiaNodeMemory();
     }

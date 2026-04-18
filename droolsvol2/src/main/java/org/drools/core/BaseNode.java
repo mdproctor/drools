@@ -5,6 +5,8 @@ import org.drools.base.reteoo.BaseTerminalNode;
 import org.drools.core.rete.builder.BuildContext;
 import org.kie.api.definition.rule.Rule;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +29,8 @@ public abstract class BaseNode implements NetworkNode {
     protected int                        hashcode;
 
     protected BaseNode leftInput;
+
+    protected List<BaseNode> outputs = new ArrayList<>();
 
     public BaseNode() {
         this(0, 0, 0);
@@ -70,6 +74,9 @@ public abstract class BaseNode implements NetworkNode {
         return objectIndex;
     }
 
+    public List<BaseNode> getOutputs() { return outputs; }
+    public void addOutput(BaseNode node) { outputs.add(node); }
+
     public BaseNode getLeftInput() {
         return leftInput;
     }
@@ -99,23 +106,11 @@ public abstract class BaseNode implements NetworkNode {
     /** Vol2: leftInput is the parent — kept for compatibility with vol1 code paths. */
     public BaseNode getParent() { return leftInput; }
 
-    /** TODO #6650: vol2 sink propagation not yet implemented */
-    public LeftTupleSinkPropagator getSinkPropagator() { return null; }
-
-    /** TODO #6650: vol2 object sink propagation not yet implemented */
-    public LeftTupleSinkPropagator getObjectSinkPropagator() { return null; }
-
     /** TODO #6650: node attachment not yet implemented in vol2 */
     public void attach(org.drools.core.rete.builder.BuildContext context) { }
 
     /** Vol2: right-input passivity — returns false by default */
     public boolean isRightInputPassive() { return false; }
-
-    /** TODO #6650: first sink traversal not yet implemented in vol2 */
-    public BaseNode getFirstLeftTupleSinkIgnoreRemoving(TerminalNode removingTn) { return null; }
-
-    /** TODO #6650: vol2 uses arrays not linked-list sinks */
-    public BaseNode getNextLeftTupleSinkNode() { return null; }
 
     /**
      * Returns true in case the current node is in use (is referenced by any other node)

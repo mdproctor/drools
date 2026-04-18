@@ -245,7 +245,7 @@ public class BuildtimeSegmentUtilities {
                 break;
             }
 
-            node = ((BaseNode) node).getFirstLeftTupleSinkIgnoreRemoving(removingTn);
+            node = firstOutputIgnoringRemoving(node, removingTn);
         }
         smem.setAllLinkedMaskTest(allLinkedTestMask);
 
@@ -447,30 +447,36 @@ public class BuildtimeSegmentUtilities {
     }
 
     public static boolean isNonTerminalTipNode(BaseNode node, TerminalNode removingTN) {
-        LeftTupleSinkPropagator sinkPropagator = node.getSinkPropagator();
+        List<BaseNode> outputs = node.getOutputs();
 
         if (removingTN == null) {
-            return sinkPropagator.size() > 1;
+            return outputs.size() > 1;
         }
 
-        if (sinkPropagator.size() == 1) {
+        if (outputs.size() == 1) {
             return false;
         }
 
-        // we know the sink size is greater than 1 and that there is a removingRule that needs to be ignored.
         int count = 0;
-        for (BaseNode sink = sinkPropagator.getFirstLeftTupleSink(); sink != null; sink = (BaseNode)(Object)sink
-                .getNextLeftTupleSinkNode()) {
+        for (BaseNode sink : outputs) {
             if (sinkNotExclusivelyAssociatedWithTerminal(sink, removingTN)) {
                 count++;
                 if (count > 1) {
-                    // There is more than one sink that is not for the removing rule
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    private static BaseNode firstOutputIgnoringRemoving(BaseNode node, TerminalNode removingTn) {
+        for (BaseNode output : node.getOutputs()) {
+            if (removingTn == null || sinkNotExclusivelyAssociatedWithTerminal(output, removingTn)) {
+                return output;
+            }
+        }
+        return null;
     }
 
     public static boolean sinkNotExclusivelyAssociatedWithTerminal(BaseNode sink, TerminalNode removingTN) {

@@ -119,6 +119,9 @@ public class ReteBuilder {
     private TerminalNode buildTerminal(BuildContext ctx, GroupElement subrule, RuleImpl rule, BuildUtils buildUtils) {
         TerminalNode terminal = new TerminalNode(ctx.getNextNodeId(), ctx.getLeftInput(), ctx, rule, subrule, ctx.getSubRuleIndex());
         ctx.getNodes().add(terminal);
+        if (ctx.getLeftInput() != null) {
+            ctx.getLeftInput().addOutput(terminal);
+        }
         return terminal;
     }
 

@@ -49,10 +49,21 @@ public class BuildUtils {
      * @return the actual attached node that may be the one given as parameter
      *         or eventually one that was already in the cache if sharing is enabled
      */
-    /**
-     * TODO #6650: vol2 node attachment — node sharing not yet implemented, returns candidate directly.
-     */
     public <T extends BaseNode> T attachNode(BuildContext context, T candidate) {
+        BaseNode parent = candidate.getLeftInput();
+        if (parent != null) {
+            for (BaseNode existing : parent.getOutputs()) {
+                if (existing.equals(candidate)) {
+                    @SuppressWarnings("unchecked")
+                    T shared = (T) existing;
+                    if (context.getRule() != null) {
+                        shared.addAssociation(context.getRule(), context);
+                    }
+                    return shared;
+                }
+            }
+            parent.addOutput(candidate);
+        }
         context.getNodes().add(candidate);
         if (context.getRule() != null) {
             candidate.addAssociation(context.getRule(), context);

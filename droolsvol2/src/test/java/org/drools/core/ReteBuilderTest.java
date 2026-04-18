@@ -103,6 +103,26 @@ public class ReteBuilderTest {
     }
 
     @Test
+    public void testNodeSharingReusesObjectTypeNodeAndLia() {
+        RuleImpl r1 = ruleWithPattern("r1", Person.class);
+        RuleImpl r2 = ruleWithPattern("r2", Person.class);
+
+        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
+        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
+
+        BaseNode lia1 = t1.get(0).getLeftInput();
+        BaseNode lia2 = t2.get(0).getLeftInput();
+        assertThat(lia1).isSameAs(lia2);
+
+        BaseNode otn1 = lia1.getLeftInput();
+        BaseNode otn2 = lia2.getLeftInput();
+        assertThat(otn1).isSameAs(otn2);
+
+        // shared LIA should have both terminals as outputs
+        assertThat(lia1.getOutputs()).contains(t1.get(0), t2.get(0));
+    }
+
+    @Test
     public void testDifferentPatternTypesBuildSeparateObjectTypeNodes() {
         RuleImpl r1 = ruleWithPattern("r1", Person.class);
         RuleImpl r2 = ruleWithPattern("r2", String.class);
