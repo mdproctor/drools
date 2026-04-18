@@ -7,7 +7,11 @@ import io.quarkiverse.permuplate.PermuteReturn;
 import io.quarkiverse.permuplate.PermuteTypeParam;
 
 import org.drools.api.data.DataSource;
+import org.drools.base.base.ClassObjectType;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.GroupElementFactory;
+import org.drools.base.rule.Pattern;
 import org.drools.core.RuleExtendsPoint.RuleExtendsPoint2;
 import org.drools.core.RuleExtendsPoint.RuleExtendsPoint3;
 import org.drools.core.RuleExtendsPoint.RuleExtendsPoint4;
@@ -27,6 +31,9 @@ import org.drools.core.function.BaseTuple.Tuple5;
 import org.drools.core.function.BaseTuple.Tuple6;
 import org.kie.api.definition.rule.Rule;
 
+import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +49,7 @@ public class RuleBuilder<DS> {
 
     public ParametersFirst<Void, DS> rule(String ruleName) {
         rule = new RuleImpl(ruleName);
+        ((RuleImpl) rule).setLhs(GroupElementFactory.newAndInstance());
         return new ParametersFirst<>(null, rule);
     }
 
@@ -72,6 +80,26 @@ public class RuleBuilder<DS> {
 
         public END end() {
             return end;
+        }
+
+        protected void addPattern(Class<?> cls) {
+            GroupElement lhs = ((RuleImpl) rule).getBody();
+            lhs.addChild(new Pattern(lhs.getNestedElements().size(), new ClassObjectType(cls)));
+        }
+
+        @SuppressWarnings("unchecked")
+        protected static <DS, T> Class<T> extractElementType(Function1<DS, DataSource<T>> f) {
+            try {
+                Method writeReplace = f.getClass().getDeclaredMethod("writeReplace");
+                writeReplace.setAccessible(true);
+                SerializedLambda sl = (SerializedLambda) writeReplace.invoke(f);
+                Class<?> declaring = Class.forName(sl.getImplClass().replace('/', '.'));
+                Method m = declaring.getMethod(sl.getImplMethodName());
+                ParameterizedType returnType = (ParameterizedType) m.getGenericReturnType();
+                return (Class<T>) returnType.getActualTypeArguments()[0];
+            } catch (Exception e) {
+                throw new RuntimeException("from()/join() requires a method reference (e.g. DS::persons)", e);
+            }
         }
     }
 
@@ -131,8 +159,9 @@ public class RuleBuilder<DS> {
             return new From1First<>(end(), rule);
         }
 
-        public <T> From1First<Void, DS, T> from(Function1<DS, DataSource<T>> f) {
-            return new From1First<>(null, rule);
+        public <T> From1First<END, DS, T> from(Function1<DS, DataSource<T>> f) {
+            addPattern(extractElementType(f));
+            return new From1First<>(end(), rule);
         }
 
         public <T> From1First<Void, DS, T> from(From1First<?, DS, T> f) {
@@ -216,6 +245,7 @@ public class RuleBuilder<DS> {
         }
 
         public <C> Join2First<END, DS, B, C> join(Function1<DS, DataSource<C>> fromC) {
+            addPattern(extractElementType(fromC));
             return new Join2First<>(end(), rule);
         }
 
@@ -351,6 +381,7 @@ public class RuleBuilder<DS> {
 
         @PermuteReturn(className = "Join${i+1}First", typeArgs = "'END, DS, ' + typeArgList(2, i+1, 'alpha') + ', T'", when = "i + 1 <= 10")
         public <T> Join3First<END, DS, B, C, T> join(Function1<DS, DataSource<T>> fromT) {
+            addPattern(extractElementType(fromT));
             return new @PermuteDeclr(type = "Join${i+1}First") Join3First<>(end(), rule);
         }
 

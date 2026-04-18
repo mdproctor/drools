@@ -1,5 +1,6 @@
 package org.drools.core;
 
+import org.drools.api.data.DataStore;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ValueResolver;
 import org.drools.base.definitions.rule.impl.RuleImpl;
@@ -321,6 +322,51 @@ public class ReteBuilderTest {
         JoinNode joinNode = (JoinNode) terminals.get(0).getLeftInput();
         assertThat(joinNode.getConstraints()).isNotNull();
         assertThat(joinNode.getConstraints().getConstraints()).isEmpty();
+    }
+
+    // --- DSL-based tests ---
+
+    record TestDS(DataStore<Person> persons, DataStore<String> names) {}
+
+    @Test
+    public void testDslSinglePattern() {
+        RuleImpl rule = (RuleImpl) new RuleBuilder<TestDS>().rule("r1").from(TestDS::persons).build();
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        assertThat(terminals).hasSize(1);
+        BaseNode lia = terminals.get(0).getLeftInput();
+        assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
+        ObjectTypeNode otn = (ObjectTypeNode) lia.getLeftInput();
+        assertThat(((ClassObjectType) otn.getObjectType()).getClassType()).isEqualTo(Person.class);
+    }
+
+    @Test
+    public void testDslTwoPatternJoin() {
+        RuleImpl rule = (RuleImpl) new RuleBuilder<TestDS>().rule("r1")
+                .from(TestDS::persons).join(TestDS::names).build();
+
+        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+
+        assertThat(terminals).hasSize(1);
+        BaseNode join = terminals.get(0).getLeftInput();
+        assertThat(join).isInstanceOf(JoinNode.class);
+        ObjectTypeNode leftOtn = (ObjectTypeNode) join.getLeftInput().getLeftInput();
+        assertThat(((ClassObjectType) leftOtn.getObjectType()).getClassType()).isEqualTo(Person.class);
+        ObjectTypeNode rightOtn = (ObjectTypeNode) ((JoinNode) join).getRightInput();
+        assertThat(((ClassObjectType) rightOtn.getObjectType()).getClassType()).isEqualTo(String.class);
+    }
+
+    @Test
+    public void testDslNodeSharingAcrossRules() {
+        RuleBuilder<TestDS> builder = new RuleBuilder<>();
+        RuleImpl r1 = (RuleImpl) builder.rule("r1").from(TestDS::persons).build();
+        RuleImpl r2 = (RuleImpl) builder.rule("r2").from(TestDS::persons).build();
+
+        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
+        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
+
+        assertThat(t1.get(0).getLeftInput()).isSameAs(t2.get(0).getLeftInput());
     }
 
     /** Minimal AlphaNodeFieldConstraint for use in tests. */
