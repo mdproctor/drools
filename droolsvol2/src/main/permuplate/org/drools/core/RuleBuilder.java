@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class RuleBuilder<DS> {
 
@@ -65,9 +66,32 @@ public class RuleBuilder<DS> {
     // Base
     // -------------------------------------------------------------------------
 
+    /** Carries the evaluation-ready state for one rule: ordered source refs and the consequence. */
+    public static class RuleDescriptor<DS> {
+        private final RuleImpl rule;
+        private final List<Function1<DS, DataSource<?>>> sources;
+        private final Object consequence;
+
+        @SuppressWarnings("unchecked")
+        RuleDescriptor(Rule rule) {
+            this.rule = (RuleImpl) rule;
+            Object[] state = BaseRuleBuilder.RULE_STATE.getOrDefault(rule, new Object[]{new ArrayList<>(), null});
+            this.sources = (List<Function1<DS, DataSource<?>>>) state[0];
+            this.consequence = state[1];
+        }
+
+        public RuleImpl getRule()                               { return rule; }
+        public List<Function1<DS, DataSource<?>>> getSources()  { return sources; }
+        public Object getConsequence()                          { return consequence; }
+    }
+
     public static class BaseRuleBuilder<END> {
         private END end;
         protected Rule rule;
+
+        // Keyed by RuleImpl identity (==); cleared once descriptor() is called
+        @SuppressWarnings("rawtypes")
+        static final IdentityHashMap<Rule, Object[]> RULE_STATE = new IdentityHashMap<>();
 
         public BaseRuleBuilder(END end, Rule rule) {
             this.end = end;
@@ -80,6 +104,23 @@ public class RuleBuilder<DS> {
 
         public END end() {
             return end;
+        }
+
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        protected void storePatternSource(Function1 f) {
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> new Object[]{new ArrayList<>(), null});
+            ((List) state[0]).add(f);
+        }
+
+        protected void storeConsequence(Object c) {
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> new Object[]{new ArrayList<>(), null});
+            state[1] = c;
+        }
+
+        public <DS> RuleDescriptor<DS> descriptor() {
+            RuleDescriptor<DS> desc = new RuleDescriptor<>(rule);
+            RULE_STATE.remove(rule);
+            return desc;
         }
 
         protected void addPattern(Class<?> cls) {
@@ -161,6 +202,7 @@ public class RuleBuilder<DS> {
 
         public <T> From1First<END, DS, T> from(Function1<DS, DataSource<T>> f) {
             addPattern(extractElementType(f));
+            storePatternSource(f);
             return new From1First<>(end(), rule);
         }
 
@@ -246,6 +288,7 @@ public class RuleBuilder<DS> {
 
         public <C> Join2First<END, DS, B, C> join(Function1<DS, DataSource<C>> fromC) {
             addPattern(extractElementType(fromC));
+            storePatternSource(fromC);
             return new Join2First<>(end(), rule);
         }
 
@@ -266,6 +309,7 @@ public class RuleBuilder<DS> {
         }
 
         public From1First<END, DS, B> ifn(Consumer2<Context<DS>, B> fn2) {
+            storeConsequence(fn2);
             return this;
         }
 
@@ -382,6 +426,7 @@ public class RuleBuilder<DS> {
         @PermuteReturn(className = "Join${i+1}First", typeArgs = "'END, DS, ' + typeArgList(2, i+1, 'alpha') + ', T'", when = "i + 1 <= 10")
         public <T> Join3First<END, DS, B, C, T> join(Function1<DS, DataSource<T>> fromT) {
             addPattern(extractElementType(fromT));
+            storePatternSource(fromT);
             return new @PermuteDeclr(type = "Join${i+1}First") Join3First<>(end(), rule);
         }
 
@@ -403,6 +448,7 @@ public class RuleBuilder<DS> {
                 @PermuteDeclr(type = "Consumer${i+1}<Context<DS>, ${typeArgList(2, i+1, 'alpha')}>",
                         name = "fn${i+1}")
                 Consumer3<Context<DS>, B, C> fn3) {
+            storeConsequence(fn3);
             return this;
         }
 

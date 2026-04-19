@@ -3,6 +3,9 @@ package org.drools.core;
 import org.drools.api.data.DataProcessor;
 import org.drools.api.data.DataStore;
 import org.drools.api.data.ObjectHandle;
+import org.drools.core.RuleBuilder.RuleDescriptor;
+import org.drools.core.function.Consumer2;
+import org.drools.core.function.Consumer3;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -19,6 +22,35 @@ public class RuleProapgationAndExecutionTest {
 
     record DS1(DataStore<Person> persons) {}
     record DS2(DataStore<Person> persons, DataStore<String> names) {}
+
+    // --- DSL descriptor stores function refs and consequence ---
+
+    @Test
+    public void testDescriptorStoresSourcesAndConsequence() {
+        List<String> fired = new ArrayList<>();
+        RuleDescriptor<DS1> desc = new RuleBuilder<DS1>()
+                .rule("r1")
+                .from(DS1::persons)
+                .ifn((ctx, p) -> fired.add(p.name()))
+                .descriptor();
+
+        assertThat(desc.getSources()).hasSize(1);
+        assertThat(desc.getConsequence()).isInstanceOf(Consumer2.class);
+    }
+
+    @Test
+    public void testDescriptorJoinStoresSourcesAndConsequence() {
+        List<String> fired = new ArrayList<>();
+        RuleDescriptor<DS2> desc = new RuleBuilder<DS2>()
+                .rule("r1")
+                .from(DS2::persons)
+                .join(DS2::names)
+                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))
+                .descriptor();
+
+        assertThat(desc.getSources()).hasSize(2);
+        assertThat(desc.getConsequence()).isInstanceOf(Consumer3.class);
+    }
 
     // --- Consequence-only rule (no join) ---
 
