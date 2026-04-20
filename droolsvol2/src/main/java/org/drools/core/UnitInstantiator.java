@@ -16,7 +16,7 @@ public class UnitInstantiator<CTX> {
         this.ruleBase = ruleBase;
     }
 
-    public static <CTX> UnitInstantiator<CTX> from(RuleBase<?> ruleBase) {
+    public static <CTX> UnitInstantiator<CTX> from(RuleBase<CTX> ruleBase) {
         return new UnitInstantiator<>(ruleBase);
     }
 

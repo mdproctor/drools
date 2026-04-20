@@ -37,7 +37,9 @@ public class PropagatingDataStore<T> extends AbstractDataSource<T> implements Da
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void update(ObjectHandle<T> dh, T object) {
+        ((ObjectHandleImpl<T>) dh).setObject(object);
         subscribers.forEach(s -> s.update(ctx, dh));
     }
 

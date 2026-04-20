@@ -66,23 +66,37 @@ public class RuleBuilder<CTX> {
     // Base
     // -------------------------------------------------------------------------
 
-    /** Carries the evaluation-ready state for one rule: ordered source refs and the consequence. */
+    record ImmediateHead(Object consumer) {}
+    record DeferredHead(Object consumer)  {}
+
+    /** Carries the evaluation-ready state for one rule: ordered source refs and the head (ifn/fn). */
     public static class RuleDescriptor<CTX> {
         private final RuleImpl rule;
         private final List<Function1<CTX, DataSource<?>>> sources;
-        private final Object head;
+        private final List<Object> filters;
+        private final Object wrappedHead;
 
         @SuppressWarnings("unchecked")
         RuleDescriptor(Rule rule) {
             this.rule = (RuleImpl) rule;
-            Object[] state = BaseRuleBuilder.RULE_STATE.getOrDefault(rule, new Object[]{new ArrayList<>(), null});
-            this.sources = (List<Function1<CTX, DataSource<?>>>) state[0];
-            this.head = state[1];
+            Object[] state = BaseRuleBuilder.RULE_STATE.getOrDefault(rule,
+                    new Object[]{new ArrayList<>(), null, new ArrayList<>()});
+            this.sources     = (List<Function1<CTX, DataSource<?>>>) state[0];
+            this.wrappedHead = state[1];
+            this.filters     = (List<Object>) state[2];
         }
 
         public RuleImpl getRule()                               { return rule; }
-        public List<Function1<CTX, DataSource<?>>> getSources()  { return sources; }
-        public Object getHead()                          { return head; }
+        public List<Function1<CTX, DataSource<?>>> getSources() { return sources; }
+        public List<Object> getFilters()                        { return filters; }
+        public boolean isImmediate()                            { return !(wrappedHead instanceof DeferredHead); }
+
+        /** Returns the raw consumer (unwrapped). */
+        public Object getHead() {
+            if (wrappedHead instanceof ImmediateHead ih) return ih.consumer();
+            if (wrappedHead instanceof DeferredHead  dh) return dh.consumer();
+            return wrappedHead;
+        }
     }
 
     public static class BaseRuleBuilder<END> {
@@ -92,6 +106,10 @@ public class RuleBuilder<CTX> {
         // Keyed by RuleImpl identity (==); cleared once descriptor() is called
         @SuppressWarnings("rawtypes")
         static final IdentityHashMap<Rule, Object[]> RULE_STATE = new IdentityHashMap<>();
+
+        private static Object[] newState() {
+            return new Object[]{new ArrayList<>(), null, new ArrayList<>()};
+        }
 
         public BaseRuleBuilder(END end, Rule rule) {
             this.end = end;
@@ -108,13 +126,26 @@ public class RuleBuilder<CTX> {
 
         @SuppressWarnings({"unchecked", "rawtypes"})
         protected void storePatternSource(Function1 f) {
-            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> new Object[]{new ArrayList<>(), null});
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
             ((List) state[0]).add(f);
+            ((List) state[2]).add(null); // no filter for this source initially
         }
 
         protected void storeHead(Object c) {
-            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> new Object[]{new ArrayList<>(), null});
-            state[1] = c;
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
+            state[1] = new ImmediateHead(c);
+        }
+
+        protected void storeFnHead(Object c) {
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
+            state[1] = new DeferredHead(c);
+        }
+
+        @SuppressWarnings("rawtypes")
+        protected void storeFilter(Object pred) {
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
+            List filters = (List) state[2];
+            if (!filters.isEmpty()) filters.set(filters.size() - 1, pred);
         }
 
         public <CTX> RuleDescriptor<CTX> descriptor() {
@@ -279,6 +310,7 @@ public class RuleBuilder<CTX> {
         }
 
         public From1First<END, CTX, B> filter(Predicate2<Context<CTX>, B> prd2) {
+            storeFilter(prd2);
             return this;
         }
 
@@ -313,7 +345,9 @@ public class RuleBuilder<CTX> {
             return this;
         }
 
-        public void fn(Consumer2<Context<CTX>, B> fn2) {
+        public From1First<END, CTX, B> fn(Consumer2<Context<CTX>, B> fn2) {
+            storeFnHead(fn2);
+            return this;
         }
 
         <PB, PC, PD, PE, PF> Path6<Join2First<END, CTX, B, Tuple6<B, PB, PC, PD, PE, PF>>, Tuple6<B, PB, PC, PD, PE, PF>, B, PB, PC, PD, PE, PF> path6() {
@@ -357,6 +391,7 @@ public class RuleBuilder<CTX> {
         public Join2First<END, CTX, B, C> filter(
                 @PermuteDeclr(type = "Predicate2<Context<CTX>, ${alpha(i+1)}>")
                 Predicate2<Context<CTX>, C> predicate2) {
+            storeFilter(predicate2);
             return this;
         }
 
@@ -452,12 +487,12 @@ public class RuleBuilder<CTX> {
             return this;
         }
 
-        // fn() returns BaseRuleBuilder — not in allGeneratedNames, use when to control boundary
-        @PermuteReturn(className = "BaseRuleBuilder", typeArgs = "'END'", when = "i + 1 <= 10")
-        public BaseRuleBuilder<END> fn(
+        @PermuteReturn(className = "Join${i}Second", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
+        public Join2Second<END, CTX, B, C> fn(
                 @PermuteDeclr(type = "Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>",
                         name = "fn${i+1}")
                 Consumer3<Context<CTX>, B, C> fn3) {
+            storeFnHead(fn3);
             return this;
         }
 
