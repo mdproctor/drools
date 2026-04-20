@@ -16,14 +16,14 @@ public class JoinMemoryTest {
 
     @Test
     public void testStartsEmpty() {
-        JoinMemory mem = new UnitMemories().getOrCreateJoinMemory(1);
+        JoinMemory mem = new SimpleNodeMemories().getNodeMemory(new JoinNode(1, 0, 0));
         assertThat(mem.getLeftHandles()).isEmpty();
         assertThat(mem.getRightHandles()).isEmpty();
     }
 
     @Test
     public void testAddLeft() {
-        JoinMemory mem = new UnitMemories().getOrCreateJoinMemory(1);
+        JoinMemory mem = new SimpleNodeMemories().getNodeMemory(new JoinNode(1, 0, 0));
         ObjectHandle<Person> h = handle("Darth");
         mem.addLeft(h);
         assertThat(mem.getLeftHandles()).containsExactly(h);
@@ -32,7 +32,7 @@ public class JoinMemoryTest {
 
     @Test
     public void testAddRight() {
-        JoinMemory mem = new UnitMemories().getOrCreateJoinMemory(1);
+        JoinMemory mem = new SimpleNodeMemories().getNodeMemory(new JoinNode(1, 0, 0));
         ObjectHandle<Person> h = handle("Darth");
         mem.addRight(h);
         assertThat(mem.getRightHandles()).containsExactly(h);
@@ -41,7 +41,7 @@ public class JoinMemoryTest {
 
     @Test
     public void testRemoveLeft() {
-        JoinMemory mem = new UnitMemories().getOrCreateJoinMemory(1);
+        JoinMemory mem = new SimpleNodeMemories().getNodeMemory(new JoinNode(1, 0, 0));
         ObjectHandle<Person> h1 = handle("Darth");
         ObjectHandle<Person> h2 = handle("Luke");
         mem.addLeft(h1);
@@ -52,7 +52,7 @@ public class JoinMemoryTest {
 
     @Test
     public void testRemoveRight() {
-        JoinMemory mem = new UnitMemories().getOrCreateJoinMemory(1);
+        JoinMemory mem = new SimpleNodeMemories().getNodeMemory(new JoinNode(1, 0, 0));
         ObjectHandle<Person> h1 = handle("Darth");
         ObjectHandle<Person> h2 = handle("Luke");
         mem.addRight(h1);

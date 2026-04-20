@@ -149,7 +149,7 @@ public class RuleProapgationAndExecutionTest {
         // JoinMemory in NodeMemories must be keyed by the JoinNode's id from the topology
         int joinNodeId = findJoinNodeId(ruleBase);
         assertThat(joinNodeId).isGreaterThan(0);
-        JoinMemory mem = ui.getUnitMemories().getOrCreateJoinMemory(joinNodeId);
+        JoinMemory mem = ui.getNodeMemories().getNodeMemory(findJoinNode(ruleBase));
         assertThat(mem.getNodeId()).isEqualTo(joinNodeId);
 
         persons.add(new Person("Darth", 100, "London"));
@@ -157,18 +157,25 @@ public class RuleProapgationAndExecutionTest {
         assertThat(mem.getLeftHandles()).hasSize(1);
     }
 
-    private int findJoinNodeId(RuleBase<?> ruleBase) {
-        return findJoinNodeId(ruleBase.getRete());
+    private JoinNode findJoinNode(RuleBase<?> ruleBase) {
+        return findJoinNode(ruleBase.getRete());
     }
 
-    private int findJoinNodeId(BaseNode node) {
-        if (node instanceof JoinNode) return node.getId();
+    private JoinNode findJoinNode(BaseNode node) {
+        if (node instanceof JoinNode jn) return jn;
         for (BaseNode out : node.getOutputs()) {
-            int id = findJoinNodeId(out);
-            if (id > 0) return id;
+            JoinNode found = findJoinNode(out);
+            if (found != null) return found;
         }
-        return -1;
+        return null;
     }
+
+    private int findJoinNodeId(RuleBase<?> ruleBase) {
+        JoinNode jn = findJoinNode(ruleBase);
+        return jn != null ? jn.getId() : -1;
+    }
+
+
 
     // --- Step 2: update and remove ---
 

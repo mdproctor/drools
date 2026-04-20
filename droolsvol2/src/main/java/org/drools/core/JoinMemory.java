@@ -1,18 +1,22 @@
 package org.drools.core;
 
 import org.drools.api.data.ObjectHandle;
+import org.drools.core.util.AbstractDoubleLinkedNode;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Combined left/right beta memory for one JoinNode, per UnitInstance.
- * Keyed by JoinNode.id in UnitMemories.
+ * Keyed by JoinNode.memoryId (= JoinNode.id) in NodeMemories.
  */
-public class JoinMemory {
+public class JoinMemory extends AbstractDoubleLinkedNode<Memory> implements Memory {
 
     private final int nodeId;
     private final List<ObjectHandle<?>> leftHandles  = new ArrayList<>();
     private final List<ObjectHandle<?>> rightHandles = new ArrayList<>();
+
+    private SegmentMemory segmentMemory;
 
     public JoinMemory(int nodeId) {
         this.nodeId = nodeId;
@@ -27,4 +31,9 @@ public class JoinMemory {
 
     public List<ObjectHandle<?>> getLeftHandles()  { return leftHandles; }
     public List<ObjectHandle<?>> getRightHandles() { return rightHandles; }
+
+    @Override public int getNodeType()                          { return 0; }
+    @Override public SegmentMemory getSegmentMemory()           { return segmentMemory; }
+    @Override public void setSegmentMemory(SegmentMemory sm)    { this.segmentMemory = sm; }
+    @Override public void reset() { leftHandles.clear(); rightHandles.clear(); }
 }

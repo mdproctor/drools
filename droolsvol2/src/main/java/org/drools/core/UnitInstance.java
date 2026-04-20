@@ -16,7 +16,7 @@ import java.util.List;
  * Vol2 equivalent of WorkingMemory + Agenda.
  * All rule evaluations for a unit happen within one UnitInstance.
  *
- * Uses UnitMemories (array-backed, keyed by node ID) for beta state.
+ * Uses NodeMemories (array-backed, keyed by node ID) for beta state.
  * JoinLeftInlet / JoinRightInlet are the named concrete DataProcessors
  * attached to their host JoinNode via the Rete topology.
  */
@@ -25,7 +25,7 @@ public class UnitInstance<CTX> {
     private final Router<CTX> router;
     private final ContextPojoDS<CTX> context;
     private final Agenda agenda = new Agenda();
-    private final UnitMemories unitMemories = new UnitMemories();
+    private final NodeMemories nodeMemories = new SimpleNodeMemories();
     private final EntryPointNode rete;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -73,7 +73,7 @@ public class UnitInstance<CTX> {
         agenda.drain();
     }
 
-    public UnitMemories getUnitMemories() { return unitMemories; }
+    public NodeMemories getNodeMemories() { return nodeMemories; }
 
     // --- Internal wiring ---
 
@@ -100,8 +100,8 @@ public class UnitInstance<CTX> {
             Object filter0 = filters.size() > 0 ? filters.get(0) : null;
             Object filter1 = filters.size() > 1 ? filters.get(1) : null;
 
-            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, unitMemories, consumer, immediate, agenda), filter0);
-            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, unitMemories, consumer, immediate, agenda), filter1);
+            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, nodeMemories, consumer, immediate, agenda), filter0);
+            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, consumer, immediate, agenda), filter1);
 
         } else {
             throw new UnsupportedOperationException("Rules with " + sources.size() + " patterns not yet supported");
