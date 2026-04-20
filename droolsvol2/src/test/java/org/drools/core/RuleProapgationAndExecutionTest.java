@@ -6,6 +6,7 @@ import org.drools.api.data.ObjectHandle;
 import org.drools.core.RuleBuilder.RuleDescriptor;
 import org.drools.core.function.Consumer2;
 import org.drools.core.function.Consumer3;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -50,6 +51,81 @@ public class RuleProapgationAndExecutionTest {
 
         assertThat(desc.getSources()).hasSize(2);
         assertThat(desc.getConsequence()).isInstanceOf(Consumer3.class);
+    }
+
+    // --- Full flow: RuleBase → UnitDescriptor → UnitInstance ---
+
+    @Test
+    public void testRuleBaseJoinViaUnitDescriptor() {
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        DS2 ds = new DS2(persons, names);
+
+        RuleBase<DS2> ruleBase = new RuleBase<>();
+        RuleBuilder<DS2> builder = new RuleBuilder<>();
+
+        List<String> fired = new ArrayList<>();
+        RuleBaseModifier.with(ruleBase)
+                        .apply(RuleBaseModifier.changeSet()
+                                               .selectPackage("org.domain").selectUnit("Unit1")
+                                               .add(builder.rule("r1")
+                                                           .from(DS2::persons)
+                                                           .join(DS2::names)
+                                                           .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ds);
+
+        persons.add(new Person("Darth", 100, "London"));
+        assertThat(fired).isEmpty();
+
+        names.add("Vader");
+        assertThat(fired).containsExactly("Darth:Vader");
+    }
+
+    // --- UnitInstance end-to-end via DSL ---
+
+    @Test
+    public void testUnitInstanceSinglePattern() {
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        DS1 ds = new DS1(persons);
+
+        List<String> fired = new ArrayList<>();
+        RuleDescriptor<DS1> desc = new RuleBuilder<DS1>()
+                .rule("r1")
+                .from(DS1::persons)
+                .ifn((ctx, p) -> fired.add(p.name()))
+                .descriptor();
+
+        new UnitInstance<>(ds, desc);
+
+        persons.add(new Person("Darth", 100, "London"));
+        assertThat(fired).containsExactly("Darth");
+
+        persons.add(new Person("Yoda", 900, "Dagobah"));
+        assertThat(fired).containsExactly("Darth", "Yoda");
+    }
+
+    @Test
+    public void testUnitInstanceTwoPatternJoin() {
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        DS2 ds = new DS2(persons, names);
+
+        List<String> fired = new ArrayList<>();
+        RuleDescriptor<DS2> desc = new RuleBuilder<DS2>()
+                .rule("r1")
+                .from(DS2::persons)
+                .join(DS2::names)
+                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))
+                .descriptor();
+
+        new UnitInstance<>(ds, desc);
+
+        persons.add(new Person("Darth", 100, "London"));
+        assertThat(fired).isEmpty();
+
+        names.add("Vader");
+        assertThat(fired).containsExactly("Darth:Vader");
     }
 
     // --- Consequence-only rule (no join) ---

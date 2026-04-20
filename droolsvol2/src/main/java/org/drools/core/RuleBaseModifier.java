@@ -1,10 +1,13 @@
 package org.drools.core;
 
 import org.drools.core.RuleBuilder.BaseRuleBuilder;
+import org.drools.core.RuleBuilder.RuleDescriptor;
 import org.kie.api.definition.rule.Rule;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -124,9 +127,10 @@ public class RuleBaseModifier {
     }
 
     public static class RuleUnitChangeSet<DS> implements ChangeSetBuilder<DS>  {
-        private RulePackageChangeSet<DS> packageChangeSet;
-        private Map<String, Rule>        added   = new HashMap<String, Rule>();
-        private Set<String>          removed = new HashSet<>();
+        private RulePackageChangeSet<DS>         packageChangeSet;
+        private Map<String, Rule>                added       = new HashMap<>();
+        private List<RuleDescriptor<DS>>         descriptors = new ArrayList<>();
+        private Set<String>                      removed     = new HashSet<>();
 
         public RuleUnitChangeSet(RulePackageChangeSet<DS> packageChangeSet) {
             this.packageChangeSet = packageChangeSet;
@@ -143,6 +147,8 @@ public class RuleBaseModifier {
         public RuleUnitChangeSet<DS> add(BaseRuleBuilder builder) {
             Rule rule = builder.build();
             added.put(rule.getName(), rule);
+            RuleDescriptor<DS> descriptor = builder.descriptor();
+            descriptors.add(descriptor);
             return this;
         }
 
@@ -152,13 +158,9 @@ public class RuleBaseModifier {
             return this;
         }
 
-        public Map<String, Rule> getAdded() {
-            return added;
-        }
-
-        public Set<String> getRemoved() {
-            return removed;
-        }
+        public Map<String, Rule>            getAdded()       { return added; }
+        public List<RuleDescriptor<DS>>     getDescriptors() { return descriptors; }
+        public Set<String>                  getRemoved()     { return removed; }
 
         @Override
         public ChangeSet<DS> getChangeSet() {

@@ -5,6 +5,7 @@ import org.drools.core.RuleBaseModifier.ChangeSet;
 import org.drools.core.RuleBaseModifier.ChangeSetBuilder;
 import org.drools.core.RuleBaseModifier.RulePackageChangeSet;
 import org.drools.core.RuleBaseModifier.RuleUnitChangeSet;
+import org.drools.core.RuleBuilder.RuleDescriptor;
 import org.drools.core.conf.RuleBaseConfiguration;
 import org.drools.core.conf.RuleBaseConfigurationFactory;
 import org.drools.core.rete.builder.ReteBuilder;
@@ -12,6 +13,7 @@ import org.kie.api.KieBaseConfiguration;
 import org.kie.api.definition.rule.Rule;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +22,9 @@ public class RuleBase<DS> {
     private ReteBuilder    reteBuilder;
     private EntryPointNode root;
 
-    private Map<String, RulePackage> rulePackages;
+    private Map<String, RulePackage>        rulePackages    = new HashMap<>();
+    // keyed by fully-qualified "packageName.unitName"
+    private Map<String, UnitDescriptor<?>> unitDescriptors = new HashMap<>();
 
     private KieBaseConfiguration    baseConf;
     private RuleBaseConfiguration   ruleBaseConf;
@@ -51,22 +55,25 @@ public class RuleBase<DS> {
         }
 
 
-        for(RulePackageChangeSet<DS> changedRulePackages : changeSet.getAdded().values()) {
-            RulePackage rulePackage = null;
-            for (String removedRuleUnit : changedRulePackages.getRemoved()) {
-                RuleUnit ruleUnit = rulePackage.getRuleUnits().remove(removedRuleUnit);
-                removeAllRules(ruleUnit);
-            }
+        for (Map.Entry<String, RulePackageChangeSet<DS>> pkgEntry : changeSet.getAdded().entrySet()) {
+            String packageName = pkgEntry.getKey();
+            RulePackageChangeSet<DS> changedRulePackages = pkgEntry.getValue();
 
-            for(RuleUnitChangeSet<DS> changedUnits : changedRulePackages.getAdded().values()) {
-                RuleUnit ruleUnit = null;
-                for(String removedRule : changedUnits.getRemoved()) {
-                   Rule rule = ruleUnit.getRules().remove(removedRule);
+            for (Map.Entry<String, RuleUnitChangeSet> unitEntry : changedRulePackages.getAdded().entrySet()) {
+                String unitName = unitEntry.getKey();
+                String fqn = packageName + "." + unitName;
+                RuleUnitChangeSet<DS> changedUnits = (RuleUnitChangeSet<DS>) unitEntry.getValue();
+
+                @SuppressWarnings("unchecked")
+                UnitDescriptor<DS> unitDescriptor = (UnitDescriptor<DS>)
+                        unitDescriptors.computeIfAbsent(fqn, k -> new UnitDescriptor<DS>());
+
+                for (Rule rule : changedUnits.getAdded().values()) {
+                    reteBuilder.addRule((RuleImpl) rule);
                 }
 
-                for(Rule rule : changedUnits.getAdded().values()) {
-                    // build rule
-                    reteBuilder.addRule((RuleImpl) rule);
+                for (RuleDescriptor<DS> descriptor : changedUnits.getDescriptors()) {
+                    unitDescriptor.addRule(descriptor);
                 }
             }
         }
@@ -78,6 +85,11 @@ public class RuleBase<DS> {
         // @TODO actually remove the rule
     }
 
+
+    @SuppressWarnings("unchecked")
+    <DS> UnitDescriptor<DS> unitDescriptor(String fqn) {
+        return (UnitDescriptor<DS>) unitDescriptors.get(fqn);
+    }
 
     public RuleBaseConfiguration getRuleBaseConfiguration() {
         return ruleBaseConf;
