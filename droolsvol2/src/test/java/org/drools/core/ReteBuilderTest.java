@@ -19,55 +19,91 @@ import org.kie.api.runtime.rule.FactHandle;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-end tests for vol2 Rete network construction.
- * Tests that rules with simple patterns build the expected node structure:
- * EntryPointNode → ObjectTypeNode → LeftInputAdapterNode → TerminalNode
+ * Structural tests for the vol2 Rete network builder.
+ * Verifies the topology produced from rules — the correct structure
+ * is the precondition for correct evaluation.
+ * All rules are applied via RuleBaseModifier; network is inspected
+ * structurally by traversing from ruleBase.getRete() via getOutputs().
  */
 public class ReteBuilderTest {
 
-    private RuleBase ruleBase;
+    // Shared context record for all DSL-based tests
+    record TestCTX(DataStore<Person> persons,
+                   DataStore<String> names,
+                   DataStore<Integer> counts) {}
+
+    private RuleBase<TestCTX> ruleBase;
 
     @BeforeEach
     public void setUp() {
-        ruleBase = new RuleBase();
+        ruleBase = new RuleBase<>();
     }
 
-    private RuleImpl ruleWithPattern(String name, Class<?>... types) {
-        RuleImpl rule = new RuleImpl(name);
-        GroupElement lhs = GroupElementFactory.newAndInstance();
-        for (int i = 0; i < types.length; i++) {
-            lhs.addChild(new Pattern(i, new ClassObjectType(types[i])));
-        }
-        rule.setLhs(lhs);
-        return rule;
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /** Apply a rule via the standard RuleBaseModifier path; return only the new terminals. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private List<TerminalNode> applyRule(RuleBuilder.BaseRuleBuilder<?> builder) {
+        Set<Integer> before = terminalsFor(ruleBase).stream()
+                .map(BaseNode::getId).collect(Collectors.toSet());
+        RuleBaseModifier.with((RuleBase) ruleBase)
+                .apply(RuleBaseModifier.changeSet()
+                                       .selectPackage("test").selectUnit("Test")
+                                       .add(builder));
+        return terminalsFor(ruleBase).stream()
+                .filter(t -> !before.contains(t.getId()))
+                .collect(Collectors.toList());
     }
+
+    /** Wrap a manually-built RuleImpl so it can go through applyRule(). */
+    private List<TerminalNode> applyRuleImpl(RuleImpl rule) {
+        return applyRule(new RuleBuilder.BaseRuleBuilder<>(null, rule) {});
+    }
+
+    /** Traverse the output tree from the Rete root; collect all TerminalNodes. */
+    private static List<TerminalNode> terminalsFor(RuleBase<?> rb) {
+        List<TerminalNode> result = new ArrayList<>();
+        collectTerminals(rb.getRete(), result, new HashSet<>());
+        return result;
+    }
+
+    private static void collectTerminals(BaseNode node, List<TerminalNode> acc, Set<Integer> seen) {
+        if (!seen.add(node.getId())) return;
+        if (node instanceof TerminalNode tn) acc.add(tn);
+        for (BaseNode out : node.getOutputs()) collectTerminals(out, acc, seen);
+    }
+
+    // -------------------------------------------------------------------------
+    // Single-pattern structure
+    // -------------------------------------------------------------------------
 
     @Test
     public void testSinglePatternProducesTerminalNode() {
-        RuleImpl rule = ruleWithPattern("r1", Person.class);
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+        List<TerminalNode> terminals = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
 
         assertThat(terminals).hasSize(1);
-        assertThat(terminals.get(0)).isInstanceOf(TerminalNode.class);
         assertThat(terminals.get(0).getRule().getName()).isEqualTo("r1");
     }
 
     @Test
     public void testSinglePatternBuildsObjectTypeNode() {
-        RuleImpl rule = ruleWithPattern("r1", Person.class);
+        List<TerminalNode> terminals = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
 
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        // The terminal's leftInput should be a LeftInputAdapterNode
-        // whose leftInput is the ObjectTypeNode
-        TerminalNode terminal = terminals.get(0);
-        BaseNode lia = terminal.getLeftInput();
+        // terminal → LIA → OTN
+        BaseNode lia = terminals.get(0).getLeftInput();
         assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
 
         BaseNode otn = lia.getLeftInput();
@@ -78,25 +114,41 @@ public class ReteBuilderTest {
 
     @Test
     public void testSinglePatternConnectsToRoot() {
-        RuleImpl rule = ruleWithPattern("r1", Person.class);
+        applyRule(new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
 
-        ruleBase.getReteBuilder().addRule(rule);
-
-        // OTN's leftInput should be the Rete root (EntryPointNode)
-        // (walked up: terminal → LIA → OTN → EntryPointNode)
-        // Just verify getRete() is non-null and the network connected
+        // OTN's leftInput is the Rete root (EntryPointNode)
         assertThat(ruleBase.getRete()).isNotNull();
+        List<TerminalNode> terminals = terminalsFor(ruleBase);
+        BaseNode otn = terminals.get(0).getLeftInput().getLeftInput();
+        assertThat(otn.getLeftInput()).isInstanceOf(EntryPointNode.class);
     }
 
     @Test
-    public void testTwoRulesSamePatternShareObjectTypeNode() {
-        RuleImpl r1 = ruleWithPattern("r1", Person.class);
-        RuleImpl r2 = ruleWithPattern("r2", Person.class);
+    public void testNoPatternRuleUsesInitialFact() {
+        // Empty LHS — builder injects an InitialFact pattern so the network has a root
+        RuleImpl rule = new RuleImpl("noPatterns");
+        rule.setLhs(GroupElementFactory.newAndInstance());
+        List<TerminalNode> terminals = applyRuleImpl(rule);
 
-        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
-        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
+        assertThat(terminals).hasSize(1);
+        BaseNode lia = terminals.get(0).getLeftInput();
+        assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
+        ObjectTypeNode otn = (ObjectTypeNode) lia.getLeftInput();
+        assertThat(((ClassObjectType) otn.getObjectType()).getClassType().getName())
+                .contains("InitialFact");
+    }
 
-        // Both rules should have terminal nodes
+    // -------------------------------------------------------------------------
+    // Node sharing
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void testTwoRulesSamePatternBothGetTerminals() {
+        List<TerminalNode> t1 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
+        List<TerminalNode> t2 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r2").from(TestCTX::persons));
+
         assertThat(t1).hasSize(1);
         assertThat(t2).hasSize(1);
         assertThat(t1.get(0).getRule().getName()).isEqualTo("r1");
@@ -105,11 +157,10 @@ public class ReteBuilderTest {
 
     @Test
     public void testNodeSharingReusesObjectTypeNodeAndLia() {
-        RuleImpl r1 = ruleWithPattern("r1", Person.class);
-        RuleImpl r2 = ruleWithPattern("r2", Person.class);
-
-        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
-        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
+        List<TerminalNode> t1 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
+        List<TerminalNode> t2 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r2").from(TestCTX::persons));
 
         BaseNode lia1 = t1.get(0).getLeftInput();
         BaseNode lia2 = t2.get(0).getLeftInput();
@@ -119,17 +170,16 @@ public class ReteBuilderTest {
         BaseNode otn2 = lia2.getLeftInput();
         assertThat(otn1).isSameAs(otn2);
 
-        // shared LIA should have both terminals as outputs
+        // shared LIA has both terminals as outputs
         assertThat(lia1.getOutputs()).contains(t1.get(0), t2.get(0));
     }
 
     @Test
     public void testDifferentPatternTypesBuildSeparateObjectTypeNodes() {
-        RuleImpl r1 = ruleWithPattern("r1", Person.class);
-        RuleImpl r2 = ruleWithPattern("r2", String.class);
-
-        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
-        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
+        List<TerminalNode> t1 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
+        List<TerminalNode> t2 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r2").from(TestCTX::names));
 
         ObjectTypeNode otn1 = (ObjectTypeNode) t1.get(0).getLeftInput().getLeftInput();
         ObjectTypeNode otn2 = (ObjectTypeNode) t2.get(0).getLeftInput().getLeftInput();
@@ -140,50 +190,45 @@ public class ReteBuilderTest {
     }
 
     @Test
-    public void testConsequenceOnlyRuleUsesInitialFact() {
-        // A rule with no patterns — empty LHS — requires an InitialFact pattern
-        // (addInitialFactPattern injects it so the network has a root to attach to)
-        RuleImpl rule = new RuleImpl("noPatterns");
-        rule.setLhs(GroupElementFactory.newAndInstance()); // empty AND
+    public void testNodeIdsAreMonotonicallyIncreasing() {
+        List<TerminalNode> t1 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons));
+        List<TerminalNode> t2 = applyRule(
+                new RuleBuilder<TestCTX>().rule("r2").from(TestCTX::names));
 
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        assertThat(terminals).hasSize(1);
-        // The LIA's OTN should match InitialFact
-        BaseNode lia = terminals.get(0).getLeftInput();
-        assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
-        ObjectTypeNode otn = (ObjectTypeNode) lia.getLeftInput();
-        assertThat(((ClassObjectType) otn.getObjectType()).getClassType().getName())
-                .contains("InitialFact");
+        assertThat(t1.get(0).getId()).isGreaterThan(0);
+        assertThat(t2.get(0).getId()).isGreaterThan(t1.get(0).getId());
     }
+
+    // -------------------------------------------------------------------------
+    // Join network structure
+    // -------------------------------------------------------------------------
 
     @Test
     public void testTwoPatternRuleProducesJoinNode() {
-        RuleImpl rule = ruleWithPattern("r1", Person.class, String.class);
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+        List<TerminalNode> terminals = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons).join(TestCTX::names));
 
         assertThat(terminals).hasSize(1);
+        BaseNode join = terminals.get(0).getLeftInput();
+        assertThat(join).isInstanceOf(JoinNode.class);
 
-        BaseNode joinNode = terminals.get(0).getLeftInput();
-        assertThat(joinNode).isInstanceOf(JoinNode.class);
-
-        // left side: LIA for first pattern (Person)
-        assertThat(joinNode.getLeftInput()).isInstanceOf(LeftInputAdapterNode.class);
-        ObjectTypeNode leftOtn = (ObjectTypeNode) joinNode.getLeftInput().getLeftInput();
+        // left: LIA → OTN(Person)
+        assertThat(join.getLeftInput()).isInstanceOf(LeftInputAdapterNode.class);
+        ObjectTypeNode leftOtn = (ObjectTypeNode) join.getLeftInput().getLeftInput();
         assertThat(((ClassObjectType) leftOtn.getObjectType()).getClassType()).isEqualTo(Person.class);
 
-        // right side: OTN for second pattern (String) — direct object input (bi-linear)
-        assertThat(((JoinNode) joinNode).getRightInput()).isInstanceOf(ObjectTypeNode.class);
-        ObjectTypeNode rightOtn = (ObjectTypeNode) ((JoinNode) joinNode).getRightInput();
+        // right: OTN(String) — bi-linear direct input
+        assertThat(((JoinNode) join).getRightInput()).isInstanceOf(ObjectTypeNode.class);
+        ObjectTypeNode rightOtn = (ObjectTypeNode) ((JoinNode) join).getRightInput();
         assertThat(((ClassObjectType) rightOtn.getObjectType()).getClassType()).isEqualTo(String.class);
     }
 
     @Test
     public void testThreePatternRuleProducesNestedJoins() {
-        RuleImpl rule = ruleWithPattern("r1", Person.class, String.class, Integer.class);
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+        List<TerminalNode> terminals = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1")
+                        .from(TestCTX::persons).join(TestCTX::names).join(TestCTX::counts));
 
         assertThat(terminals).hasSize(1);
 
@@ -200,6 +245,39 @@ public class ReteBuilderTest {
     }
 
     @Test
+    public void testNoBetaConstraintUsesEmptyConstraints() {
+        List<TerminalNode> terminals = applyRule(
+                new RuleBuilder<TestCTX>().rule("r1").from(TestCTX::persons).join(TestCTX::names));
+
+        JoinNode join = (JoinNode) terminals.get(0).getLeftInput();
+        assertThat(join.getConstraints()).isNotNull();
+        assertThat(join.getConstraints().getConstraints()).isEmpty();
+    }
+
+    @Test
+    public void testBetaConstraintStoredOnJoinNode() {
+        RuleImpl rule = new RuleImpl("r1");
+        GroupElement lhs = GroupElementFactory.newAndInstance();
+        Pattern p1 = new Pattern(0, new ClassObjectType(Person.class));
+        Pattern p2 = new Pattern(1, new ClassObjectType(String.class));
+        p2.addConstraint(new TestBetaConstraint("person.name == name"));
+        lhs.addChild(p1);
+        lhs.addChild(p2);
+        rule.setLhs(lhs);
+
+        List<TerminalNode> terminals = applyRuleImpl(rule);
+
+        JoinNode join = (JoinNode) terminals.get(0).getLeftInput();
+        assertThat(join.getConstraints().getConstraints()).hasSize(1);
+        assertThat(join.getConstraints().getConstraints().get(0))
+                .isInstanceOf(TestBetaConstraint.class);
+    }
+
+    // -------------------------------------------------------------------------
+    // Alpha constraint structure
+    // -------------------------------------------------------------------------
+
+    @Test
     public void testSingleAlphaConstraintBuildsAlphaNode() {
         RuleImpl rule = new RuleImpl("r1");
         GroupElement lhs = GroupElementFactory.newAndInstance();
@@ -208,21 +286,18 @@ public class ReteBuilderTest {
         lhs.addChild(p);
         rule.setLhs(lhs);
 
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        assertThat(terminals).hasSize(1);
+        List<TerminalNode> terminals = applyRuleImpl(rule);
 
         // terminal → LIA → AlphaNode → OTN
-        BaseNode lia   = terminals.get(0).getLeftInput();
+        BaseNode lia = terminals.get(0).getLeftInput();
         assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
 
         BaseNode alpha = lia.getLeftInput();
         assertThat(alpha).isInstanceOf(AlphaNode.class);
         assertThat(((AlphaNode) alpha).getConstraint()).isInstanceOf(TestAlphaConstraint.class);
 
-        BaseNode otn   = alpha.getLeftInput();
-        assertThat(otn).isInstanceOf(ObjectTypeNode.class);
-        assertThat(((ClassObjectType) ((ObjectTypeNode) otn).getObjectType()).getClassType())
+        assertThat(alpha.getLeftInput()).isInstanceOf(ObjectTypeNode.class);
+        assertThat(((ClassObjectType) ((ObjectTypeNode) alpha.getLeftInput()).getObjectType()).getClassType())
                 .isEqualTo(Person.class);
     }
 
@@ -236,7 +311,7 @@ public class ReteBuilderTest {
         lhs.addChild(p);
         rule.setLhs(lhs);
 
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+        List<TerminalNode> terminals = applyRuleImpl(rule);
 
         // terminal → LIA → AlphaNode2 → AlphaNode1 → OTN
         BaseNode lia    = terminals.get(0).getLeftInput();
@@ -251,7 +326,7 @@ public class ReteBuilderTest {
 
     @Test
     public void testAlphaConstraintWithJoin() {
-        // Person(age > 18), String  →  AlphaNode in left network, plain OTN in right
+        // Person(age > 18), String — AlphaNode in left path, plain OTN in right
         RuleImpl rule = new RuleImpl("r1");
         GroupElement lhs = GroupElementFactory.newAndInstance();
         Pattern p1 = new Pattern(0, new ClassObjectType(Person.class));
@@ -260,122 +335,27 @@ public class ReteBuilderTest {
         lhs.addChild(new Pattern(1, new ClassObjectType(String.class)));
         rule.setLhs(lhs);
 
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
+        List<TerminalNode> terminals = applyRuleImpl(rule);
 
         BaseNode join = terminals.get(0).getLeftInput();
         assertThat(join).isInstanceOf(JoinNode.class);
 
-        // left side has AlphaNode between LIA and OTN
-        BaseNode lia   = join.getLeftInput();
+        // left: LIA → AlphaNode → OTN
+        BaseNode lia = join.getLeftInput();
         assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
         assertThat(lia.getLeftInput()).isInstanceOf(AlphaNode.class);
 
-        // right side is plain OTN (no alpha)
+        // right: plain OTN (no alpha)
         assertThat(((JoinNode) join).getRightInput()).isInstanceOf(ObjectTypeNode.class);
     }
 
-    @Test
-    public void testNodeIdsAreMonotonicallyIncreasing() {
-        // Each addRule() call should allocate new, unique, increasing node IDs
-        RuleImpl r1 = ruleWithPattern("r1", Person.class);
-        RuleImpl r2 = ruleWithPattern("r2", String.class);
+    // -------------------------------------------------------------------------
+    // Minimal constraint implementations for structural tests
+    // -------------------------------------------------------------------------
 
-        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
-        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
-
-        int id1 = t1.get(0).getId();
-        int id2 = t2.get(0).getId();
-
-        assertThat(id1).isGreaterThan(0);
-        assertThat(id2).isGreaterThan(id1);
-    }
-
-    @Test
-    public void testBetaConstraintStoredOnJoinNode() {
-        RuleImpl rule = new RuleImpl("r1");
-        GroupElement lhs = GroupElementFactory.newAndInstance();
-
-        Pattern p1 = new Pattern(0, new ClassObjectType(Person.class));
-        Pattern p2 = new Pattern(1, new ClassObjectType(String.class));
-        TestBetaConstraint betaConstraint = new TestBetaConstraint("person.name == string");
-        p2.addConstraint(betaConstraint);
-        lhs.addChild(p1);
-        lhs.addChild(p2);
-        rule.setLhs(lhs);
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        JoinNode joinNode = (JoinNode) terminals.get(0).getLeftInput();
-        assertThat(joinNode.getConstraints()).isNotNull();
-        assertThat(joinNode.getConstraints().getConstraints()).hasSize(1);
-        assertThat(joinNode.getConstraints().getConstraints().get(0))
-                .isInstanceOf(TestBetaConstraint.class);
-    }
-
-    @Test
-    public void testNoBetaConstraintUsesEmptyConstraints() {
-        // No constraints on patterns → join has empty BetaConstraints, not null
-        RuleImpl rule = ruleWithPattern("r1", Person.class, String.class);
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        JoinNode joinNode = (JoinNode) terminals.get(0).getLeftInput();
-        assertThat(joinNode.getConstraints()).isNotNull();
-        assertThat(joinNode.getConstraints().getConstraints()).isEmpty();
-    }
-
-    // --- DSL-based tests ---
-
-    record TestDS(DataStore<Person> persons, DataStore<String> names) {}
-
-    @Test
-    public void testDslSinglePattern() {
-        RuleImpl rule = (RuleImpl) new RuleBuilder<TestDS>().rule("r1").from(TestDS::persons).build();
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        assertThat(terminals).hasSize(1);
-        BaseNode lia = terminals.get(0).getLeftInput();
-        assertThat(lia).isInstanceOf(LeftInputAdapterNode.class);
-        ObjectTypeNode otn = (ObjectTypeNode) lia.getLeftInput();
-        assertThat(((ClassObjectType) otn.getObjectType()).getClassType()).isEqualTo(Person.class);
-    }
-
-    @Test
-    public void testDslTwoPatternJoin() {
-        RuleImpl rule = (RuleImpl) new RuleBuilder<TestDS>().rule("r1")
-                .from(TestDS::persons).join(TestDS::names).build();
-
-        List<TerminalNode> terminals = ruleBase.getReteBuilder().addRule(rule);
-
-        assertThat(terminals).hasSize(1);
-        BaseNode join = terminals.get(0).getLeftInput();
-        assertThat(join).isInstanceOf(JoinNode.class);
-        ObjectTypeNode leftOtn = (ObjectTypeNode) join.getLeftInput().getLeftInput();
-        assertThat(((ClassObjectType) leftOtn.getObjectType()).getClassType()).isEqualTo(Person.class);
-        ObjectTypeNode rightOtn = (ObjectTypeNode) ((JoinNode) join).getRightInput();
-        assertThat(((ClassObjectType) rightOtn.getObjectType()).getClassType()).isEqualTo(String.class);
-    }
-
-    @Test
-    public void testDslNodeSharingAcrossRules() {
-        RuleBuilder<TestDS> builder = new RuleBuilder<>();
-        RuleImpl r1 = (RuleImpl) builder.rule("r1").from(TestDS::persons).build();
-        RuleImpl r2 = (RuleImpl) builder.rule("r2").from(TestDS::persons).build();
-
-        List<TerminalNode> t1 = ruleBase.getReteBuilder().addRule(r1);
-        List<TerminalNode> t2 = ruleBase.getReteBuilder().addRule(r2);
-
-        assertThat(t1.get(0).getLeftInput()).isSameAs(t2.get(0).getLeftInput());
-    }
-
-    /** Minimal AlphaNodeFieldConstraint for use in tests. */
     static class TestAlphaConstraint implements AlphaNodeFieldConstraint {
         private final String expression;
-
-        TestAlphaConstraint(String expression) {
-            this.expression = expression;
-        }
+        TestAlphaConstraint(String expression) { this.expression = expression; }
 
         @Override public boolean isAllowed(FactHandle handle, ValueResolver valueResolver) { return true; }
         @Override public AlphaNodeFieldConstraint cloneIfInUse() { return this; }
@@ -386,11 +366,9 @@ public class ReteBuilderTest {
         @Override public Constraint clone() { return this; }
         @Override public void writeExternal(ObjectOutput out) throws IOException { }
         @Override public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException { }
-
-        @Override public String toString() { return "AlphaConstraint(" + expression + ")"; }
+        @Override public String toString() { return "Alpha(" + expression + ")"; }
     }
 
-    /** Minimal BetaConstraint for use in tests. */
     @SuppressWarnings("unchecked")
     static class TestBetaConstraint implements BetaConstraint<Object> {
         private final String expression;
@@ -407,7 +385,6 @@ public class ReteBuilderTest {
         @Override public Constraint clone() { return this; }
         @Override public void writeExternal(ObjectOutput out) throws IOException { }
         @Override public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException { }
-
-        @Override public String toString() { return "BetaConstraint(" + expression + ")"; }
+        @Override public String toString() { return "Beta(" + expression + ")"; }
     }
 }
