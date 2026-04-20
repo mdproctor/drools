@@ -57,7 +57,7 @@ public class UnitInstance<CTX> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void wireHead(RuleDescriptor<CTX> desc) {
         List<Function1<CTX, DataSource<?>>> sources = desc.getSources();
-        Object head = desc.getConsequence();
+        Object head = desc.getHead();
 
         if (sources.isEmpty()) {
             // No patterns — not yet supported

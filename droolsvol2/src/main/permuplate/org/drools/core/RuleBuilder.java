@@ -70,19 +70,19 @@ public class RuleBuilder<CTX> {
     public static class RuleDescriptor<CTX> {
         private final RuleImpl rule;
         private final List<Function1<CTX, DataSource<?>>> sources;
-        private final Object consequence;
+        private final Object head;
 
         @SuppressWarnings("unchecked")
         RuleDescriptor(Rule rule) {
             this.rule = (RuleImpl) rule;
             Object[] state = BaseRuleBuilder.RULE_STATE.getOrDefault(rule, new Object[]{new ArrayList<>(), null});
             this.sources = (List<Function1<CTX, DataSource<?>>>) state[0];
-            this.consequence = state[1];
+            this.head = state[1];
         }
 
         public RuleImpl getRule()                               { return rule; }
         public List<Function1<CTX, DataSource<?>>> getSources()  { return sources; }
-        public Object getConsequence()                          { return consequence; }
+        public Object getHead()                          { return head; }
     }
 
     public static class BaseRuleBuilder<END> {
@@ -112,7 +112,7 @@ public class RuleBuilder<CTX> {
             ((List) state[0]).add(f);
         }
 
-        protected void storeConsequence(Object c) {
+        protected void storeHead(Object c) {
             Object[] state = RULE_STATE.computeIfAbsent(rule, k -> new Object[]{new ArrayList<>(), null});
             state[1] = c;
         }
@@ -309,7 +309,7 @@ public class RuleBuilder<CTX> {
         }
 
         public From1First<END, CTX, B> ifn(Consumer2<Context<CTX>, B> fn2) {
-            storeConsequence(fn2);
+            storeHead(fn2);
             return this;
         }
 
@@ -448,7 +448,7 @@ public class RuleBuilder<CTX> {
                 @PermuteDeclr(type = "Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>",
                         name = "fn${i+1}")
                 Consumer3<Context<CTX>, B, C> fn3) {
-            storeConsequence(fn3);
+            storeHead(fn3);
             return this;
         }
 
