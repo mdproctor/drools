@@ -54,7 +54,7 @@ public class RuleProapgationAndExecutionTest {
     @Test
     public void testSinglePatternIfnFires() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
-        CTX1 unit = new CTX1(persons);
+        CTX1 ctx1 = new CTX1(persons);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX1> ruleBase = new RuleBase<>();
 
@@ -65,7 +65,7 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX1::persons)
                                 .ifn((ctx, p) -> fired.add(p.name()))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx1);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).containsExactly("Darth");
@@ -80,7 +80,7 @@ public class RuleProapgationAndExecutionTest {
     public void testJoinIfnFires() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
 
@@ -92,7 +92,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).isEmpty();
@@ -105,7 +105,7 @@ public class RuleProapgationAndExecutionTest {
     public void testJoinCrossProductFires() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
 
@@ -117,7 +117,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         names.add("Skywalker");
         names.add("Vader");
@@ -135,7 +135,7 @@ public class RuleProapgationAndExecutionTest {
     public void testUpdateLeftSideRefires() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
 
@@ -147,7 +147,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         ObjectHandle<Person> darth = ui.add(persons, new Person("Darth", 100, "London"));
         ui.add(names, "Vader");
@@ -161,7 +161,7 @@ public class RuleProapgationAndExecutionTest {
     public void testRemoveLeftStopsMatching() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
 
@@ -173,7 +173,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         ObjectHandle<Person> darth = ui.add(persons, new Person("Darth", 100, "London"));
         ui.add(names, "Vader");
@@ -189,7 +189,7 @@ public class RuleProapgationAndExecutionTest {
     @Test
     public void testFilterBlocksNonMatchingSinglePattern() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
-        CTX1 unit = new CTX1(persons);
+        CTX1 ctx1 = new CTX1(persons);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX1> ruleBase = new RuleBase<>();
 
@@ -201,7 +201,7 @@ public class RuleProapgationAndExecutionTest {
                                 .filter((ctx, p) -> p.age() > 18)
                                 .ifn((ctx, p) -> fired.add(p.name()))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx1);
 
         persons.add(new Person("Child", 10, "London"));
         assertThat(fired).isEmpty();
@@ -214,7 +214,7 @@ public class RuleProapgationAndExecutionTest {
     public void testFilterOnLeftSideOfJoin() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
 
@@ -227,7 +227,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         persons.add(new Person("Child", 10, "London"));
         names.add("Vader");
@@ -242,7 +242,7 @@ public class RuleProapgationAndExecutionTest {
     @Test
     public void testFnFiresDeferredViaUnitAdd() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
-        CTX1 unit = new CTX1(persons);
+        CTX1 ctx1 = new CTX1(persons);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX1> ruleBase = new RuleBase<>();
 
@@ -253,7 +253,7 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX1::persons)
                                 .fn((ctx, p) -> fired.add(p.name()))));
 
-        UnitInstance<CTX1> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstance<CTX1> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx1);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).isEmpty();
@@ -266,7 +266,7 @@ public class RuleProapgationAndExecutionTest {
     public void testFnJoinFiresDeferred() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
 
@@ -278,7 +278,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .fn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         ui.add(persons, new Person("Darth", 100, "London"));
         assertThat(fired).isEmpty();
@@ -291,7 +291,7 @@ public class RuleProapgationAndExecutionTest {
     public void testMultipleRulesInUnit() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        CTX2 unit = new CTX2(persons, names);
+        CTX2 ctx2 = new CTX2(persons, names);
         List<String> fired = new ArrayList<>();
         RuleBase<CTX2> ruleBase = new RuleBase<>();
         RuleBuilder<CTX2> builder = new RuleBuilder<>();
@@ -307,7 +307,7 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX2::names)
                                 .ifn((ctx, p, n) -> fired.add("r2:" + p.name() + ":" + n))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).containsExactly("r1:Darth");
