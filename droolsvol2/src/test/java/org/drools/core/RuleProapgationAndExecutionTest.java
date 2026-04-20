@@ -129,6 +129,47 @@ public class RuleProapgationAndExecutionTest {
                 "Luke:Skywalker", "Luke:Vader", "Darth:Skywalker", "Darth:Vader");
     }
 
+    // --- JoinMemory keyed by JoinNode id, NodeMemories array-backed ---
+
+    @Test
+    public void testJoinMemoryKeyedByNodeId() {
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX2 ctx2 = new CTX2(persons, names);
+        RuleBase<CTX2> ruleBase = new RuleBase<>();
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("Unit1")
+                        .add(new RuleBuilder<CTX2>().rule("r1")
+                                .from(CTX2::persons).join(CTX2::names)
+                                .ifn((ctx, p, n) -> {})));
+
+        UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
+
+        // JoinMemory in NodeMemories must be keyed by the JoinNode's id from the topology
+        int joinNodeId = findJoinNodeId(ruleBase);
+        assertThat(joinNodeId).isGreaterThan(0);
+        JoinMemory mem = ui.getUnitMemories().getOrCreateJoinMemory(joinNodeId);
+        assertThat(mem.getNodeId()).isEqualTo(joinNodeId);
+
+        persons.add(new Person("Darth", 100, "London"));
+        // after add, left side should be in the memory keyed by the join node id
+        assertThat(mem.getLeftHandles()).hasSize(1);
+    }
+
+    private int findJoinNodeId(RuleBase<?> ruleBase) {
+        return findJoinNodeId(ruleBase.getRete());
+    }
+
+    private int findJoinNodeId(BaseNode node) {
+        if (node instanceof JoinNode) return node.getId();
+        for (BaseNode out : node.getOutputs()) {
+            int id = findJoinNodeId(out);
+            if (id > 0) return id;
+        }
+        return -1;
+    }
+
     // --- Step 2: update and remove ---
 
     @Test

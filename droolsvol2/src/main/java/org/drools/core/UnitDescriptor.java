@@ -24,7 +24,7 @@ public class UnitDescriptor<CTX> {
     }
 
     @SuppressWarnings("unchecked")
-    public UnitInstance<CTX> createInstance(CTX ctx) {
-        return new UnitInstance<>(ctx, rules.toArray(new RuleDescriptor[0]));
+    public UnitInstance<CTX> createInstance(CTX ctx, EntryPointNode rete) {
+        return new UnitInstance<>(ctx, rete, rules.toArray(new RuleDescriptor[0]));
     }
 }

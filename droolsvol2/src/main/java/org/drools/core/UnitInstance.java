@@ -3,7 +3,6 @@ package org.drools.core;
 import org.drools.api.data.DataProcessor;
 import org.drools.api.data.DataSource;
 import org.drools.api.data.ObjectHandle;
-
 import org.drools.core.RuleBuilder.RuleDescriptor;
 import org.drools.core.function.Consumer2;
 import org.drools.core.function.Consumer3;
@@ -16,28 +15,33 @@ import java.util.List;
 /**
  * Vol2 equivalent of WorkingMemory + Agenda.
  * All rule evaluations for a unit happen within one UnitInstance.
- * Propagation and join logic live entirely here — not on network nodes.
+ *
+ * Uses UnitMemories (array-backed, keyed by node ID) for beta state.
+ * JoinLeftInlet / JoinRightInlet are the named concrete DataProcessors
+ * attached to their host JoinNode via the Rete topology.
  */
 public class UnitInstance<CTX> {
 
     private final Router<CTX> router;
     private final ContextPojoDS<CTX> context;
     private final Agenda agenda = new Agenda();
+    private final UnitMemories unitMemories = new UnitMemories();
+    private final EntryPointNode rete;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public UnitInstance(CTX ctx, RuleDescriptor<CTX>... descriptors) {
-        int slots = countSlots(descriptors);
-        this.router  = new Router<>(slots);
+    public UnitInstance(CTX ctx, EntryPointNode rete, RuleDescriptor<CTX>... descriptors) {
+        this.rete    = rete;
+        this.router  = new Router<>(countSlots(descriptors));
         this.context = new ContextPojoDS<>(ctx);
         this.router.addContext(context);
 
-        List<DataSource<?>> wiredSources = new ArrayList<>();
+        List<DataSource<?>> wired = new ArrayList<>();
         for (RuleDescriptor<CTX> desc : descriptors) {
             List<Function1<CTX, DataSource<?>>> sources = desc.getSources();
             for (int i = 0; i < sources.size(); i++) {
                 DataSource<?> ds = sources.get(i).apply(ctx);
-                if (!containsByIdentity(wiredSources, ds)) {
-                    wiredSources.add(ds);
+                if (!containsByIdentity(wired, ds)) {
+                    wired.add(ds);
                     ((PropagatingDataStore) ds).subscribe(new ContextRouterAdapter<>(i, router));
                 }
             }
@@ -69,6 +73,8 @@ public class UnitInstance<CTX> {
         agenda.drain();
     }
 
+    public UnitMemories getUnitMemories() { return unitMemories; }
+
     // --- Internal wiring ---
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -79,7 +85,7 @@ public class UnitInstance<CTX> {
         boolean immediate = desc.isImmediate();
 
         if (sources.isEmpty()) {
-            throw new UnsupportedOperationException("Rules with no from() not yet supported via UnitInstance");
+            throw new UnsupportedOperationException("Rules with no from() not yet supported");
         }
 
         if (sources.size() == 1) {
@@ -89,73 +95,40 @@ public class UnitInstance<CTX> {
 
         } else if (sources.size() == 2) {
             Consumer3<Context<CTX>, Object, Object> consumer = (Consumer3<Context<CTX>, Object, Object>) rawHead;
-            JoinMemory betaMem = new JoinMemory();
+            JoinNode joinNode = findJoinNode(desc.getRule());
+
             Object filter0 = filters.size() > 0 ? filters.get(0) : null;
             Object filter1 = filters.size() > 1 ? filters.get(1) : null;
 
-            DataProcessor<CTX, Object> leftProc = new DataProcessor<CTX, Object>() {
-                public void add(Context<CTX> c, ObjectHandle<Object> h) {
-                    betaMem.addLeft(h);
-                    for (ObjectHandle<?> rh : new ArrayList<>(betaMem.getRightHandles())) {
-                        fire(c, h.getObject(), rh.getObject(), consumer, immediate);
-                    }
-                }
-                public void update(Context<CTX> c, ObjectHandle<Object> h) {
-                    for (ObjectHandle<?> rh : new ArrayList<>(betaMem.getRightHandles())) {
-                        fire(c, h.getObject(), rh.getObject(), consumer, immediate);
-                    }
-                }
-                public void remove(Context<CTX> c, ObjectHandle<Object> h) {
-                    betaMem.removeLeft(h);
-                }
-            };
-
-            DataProcessor<CTX, Object> rightProc = new DataProcessor<CTX, Object>() {
-                public void add(Context<CTX> c, ObjectHandle<Object> h) {
-                    betaMem.addRight(h);
-                    for (ObjectHandle<?> lh : new ArrayList<>(betaMem.getLeftHandles())) {
-                        fire(c, lh.getObject(), h.getObject(), consumer, immediate);
-                    }
-                }
-                public void update(Context<CTX> c, ObjectHandle<Object> h) {
-                    for (ObjectHandle<?> lh : new ArrayList<>(betaMem.getLeftHandles())) {
-                        fire(c, lh.getObject(), h.getObject(), consumer, immediate);
-                    }
-                }
-                public void remove(Context<CTX> c, ObjectHandle<Object> h) {
-                    betaMem.removeRight(h);
-                }
-            };
-
-            subscribeWithFilter(0, leftProc,  filter0);
-            subscribeWithFilter(1, rightProc, filter1);
+            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, unitMemories, consumer, immediate, agenda), filter0);
+            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, unitMemories, consumer, immediate, agenda), filter1);
 
         } else {
             throw new UnsupportedOperationException("Rules with " + sources.size() + " patterns not yet supported");
         }
     }
 
-    private void fire(Context<CTX> c, Object left, Object right,
-                      Consumer3<Context<CTX>, Object, Object> consumer, boolean immediate) {
-        if (immediate) {
-            consumer.accept(c, left, right);
-        } else {
-            agenda.enqueue(() -> consumer.accept(c, left, right));
-        }
+    /** Find the JoinNode in the Rete topology associated with this rule. */
+    private JoinNode findJoinNode(org.drools.base.definitions.rule.impl.RuleImpl rule) {
+        return findJoinNodeIn(rete, rule);
     }
 
-    @SuppressWarnings("unchecked")
-    private DataProcessor<CTX, Object> buildAction(Consumer2<Context<CTX>, Object> consumer, boolean immediate) {
-        if (immediate) {
-            return new Action1<>(consumer);
+    private JoinNode findJoinNodeIn(BaseNode node, org.drools.base.definitions.rule.impl.RuleImpl rule) {
+        if (node instanceof JoinNode && node.isAssociatedWith(rule)) {
+            return (JoinNode) node;
         }
+        for (BaseNode out : node.getOutputs()) {
+            JoinNode found = findJoinNodeIn(out, rule);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private DataProcessor<CTX, Object> buildAction(Consumer2<Context<CTX>, Object> consumer, boolean immediate) {
+        if (immediate) return new Action1<>(consumer);
         return new DataProcessor<CTX, Object>() {
-            public void add(Context<CTX> c, ObjectHandle<Object> h) {
-                agenda.enqueue(() -> consumer.accept(c, h.getObject()));
-            }
-            public void update(Context<CTX> c, ObjectHandle<Object> h) {
-                agenda.enqueue(() -> consumer.accept(c, h.getObject()));
-            }
+            public void add(Context<CTX> c, ObjectHandle<Object> h) { agenda.enqueue(() -> consumer.accept(c, h.getObject())); }
+            public void update(Context<CTX> c, ObjectHandle<Object> h) { agenda.enqueue(() -> consumer.accept(c, h.getObject())); }
             public void remove(Context<CTX> c, ObjectHandle<Object> h) { }
         };
     }

@@ -25,6 +25,6 @@ public class UnitInstantiator<CTX> {
         if (descriptor == null) {
             throw new IllegalArgumentException("No unit registered as '" + unitFqn + "'");
         }
-        return descriptor.createInstance(ctx);
+        return descriptor.createInstance(ctx, ruleBase.getRete());
     }
 }

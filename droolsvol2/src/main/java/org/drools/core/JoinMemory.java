@@ -4,9 +4,21 @@ import org.drools.api.data.ObjectHandle;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Combined left/right beta memory for one JoinNode, per UnitInstance.
+ * Keyed by JoinNode.id in UnitMemories.
+ */
 public class JoinMemory {
+
+    private final int nodeId;
     private final List<ObjectHandle<?>> leftHandles  = new ArrayList<>();
     private final List<ObjectHandle<?>> rightHandles = new ArrayList<>();
+
+    public JoinMemory(int nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public int getNodeId() { return nodeId; }
 
     public void addLeft(ObjectHandle<?> h)    { leftHandles.add(h); }
     public void removeLeft(ObjectHandle<?> h) { leftHandles.remove(h); }
