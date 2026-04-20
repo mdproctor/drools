@@ -14,7 +14,7 @@ public class MultiTypeDataStoreTest {
     public void testNonIndexedPropagation() {
         PropagatingDataStore<Object> objects = new PropagatingDataStore(0, new TypeIndexer<>());
 
-        record DS1(DataStore<Object> objects) {};
+        record CTX1(DataStore<Object> objects) {};
 
         Filter1Type<DataStore<Object>, Person> personOtn = new Filter1Type<>( new ClassObjectType(Person.class) );
         Filter1Type<DataStore<Object>, City>   cityOtn = new Filter1Type<>( new ClassObjectType(City.class) );
@@ -22,18 +22,18 @@ public class MultiTypeDataStoreTest {
         objects.subscribe(personOtn);
         objects.subscribe(cityOtn);
 
-        Router<DS1> router = new Router<>(2);
+        Router<CTX1> router = new Router<>(2);
 
-        ContextPojoDS<DS1> ctx         = new ContextPojoDS<>(new DS1(objects));
+        ContextPojoDS<CTX1> ctx         = new ContextPojoDS<>(new CTX1(objects));
         router.addContext(ctx);
-        ContextRouterAdapter<DataStore<Object>, DS1, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<Object>, DS1, City>   ctxAdapter1 = new ContextRouterAdapter(1, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, City>   ctxAdapter1 = new ContextRouterAdapter(1, router);
 
         personOtn.subscribe(ctxAdapter0);
         cityOtn.subscribe(ctxAdapter1);
 
-        RecordingDataProcessor<DS1, Person> recorder0 = new RecordingDataProcessor<>(0);
-        RecordingDataProcessor<DS1, City> recorder1 = new RecordingDataProcessor<>(1);
+        RecordingDataProcessor<CTX1, Person> recorder0 = new RecordingDataProcessor<>(0);
+        RecordingDataProcessor<CTX1, City> recorder1 = new RecordingDataProcessor<>(1);
         router.subscribe(0, recorder0);
         router.subscribe(1, recorder1);
 
@@ -83,15 +83,15 @@ public class MultiTypeDataStoreTest {
 
         PropagatingDataStore<Object> objects = new PropagatingDataStore(0, typeIndex);
 
-        record DS1(DataStore<Object> objects) {};
+        record CTX1(DataStore<Object> objects) {};
 
-        Router<DS1> router = new Router<>(3);
+        Router<CTX1> router = new Router<>(3);
 
-        ContextPojoDS<DS1> ctx         = new ContextPojoDS<>(new DS1(objects));
+        ContextPojoDS<CTX1> ctx         = new ContextPojoDS<>(new CTX1(objects));
         router.addContext(ctx);
-        ContextRouterAdapter<DataStore<Object>, DS1, A1> a1 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<Object>, DS1, A2> a2 = new ContextRouterAdapter(1, router);
-        ContextRouterAdapter<DataStore<Object>, DS1, A3> a3 = new ContextRouterAdapter(2, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, A1> a1 = new ContextRouterAdapter(0, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, A2> a2 = new ContextRouterAdapter(1, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, A3> a3 = new ContextRouterAdapter(2, router);
 
         typeIndex.buildCache(Base123.class, List.of(a1, a2, a3));
         typeIndex.buildCache(Base1.class, List.of(a1));
@@ -101,9 +101,9 @@ public class MultiTypeDataStoreTest {
         Filter1TypeIndex indexedTypeIndex = new Filter1TypeIndex();
         objects.subscribe(indexedTypeIndex);
 
-        RecordingDataProcessor<DS1, Object> recorder0 = new RecordingDataProcessor<>(0);
-        RecordingDataProcessor<DS1, Object> recorder1 = new RecordingDataProcessor<>(1);
-        RecordingDataProcessor<DS1, Object> recorder2 = new RecordingDataProcessor<>(2);
+        RecordingDataProcessor<CTX1, Object> recorder0 = new RecordingDataProcessor<>(0);
+        RecordingDataProcessor<CTX1, Object> recorder1 = new RecordingDataProcessor<>(1);
+        RecordingDataProcessor<CTX1, Object> recorder2 = new RecordingDataProcessor<>(2);
         router.subscribe(0, recorder0);
         router.subscribe(1, recorder1);
         router.subscribe(2, recorder2);

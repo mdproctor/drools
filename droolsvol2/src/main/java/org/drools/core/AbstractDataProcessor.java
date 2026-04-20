@@ -4,18 +4,18 @@ import org.drools.api.data.DataProcessor;
 
 import java.util.ArrayList;
 
-public abstract class AbstractDataProcessor<DS, T> {
-    protected ArrayList<DataProcessor<DS, T>> subscribers;
+public abstract class AbstractDataProcessor<CTX, T> {
+    protected ArrayList<DataProcessor<CTX, T>> subscribers;
 
     public AbstractDataProcessor() {
-        this.subscribers = new ArrayList<DataProcessor<DS, T>>();
+        this.subscribers = new ArrayList<DataProcessor<CTX, T>>();
     }
 
-    public void subscribe(DataProcessor<DS, T> processor) {
+    public void subscribe(DataProcessor<CTX, T> processor) {
         subscribers.add(processor);
     }
 
-    public void unsubscribe(DataProcessor<DS, T> processor) {
+    public void unsubscribe(DataProcessor<CTX, T> processor) {
         subscribers.remove(processor);
     }
 }

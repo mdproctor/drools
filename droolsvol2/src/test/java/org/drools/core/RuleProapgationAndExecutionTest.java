@@ -21,17 +21,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class RuleProapgationAndExecutionTest {
 
-    record DS1(DataStore<Person> persons) {}
-    record DS2(DataStore<Person> persons, DataStore<String> names) {}
+    record CTX1(DataStore<Person> persons) {}
+    record CTX2(DataStore<Person> persons, DataStore<String> names) {}
 
     // --- DSL descriptor stores function refs and consequence ---
 
     @Test
     public void testDescriptorStoresSourcesAndConsequence() {
         List<String> fired = new ArrayList<>();
-        RuleDescriptor<DS1> desc = new RuleBuilder<DS1>()
+        RuleDescriptor<CTX1> desc = new RuleBuilder<CTX1>()
                 .rule("r1")
-                .from(DS1::persons)
+                .from(CTX1::persons)
                 .ifn((ctx, p) -> fired.add(p.name()))
                 .descriptor();
 
@@ -42,10 +42,10 @@ public class RuleProapgationAndExecutionTest {
     @Test
     public void testDescriptorJoinStoresSourcesAndConsequence() {
         List<String> fired = new ArrayList<>();
-        RuleDescriptor<DS2> desc = new RuleBuilder<DS2>()
+        RuleDescriptor<CTX2> desc = new RuleBuilder<CTX2>()
                 .rule("r1")
-                .from(DS2::persons)
-                .join(DS2::names)
+                .from(CTX2::persons)
+                .join(CTX2::names)
                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))
                 .descriptor();
 
@@ -59,21 +59,21 @@ public class RuleProapgationAndExecutionTest {
     public void testRuleBaseJoinViaUnitDescriptor() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        DS2 ds = new DS2(persons, names);
+        CTX2 unit = new CTX2(persons, names);
 
-        RuleBase<DS2> ruleBase = new RuleBase<>();
-        RuleBuilder<DS2> builder = new RuleBuilder<>();
+        RuleBase<CTX2> ruleBase = new RuleBase<>();
+        RuleBuilder<CTX2> builder = new RuleBuilder<>();
 
         List<String> fired = new ArrayList<>();
         RuleBaseModifier.with(ruleBase)
                         .apply(RuleBaseModifier.changeSet()
                                                .selectPackage("org.domain").selectUnit("Unit1")
                                                .add(builder.rule("r1")
-                                                           .from(DS2::persons)
-                                                           .join(DS2::names)
+                                                           .from(CTX2::persons)
+                                                           .join(CTX2::names)
                                                            .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
 
-        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ds);
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", unit);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).isEmpty();
@@ -87,16 +87,16 @@ public class RuleProapgationAndExecutionTest {
     @Test
     public void testUnitInstanceSinglePattern() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
-        DS1 ds = new DS1(persons);
+        CTX1 unit = new CTX1(persons);
 
         List<String> fired = new ArrayList<>();
-        RuleDescriptor<DS1> desc = new RuleBuilder<DS1>()
+        RuleDescriptor<CTX1> desc = new RuleBuilder<CTX1>()
                 .rule("r1")
-                .from(DS1::persons)
+                .from(CTX1::persons)
                 .ifn((ctx, p) -> fired.add(p.name()))
                 .descriptor();
 
-        new UnitInstance<>(ds, desc);
+        new UnitInstance<>(unit, desc);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).containsExactly("Darth");
@@ -109,17 +109,17 @@ public class RuleProapgationAndExecutionTest {
     public void testUnitInstanceTwoPatternJoin() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
-        DS2 ds = new DS2(persons, names);
+        CTX2 unit = new CTX2(persons, names);
 
         List<String> fired = new ArrayList<>();
-        RuleDescriptor<DS2> desc = new RuleBuilder<DS2>()
+        RuleDescriptor<CTX2> desc = new RuleBuilder<CTX2>()
                 .rule("r1")
-                .from(DS2::persons)
-                .join(DS2::names)
+                .from(CTX2::persons)
+                .join(CTX2::names)
                 .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))
                 .descriptor();
 
-        new UnitInstance<>(ds, desc);
+        new UnitInstance<>(unit, desc);
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).isEmpty();
@@ -134,14 +134,14 @@ public class RuleProapgationAndExecutionTest {
     public void testConsequenceOnlyFires() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
 
-        Router<DS1> router = new Router<>(1);
-        ContextPojoDS<DS1> ctx = new ContextPojoDS<>(new DS1(persons));
+        Router<CTX1> router = new Router<>(1);
+        ContextPojoDS<CTX1> ctx = new ContextPojoDS<>(new CTX1(persons));
         router.addContext(ctx);
 
         persons.subscribe(new ContextRouterAdapter<>(0, router));
 
         List<String> fired = new ArrayList<>();
-        router.subscribe(0, new Action1<DS1, Person>((c, p) -> fired.add(p.name())));
+        router.subscribe(0, new Action1<CTX1, Person>((c, p) -> fired.add(p.name())));
 
         persons.add(new Person("Darth", 100, "London"));
         assertThat(fired).containsExactly("Darth");
@@ -157,8 +157,8 @@ public class RuleProapgationAndExecutionTest {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
 
-        Router<DS2> router = new Router<>(2);
-        ContextPojoDS<DS2> ctx = new ContextPojoDS<>(new DS2(persons, names));
+        Router<CTX2> router = new Router<>(2);
+        ContextPojoDS<CTX2> ctx = new ContextPojoDS<>(new CTX2(persons, names));
         router.addContext(ctx);
 
         persons.subscribe(new ContextRouterAdapter<>(0, router));
@@ -171,23 +171,23 @@ public class RuleProapgationAndExecutionTest {
         List<ObjectHandle<String>> rightMem = new ArrayList<>();
 
         // Left handler: store handle, probe right memory, fire on match
-        router.subscribe(0, new DataProcessor<DS2, Person>() {
-            public void add(Context<DS2> c, ObjectHandle<Person> h) {
+        router.subscribe(0, new DataProcessor<CTX2, Person>() {
+            public void add(Context<CTX2> c, ObjectHandle<Person> h) {
                 leftMem.add(h);
                 rightMem.forEach(rh -> fired.add(h.getObject().name() + ":" + rh.getObject()));
             }
-            public void update(Context<DS2> c, ObjectHandle<Person> h) { }
-            public void remove(Context<DS2> c, ObjectHandle<Person> h) { leftMem.remove(h); }
+            public void update(Context<CTX2> c, ObjectHandle<Person> h) { }
+            public void remove(Context<CTX2> c, ObjectHandle<Person> h) { leftMem.remove(h); }
         });
 
         // Right handler: store handle, probe left memory, fire on match
-        router.subscribe(1, new DataProcessor<DS2, String>() {
-            public void add(Context<DS2> c, ObjectHandle<String> h) {
+        router.subscribe(1, new DataProcessor<CTX2, String>() {
+            public void add(Context<CTX2> c, ObjectHandle<String> h) {
                 rightMem.add(h);
                 leftMem.forEach(lh -> fired.add(lh.getObject().name() + ":" + h.getObject()));
             }
-            public void update(Context<DS2> c, ObjectHandle<String> h) { }
-            public void remove(Context<DS2> c, ObjectHandle<String> h) { rightMem.remove(h); }
+            public void update(Context<CTX2> c, ObjectHandle<String> h) { }
+            public void remove(Context<CTX2> c, ObjectHandle<String> h) { rightMem.remove(h); }
         });
 
         persons.add(new Person("Darth", 100, "London"));
@@ -202,8 +202,8 @@ public class RuleProapgationAndExecutionTest {
         PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
         PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
 
-        Router<DS2> router = new Router<>(2);
-        router.addContext(new ContextPojoDS<>(new DS2(persons, names)));
+        Router<CTX2> router = new Router<>(2);
+        router.addContext(new ContextPojoDS<>(new CTX2(persons, names)));
 
         persons.subscribe(new ContextRouterAdapter<>(0, router));
         names.subscribe(new ContextRouterAdapter<>(1, router));
@@ -212,22 +212,22 @@ public class RuleProapgationAndExecutionTest {
         List<ObjectHandle<Person>> leftMem  = new ArrayList<>();
         List<ObjectHandle<String>> rightMem = new ArrayList<>();
 
-        router.subscribe(0, new DataProcessor<DS2, Person>() {
-            public void add(Context<DS2> c, ObjectHandle<Person> h) {
+        router.subscribe(0, new DataProcessor<CTX2, Person>() {
+            public void add(Context<CTX2> c, ObjectHandle<Person> h) {
                 leftMem.add(h);
                 rightMem.forEach(rh -> fired.add(h.getObject().name() + ":" + rh.getObject()));
             }
-            public void update(Context<DS2> c, ObjectHandle<Person> h) { }
-            public void remove(Context<DS2> c, ObjectHandle<Person> h) { leftMem.remove(h); }
+            public void update(Context<CTX2> c, ObjectHandle<Person> h) { }
+            public void remove(Context<CTX2> c, ObjectHandle<Person> h) { leftMem.remove(h); }
         });
 
-        router.subscribe(1, new DataProcessor<DS2, String>() {
-            public void add(Context<DS2> c, ObjectHandle<String> h) {
+        router.subscribe(1, new DataProcessor<CTX2, String>() {
+            public void add(Context<CTX2> c, ObjectHandle<String> h) {
                 rightMem.add(h);
                 leftMem.forEach(lh -> fired.add(lh.getObject().name() + ":" + h.getObject()));
             }
-            public void update(Context<DS2> c, ObjectHandle<String> h) { }
-            public void remove(Context<DS2> c, ObjectHandle<String> h) { rightMem.remove(h); }
+            public void update(Context<CTX2> c, ObjectHandle<String> h) { }
+            public void remove(Context<CTX2> c, ObjectHandle<String> h) { rightMem.remove(h); }
         });
 
         names.add("Skywalker");

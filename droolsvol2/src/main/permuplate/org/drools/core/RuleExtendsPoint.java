@@ -26,7 +26,7 @@ public class RuleExtendsPoint {
     // Template — generates RuleExtendsPoint3..RuleExtendsPoint10
     @Permute(varName = "i", from = "3", to = "10", className = "RuleExtendsPoint${i}",
              inline = true, keepTemplate = true)
-    public static class RuleExtendsPoint2<DS,
+    public static class RuleExtendsPoint2<CTX,
             @PermuteTypeParam(varName = "j", from = "2", to = "${i}", name = "${alpha(j)}") B>
             extends RuleExtendsPoint {
 

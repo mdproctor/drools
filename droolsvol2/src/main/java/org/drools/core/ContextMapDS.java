@@ -14,7 +14,7 @@ public class ContextMapDS extends AbstractContext<Map<String, DataSource<?>>>
         this.sources = new HashMap<>();
     }
 
-    public Map<String, DataSource<?>> ds() {
+    public Map<String, DataSource<?>> context() {
         return sources;
     }
 

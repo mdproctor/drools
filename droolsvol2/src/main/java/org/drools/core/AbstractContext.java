@@ -5,25 +5,25 @@ import org.drools.api.data.DataProcessor;
 
 import java.util.List;
 
-public abstract class AbstractContext<DS> implements Context<DS> {
+public abstract class AbstractContext<CTX> implements Context<CTX> {
 
     // Type erasure is necessary here, so it can be cast in the getDataProcessorsByTypeAssignment method.
-    private TypeIndexer<DS> typeIndexer;
+    private TypeIndexer<CTX> typeIndexer;
 
     public AbstractContext() {
 
     }
 
-    public TypeIndexer<DS> getTypeIndexer() {
+    public TypeIndexer<CTX> getTypeIndexer() {
         return typeIndexer;
     }
 
-    public void setTypeIndexer(TypeIndexer<DS> typeIndexer) {
+    public void setTypeIndexer(TypeIndexer<CTX> typeIndexer) {
         this.typeIndexer = typeIndexer;
     }
 
     @Override
-    public <T, K extends T> List<DataProcessor<DS, K>> getDataProcessorsByTypeAssignment(ObjectHandle<T> handle) {
+    public <T, K extends T> List<DataProcessor<CTX, K>> getDataProcessorsByTypeAssignment(ObjectHandle<T> handle) {
         return typeIndexer.getDataProcessorsByTypeAssignment(handle.getObject().getClass());
     }
 

@@ -13,26 +13,26 @@ import java.util.Set;
 
 public class RuleBaseModifier {
 
-    public static <DS> ChangeSet<DS> changeSet() {
+    public static <CTX> ChangeSet<CTX> changeSet() {
         return new ChangeSet<>();
     }
 
-    public static <DS> ChangeSetModifier<DS> with(RuleBase<DS> ruleBase) {
+    public static <CTX> ChangeSetModifier<CTX> with(RuleBase<CTX> ruleBase) {
         return new ChangeSetModifier<>(ruleBase);
     }
 
-    public static class ChangeSetModifier<DS> {
-        RuleBase<DS> ruleBase;
+    public static class ChangeSetModifier<CTX> {
+        RuleBase<CTX> ruleBase;
 
-        public ChangeSetModifier(RuleBase<DS> ruleBase) {
+        public ChangeSetModifier(RuleBase<CTX> ruleBase) {
             this.ruleBase = ruleBase;
         }
 
-        public <DS> void apply(ChangeSetBuilder<DS> changeSetBuilder) {
+        public <CTX> void apply(ChangeSetBuilder<CTX> changeSetBuilder) {
             ruleBase.apply(changeSetBuilder);
-//            ChangeSet<DS> changeSet = changeSetBuilder.getChangeSet();
-//            for(PackageChangeSet<DS> packages : changeSet.added.values()) {
-//               for(UnitChangeSet<DS> units : packages.added.values()) {
+//            ChangeSet<CTX> changeSet = changeSetBuilder.getChangeSet();
+//            for(PackageChangeSet<CTX> packages : changeSet.added.values()) {
+//               for(UnitChangeSet<CTX> units : packages.added.values()) {
 //                   for(Rule rule : units.added.values()) {
 //
 //
@@ -42,36 +42,36 @@ public class RuleBaseModifier {
         }
     }
 
-    public interface ChangeSetBuilder<DS> {
-        ChangeSet<DS>  getChangeSet();
+    public interface ChangeSetBuilder<CTX> {
+        ChangeSet<CTX>  getChangeSet();
     }
 
-    public static class ChangeSet<DS> implements ChangeSetBuilder<DS> {
-        private Map<String, RulePackageChangeSet<DS>> added   = new HashMap<>();
+    public static class ChangeSet<CTX> implements ChangeSetBuilder<CTX> {
+        private Map<String, RulePackageChangeSet<CTX>> added   = new HashMap<>();
         private Set<String>                           removed = new HashSet<>();
-        private RulePackageChangeSet<DS>              packageChangeSet;
+        private RulePackageChangeSet<CTX>              packageChangeSet;
 
-        public RulePackageChangeSet<DS> selectPackage(String packageName) {
+        public RulePackageChangeSet<CTX> selectPackage(String packageName) {
             packageChangeSet = added.get(packageName);
             if (packageChangeSet == null) {
-                packageChangeSet = new RulePackageChangeSet<DS>(this);
+                packageChangeSet = new RulePackageChangeSet<CTX>(this);
                 added.put(packageName, packageChangeSet);
             }
             return packageChangeSet;
         }
 
-        public ChangeSet<DS> remove(String packageName) {
+        public ChangeSet<CTX> remove(String packageName) {
             this.added.remove(packageName);
             this.removed.add(packageName);
             return this;
         }
 
         @Override
-        public ChangeSet<DS> getChangeSet() {
+        public ChangeSet<CTX> getChangeSet() {
             return this;
         }
 
-        public Map<String, RulePackageChangeSet<DS>> getAdded() {
+        public Map<String, RulePackageChangeSet<CTX>> getAdded() {
             return added;
         }
 
@@ -81,28 +81,28 @@ public class RuleBaseModifier {
     }
 
 
-    public static class RulePackageChangeSet<DS> implements ChangeSetBuilder<DS> {
-        private ChangeSet<DS>              changeSet;
+    public static class RulePackageChangeSet<CTX> implements ChangeSetBuilder<CTX> {
+        private ChangeSet<CTX>              changeSet;
         private String                         packageName;
         private Map<String, RuleUnitChangeSet> added   = new HashMap<>();
         private Set<String>           removed = new HashSet<>();
-        private RuleUnitChangeSet<DS> unitChangeSet;
+        private RuleUnitChangeSet<CTX> unitChangeSet;
 
-        public RulePackageChangeSet(ChangeSet<DS> changeSet) {
+        public RulePackageChangeSet(ChangeSet<CTX> changeSet) {
             this.changeSet = changeSet;
         }
 
-        public RuleUnitChangeSet<DS> selectUnit(String unitName) {
+        public RuleUnitChangeSet<CTX> selectUnit(String unitName) {
             unitChangeSet = added.get(unitName);
             if (unitChangeSet == null) {
-                unitChangeSet =  new RuleUnitChangeSet<DS>(this);
+                unitChangeSet =  new RuleUnitChangeSet<CTX>(this);
                 added.put(unitName, unitChangeSet);
             }
 
             return unitChangeSet;
         }
 
-        public RulePackageChangeSet<DS> remove(String unitName) {
+        public RulePackageChangeSet<CTX> remove(String unitName) {
             this.added.remove(unitName);
             this.removed.add(unitName);
             return this;
@@ -121,49 +121,49 @@ public class RuleBaseModifier {
         }
 
         @Override
-        public ChangeSet<DS> getChangeSet() {
+        public ChangeSet<CTX> getChangeSet() {
             return changeSet;
         }
     }
 
-    public static class RuleUnitChangeSet<DS> implements ChangeSetBuilder<DS>  {
-        private RulePackageChangeSet<DS>         packageChangeSet;
+    public static class RuleUnitChangeSet<CTX> implements ChangeSetBuilder<CTX>  {
+        private RulePackageChangeSet<CTX>         packageChangeSet;
         private Map<String, Rule>                added       = new HashMap<>();
-        private List<RuleDescriptor<DS>>         descriptors = new ArrayList<>();
+        private List<RuleDescriptor<CTX>>         descriptors = new ArrayList<>();
         private Set<String>                      removed     = new HashSet<>();
 
-        public RuleUnitChangeSet(RulePackageChangeSet<DS> packageChangeSet) {
+        public RuleUnitChangeSet(RulePackageChangeSet<CTX> packageChangeSet) {
             this.packageChangeSet = packageChangeSet;
         }
 
-        public RulePackageChangeSet<DS> selectPackage(String packageName) {
+        public RulePackageChangeSet<CTX> selectPackage(String packageName) {
             return packageChangeSet.changeSet.selectPackage(packageName);
         }
 
-        public RuleUnitChangeSet<DS> selectUnit(String unitName) {
+        public RuleUnitChangeSet<CTX> selectUnit(String unitName) {
             return packageChangeSet.selectUnit(unitName);
         }
 
-        public RuleUnitChangeSet<DS> add(BaseRuleBuilder builder) {
+        public RuleUnitChangeSet<CTX> add(BaseRuleBuilder builder) {
             Rule rule = builder.build();
             added.put(rule.getName(), rule);
-            RuleDescriptor<DS> descriptor = builder.descriptor();
+            RuleDescriptor<CTX> descriptor = builder.descriptor();
             descriptors.add(descriptor);
             return this;
         }
 
-        public RuleUnitChangeSet<DS> remove(String rule) {
+        public RuleUnitChangeSet<CTX> remove(String rule) {
             added.remove(rule);
             removed.remove(rule);
             return this;
         }
 
         public Map<String, Rule>            getAdded()       { return added; }
-        public List<RuleDescriptor<DS>>     getDescriptors() { return descriptors; }
+        public List<RuleDescriptor<CTX>>     getDescriptors() { return descriptors; }
         public Set<String>                  getRemoved()     { return removed; }
 
         @Override
-        public ChangeSet<DS> getChangeSet() {
+        public ChangeSet<CTX> getChangeSet() {
             return packageChangeSet.changeSet;
         }
     }

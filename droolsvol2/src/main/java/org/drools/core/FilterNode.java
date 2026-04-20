@@ -5,9 +5,9 @@ import org.drools.core.function.Predicate2;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FilterNode<DS, T> extends BaseNode {
+public class FilterNode<CTX, T> extends BaseNode {
     private BaseNode                parent;
-    private Predicate2<Context<DS>, T> predicate;
+    private Predicate2<Context<CTX>, T> predicate;
     private List<NetworkNode>          children;
 
     public FilterNode(int id) {
@@ -23,7 +23,7 @@ public class FilterNode<DS, T> extends BaseNode {
         this.parent = parent;
     }
 
-    public Predicate2<Context<DS>, T> getPredicate() {
+    public Predicate2<Context<CTX>, T> getPredicate() {
         return predicate;
     }
 

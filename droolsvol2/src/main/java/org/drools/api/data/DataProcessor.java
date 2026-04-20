@@ -2,11 +2,11 @@ package org.drools.api.data;
 
 import org.drools.core.Context;
 
-public interface DataProcessor<DS, T> {
-    void add(Context<DS> ctx, ObjectHandle<T> handle);
+public interface DataProcessor<CTX, T> {
+    void add(Context<CTX> ctx, ObjectHandle<T> handle);
 
-    void update(Context<DS> ctx, ObjectHandle<T> handle);
+    void update(Context<CTX> ctx, ObjectHandle<T> handle);
 
-    void remove(Context<DS> ctx, ObjectHandle<T> handle);
+    void remove(Context<CTX> ctx, ObjectHandle<T> handle);
 
 }

@@ -16,20 +16,20 @@ public class ContextAdapterTest {
         PropagatingDataStore<Person> persons = new PropagatingDataStore(0, new TypeIndexer<>());
         PropagatingDataStore<City> cities = new PropagatingDataStore(1, new TypeIndexer<>());
 
-        record DS1(DataStore<Person> persons, DataStore<City> cities) {};
+        record CTX1(DataStore<Person> persons, DataStore<City> cities) {};
 
-        Router<DS1> router = new Router<>(2);
+        Router<CTX1> router = new Router<>(2);
 
-        ContextPojoDS<DS1>                                                  ctx         = new ContextPojoDS<>(new DS1(persons, cities));
+        ContextPojoDS<CTX1>                                                  ctx         = new ContextPojoDS<>(new CTX1(persons, cities));
         Handle                                                              handle      = router.addContext(ctx);
-        ContextRouterAdapter<DataStore<Person>, ContextPojoDS<DS1>, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<City>, ContextPojoDS<DS1>, City>     ctxAdapter1 = new ContextRouterAdapter(1, router);
+        ContextRouterAdapter<DataStore<Person>, ContextPojoDS<CTX1>, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
+        ContextRouterAdapter<DataStore<City>, ContextPojoDS<CTX1>, City>     ctxAdapter1 = new ContextRouterAdapter(1, router);
 
         persons.subscribe(ctxAdapter0);
         cities.subscribe(ctxAdapter1);
 
-        RecordingDataProcessor<DS1, Object> recorder0 = new RecordingDataProcessor<>(0);
-        RecordingDataProcessor<DS1, Object> recorder1 = new RecordingDataProcessor<>(1);
+        RecordingDataProcessor<CTX1, Object> recorder0 = new RecordingDataProcessor<>(0);
+        RecordingDataProcessor<CTX1, Object> recorder1 = new RecordingDataProcessor<>(1);
         router.subscribe(0, recorder0);
         router.subscribe(1, recorder1);
 
@@ -77,40 +77,40 @@ public class ContextAdapterTest {
         List<String> list1 = new ArrayList<>();
         List<String> list2 = new ArrayList<>();
 
-        record DS1(String name, DataStore<Person> persons, DataStore<City> cities, List<String> list) {};
+        record CTX1(String name, DataStore<Person> persons, DataStore<City> cities, List<String> list) {};
 
-        Router<DS1> router = new Router<>(2);
+        Router<CTX1> router = new Router<>(2);
 
-        ContextPojoDS<DS1> ctx1         = new ContextPojoDS<>(new DS1("ctx1", persons1, cities, list1));
-        ContextPojoDS<DS1> ctx2         = new ContextPojoDS<>(new DS1("ctx2", persons2, cities, list2));
+        ContextPojoDS<CTX1> ctx1         = new ContextPojoDS<>(new CTX1("ctx1", persons1, cities, list1));
+        ContextPojoDS<CTX1> ctx2         = new ContextPojoDS<>(new CTX1("ctx2", persons2, cities, list2));
         Handle ctx1H = router.addContext(ctx1);
         Handle ctx2H = router.addContext(ctx2);
 
-        ContextRouterAdapter<DataStore<Person>, ContextPojoDS<DS1>, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<City>, ContextPojoDS<DS1>, City>     ctxAdapter1 = new ContextRouterAdapter(1, router);
+        ContextRouterAdapter<DataStore<Person>, ContextPojoDS<CTX1>, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
+        ContextRouterAdapter<DataStore<City>, ContextPojoDS<CTX1>, City>     ctxAdapter1 = new ContextRouterAdapter(1, router);
 
         persons1.subscribe(ctxAdapter0);
         cities.subscribe(ctxAdapter1);
 
-        Action1<DS1, Person> pfn = new Action1<>((ctx, o) -> ctx.ds().list().add(ctx.ds().name() + ":" + o.name()));
-        Action1<DS1, City>   cfn = new Action1<>((ctx, o) -> ctx.ds().list().add(ctx.ds().name() + ":" + o.name()));
+        Action1<CTX1, Person> pfn = new Action1<>((ctx, o) -> ctx.context().list().add(ctx.context().name() + ":" + o.name()));
+        Action1<CTX1, City>   cfn = new Action1<>((ctx, o) -> ctx.context().list().add(ctx.context().name() + ":" + o.name()));
 
         router.subscribe(0, pfn);
         router.subscribe(1, cfn);
 
         ObjectHandle<Person> data1H = persons1.add(new Person("Darth", 100, "London"));
-        assertThat(ctx1.ds().list()).containsExactly("ctx1:Darth");
-        assertThat(ctx2.ds().list()).containsExactly("ctx2:Darth");
+        assertThat(ctx1.context().list()).containsExactly("ctx1:Darth");
+        assertThat(ctx2.context().list()).containsExactly("ctx2:Darth");
 
         router.removeContext(ctx1H);
         ObjectHandle<Person> data2H = persons1.add(new Person("Yoda", 300, "Paris"));
-        assertThat(ctx1.ds().list()).containsExactly("ctx1:Darth");
-        assertThat(ctx2.ds().list()).containsExactly("ctx2:Darth", "ctx2:Yoda");
+        assertThat(ctx1.context().list()).containsExactly("ctx1:Darth");
+        assertThat(ctx2.context().list()).containsExactly("ctx2:Darth", "ctx2:Yoda");
 
         ctx1H = router.addContext(ctx1);
         ObjectHandle<Person> data3H = persons1.add(new Person("Luke", 30, "Barcelona"));
-        assertThat(ctx1.ds().list()).containsExactly("ctx1:Darth", "ctx1:Luke");
-        assertThat(ctx2.ds().list()).containsExactly("ctx2:Darth", "ctx2:Yoda", "ctx2:Luke");
+        assertThat(ctx1.context().list()).containsExactly("ctx1:Darth", "ctx1:Luke");
+        assertThat(ctx2.context().list()).containsExactly("ctx2:Darth", "ctx2:Yoda", "ctx2:Luke");
 
     }
 

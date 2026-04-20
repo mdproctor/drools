@@ -1,14 +1,14 @@
 package org.drools.core;
 
-public class ContextPojoDS<DS> extends AbstractContext<DS> implements Context<DS> {
+public class ContextPojoDS<CTX> extends AbstractContext<CTX> implements Context<CTX> {
 
-    private DS sources;
+    private CTX sources;
 
-    public ContextPojoDS(DS sources) {
+    public ContextPojoDS(CTX sources) {
         this.sources = sources;
     }
 
-    public DS ds() {
+    public CTX context() {
         return sources;
     }
 

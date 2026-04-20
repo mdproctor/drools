@@ -9,17 +9,17 @@ import org.drools.core.rete.NetworkNode;
 import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.FastIterator;
 
-public class Join4<DS, B, C, D, E> extends NetworkNode {
+public class Join4<CTX, B, C, D, E> extends NetworkNode {
     private BaseNode leftInput;
 
     private BaseNode rightInput;
 
     private BaseNode sink;
 
-    private Predicate8<Context<DS>, B, C, D, E, Object, Object, Object> predicate8;
-    private Predicate7<Context<DS>, B, C, D, E, Object, Object> predicate7;
-    private Predicate6<Context<DS>, B, C, D, E, Object> predicate6;
-    private Predicate5<Context<DS>, B, C, D, E> predicate5;
+    private Predicate8<Context<CTX>, B, C, D, E, Object, Object, Object> predicate8;
+    private Predicate7<Context<CTX>, B, C, D, E, Object, Object> predicate7;
+    private Predicate6<Context<CTX>, B, C, D, E, Object> predicate6;
+    private Predicate5<Context<CTX>, B, C, D, E> predicate5;
 
     private int rightSize;
 
@@ -56,7 +56,7 @@ public class Join4<DS, B, C, D, E> extends NetworkNode {
         }
     }
 
-    private void leftAdd(Context<DS> ctx, TupleImpl<B> b, TupleImpl<C> c, TupleImpl<D> d, TupleImpl<E> e) {
+    private void leftAdd(Context<CTX> ctx, TupleImpl<B> b, TupleImpl<C> c, TupleImpl<D> d, TupleImpl<E> e) {
         Join4Memory             memory      = ctx.getMemory(this);
         TupleMemory             rightMemory = memory.rightMemory();
         TupleImpl               rightTp     = rightMemory.getFirst4(b, c, d, e);
@@ -87,7 +87,7 @@ public class Join4<DS, B, C, D, E> extends NetworkNode {
 //        }
     }
 
-    private void join(Context<DS> ctx, ObjectHandle<B> b, ObjectHandle<C> c, ObjectHandle<D> d, ObjectHandle<E> e) {
+    private void join(Context<CTX> ctx, ObjectHandle<B> b, ObjectHandle<C> c, ObjectHandle<D> d, ObjectHandle<E> e) {
         int joins = 0;
         switch(joins) {
             case 1:

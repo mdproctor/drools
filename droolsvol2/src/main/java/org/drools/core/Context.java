@@ -5,11 +5,11 @@ import org.drools.api.data.DataProcessor;
 
 import java.util.List;
 
-public interface Context<DS> {
+public interface Context<CTX> {
 
-    DS ds();
+    CTX context();
 
-    <T, K extends T> List<DataProcessor<DS, K>> getDataProcessorsByTypeAssignment(ObjectHandle<T> handle);
+    <T, K extends T> List<DataProcessor<CTX, K>> getDataProcessorsByTypeAssignment(ObjectHandle<T> handle);
 
     <M> M getMemory(Object object);
 

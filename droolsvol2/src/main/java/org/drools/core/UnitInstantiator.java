@@ -6,9 +6,9 @@ package org.drools.core;
  * allowing different instantiation strategies in future.
  *
  * Usage:
- *   UnitInstantiator.using(ruleBase).createInstance("org.domain.Unit1", ds)
+ *   UnitInstantiator.using(ruleBase).createInstance("org.domain.Unit1", ctx)
  */
-public class UnitInstantiator<DS> {
+public class UnitInstantiator<CTX> {
 
     private final RuleBase<?> ruleBase;
 
@@ -16,15 +16,15 @@ public class UnitInstantiator<DS> {
         this.ruleBase = ruleBase;
     }
 
-    public static <DS> UnitInstantiator<DS> from(RuleBase<?> ruleBase) {
+    public static <CTX> UnitInstantiator<CTX> from(RuleBase<?> ruleBase) {
         return new UnitInstantiator<>(ruleBase);
     }
 
-    public UnitInstance<DS> createInstance(String unitFqn, DS ds) {
-        UnitDescriptor<DS> descriptor = ruleBase.unitDescriptor(unitFqn);
+    public UnitInstance<CTX> createInstance(String unitFqn, CTX ctx) {
+        UnitDescriptor<CTX> descriptor = ruleBase.unitDescriptor(unitFqn);
         if (descriptor == null) {
             throw new IllegalArgumentException("No unit registered as '" + unitFqn + "'");
         }
-        return descriptor.createInstance(ds);
+        return descriptor.createInstance(ctx);
     }
 }

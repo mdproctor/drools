@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ClassTypeInfo<DS, T>  {
-    private Map<ObjectType, List<DataProcessor<DS, T>>> cache = new HashMap<>();
+public class ClassTypeInfo<CTX, T>  {
+    private Map<ObjectType, List<DataProcessor<CTX, T>>> cache = new HashMap<>();
 
 }

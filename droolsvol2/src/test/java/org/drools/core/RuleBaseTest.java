@@ -9,9 +9,9 @@ public class RuleBaseTest {
     public void test0() {
         RuleBase ruleBase = new RuleBase();
 
-        record DS(DataStore<Person> persons) {};
+        record CTX(DataStore<Person> persons) {};
 
-        RuleBuilder<DS> builder = new RuleBuilder<>();
+        RuleBuilder<CTX> builder = new RuleBuilder<>();
 
         RuleBaseModifier.with(ruleBase)
                         .apply(RuleBaseModifier.changeSet()
@@ -25,9 +25,9 @@ public class RuleBaseTest {
     public void test1() {
         RuleBase ruleBase = new RuleBase();
 
-        record DS(DataStore<?> ds1) {};
+        record CTX(DataStore<?> ds1) {};
 
-        RuleBuilder<DS> rb = new RuleBuilder<>();
+        RuleBuilder<CTX> rb = new RuleBuilder<>();
 
         RuleBaseModifier.with(ruleBase)
                         .apply(RuleBaseModifier.changeSet()
@@ -40,19 +40,19 @@ public class RuleBaseTest {
     public void test2() {
         RuleBase ruleBase = new RuleBase();
 
-        record DS(DataStore<Person> persons) {};
+        record CTX(DataStore<Person> persons) {};
 
         record P3(String p3_1, String p3_2, String p3_3) {
             public static final P3 V = new P3(null,null,null);
         };
 
-        RuleBuilder<DS> rb = new RuleBuilder<>();
+        RuleBuilder<CTX> rb = new RuleBuilder<>();
 
         RuleBaseModifier.with(ruleBase)
                         .apply(RuleBaseModifier.changeSet()
                                                .selectPackage("org.domain").selectUnit("Unit1")
                                                .add(rb.rule("rule1").<P3>params()
-                                                           .join(rb.from(DS::persons).filter((ctx, b) -> b.age() > 20))
+                                                           .join(rb.from(CTX::persons).filter((ctx, b) -> b.age() > 20))
                                                            .filter((ctx, a, b) -> a.p3_1().length() > b.age())));
 
     }

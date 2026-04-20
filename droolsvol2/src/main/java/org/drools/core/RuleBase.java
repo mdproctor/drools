@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RuleBase<DS> {
+public class RuleBase<CTX> {
 
     private ReteBuilder    reteBuilder;
     private EntryPointNode root;
@@ -41,8 +41,8 @@ public class RuleBase<DS> {
         reteBuilder = new ReteBuilder(this);
     }
 
-    public <DS> void apply(ChangeSetBuilder<DS> changeSetBuilder) {
-        ChangeSet<DS> changeSet = changeSetBuilder.getChangeSet();
+    public <CTX> void apply(ChangeSetBuilder<CTX> changeSetBuilder) {
+        ChangeSet<CTX> changeSet = changeSetBuilder.getChangeSet();
 
         // for each removed package, remove all the units and all the rules for those units.
         for(String removedRulePackages : changeSet.getRemoved()) {
@@ -55,24 +55,24 @@ public class RuleBase<DS> {
         }
 
 
-        for (Map.Entry<String, RulePackageChangeSet<DS>> pkgEntry : changeSet.getAdded().entrySet()) {
+        for (Map.Entry<String, RulePackageChangeSet<CTX>> pkgEntry : changeSet.getAdded().entrySet()) {
             String packageName = pkgEntry.getKey();
-            RulePackageChangeSet<DS> changedRulePackages = pkgEntry.getValue();
+            RulePackageChangeSet<CTX> changedRulePackages = pkgEntry.getValue();
 
             for (Map.Entry<String, RuleUnitChangeSet> unitEntry : changedRulePackages.getAdded().entrySet()) {
                 String unitName = unitEntry.getKey();
                 String fqn = packageName + "." + unitName;
-                RuleUnitChangeSet<DS> changedUnits = (RuleUnitChangeSet<DS>) unitEntry.getValue();
+                RuleUnitChangeSet<CTX> changedUnits = (RuleUnitChangeSet<CTX>) unitEntry.getValue();
 
                 @SuppressWarnings("unchecked")
-                UnitDescriptor<DS> unitDescriptor = (UnitDescriptor<DS>)
-                        unitDescriptors.computeIfAbsent(fqn, k -> new UnitDescriptor<DS>());
+                UnitDescriptor<CTX> unitDescriptor = (UnitDescriptor<CTX>)
+                        unitDescriptors.computeIfAbsent(fqn, k -> new UnitDescriptor<CTX>());
 
                 for (Rule rule : changedUnits.getAdded().values()) {
                     reteBuilder.addRule((RuleImpl) rule);
                 }
 
-                for (RuleDescriptor<DS> descriptor : changedUnits.getDescriptors()) {
+                for (RuleDescriptor<CTX> descriptor : changedUnits.getDescriptors()) {
                     unitDescriptor.addRule(descriptor);
                 }
             }
@@ -87,8 +87,8 @@ public class RuleBase<DS> {
 
 
     @SuppressWarnings("unchecked")
-    <DS> UnitDescriptor<DS> unitDescriptor(String fqn) {
-        return (UnitDescriptor<DS>) unitDescriptors.get(fqn);
+    <CTX> UnitDescriptor<CTX> unitDescriptor(String fqn) {
+        return (UnitDescriptor<CTX>) unitDescriptors.get(fqn);
     }
 
     public RuleBaseConfiguration getRuleBaseConfiguration() {

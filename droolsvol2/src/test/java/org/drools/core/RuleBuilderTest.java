@@ -183,7 +183,7 @@ public class RuleBuilderTest {
                                 .filter((ctx, p) -> p.get("xxx").age() > 20))
                    .join(Ctx::libraries)
                .end()
-               .fn( (a, b, c) -> System.out.println(a.ds() + b.p3_1 + c.name()))
+               .fn( (a, b, c) -> System.out.println(a.context() + b.p3_1 + c.name()))
                .end();
     }
 

@@ -4,7 +4,7 @@ import org.drools.api.data.DataStore;
 import org.drools.core.RuleBuilderTest.Params3;
 
 public class TestRules {
-    record DS(DataStore<Person> persons,
+    record CTX(DataStore<Person> persons,
               DataStore<Library> libraries,
               DataStore<Object> misc) {};
 
@@ -17,12 +17,12 @@ public class TestRules {
     public void test3JOINS() {
         RuleBase ruleBase = new RuleBase();
 
-        RuleBuilder<DS> builder = new RuleBuilder<>();
+        RuleBuilder<CTX> builder = new RuleBuilder<>();
 
         RuleBaseModifier.with(ruleBase)
                         .apply(RuleBaseModifier.changeSet()
                                                .selectPackage("org.domain").selectUnit("Unit1")
-                                               .add(builder.rule("Rule1").from(DS::persons)
+                                               .add(builder.rule("Rule1").from(CTX::persons)
                                                            .ifn( (ctx, p) -> System.out.println(p))));
     }
 }

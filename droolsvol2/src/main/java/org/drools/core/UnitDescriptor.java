@@ -9,22 +9,22 @@ import java.util.List;
 /**
  * Compiled representation of a named unit within a RuleBase package.
  * Holds all RuleDescriptors for the unit's rules.
- * UnitInstances are created from a UnitDescriptor + a DS record instance.
+ * UnitInstances are created from a UnitDescriptor + a CTX record instance.
  */
-public class UnitDescriptor<DS> {
+public class UnitDescriptor<CTX> {
 
-    private final List<RuleDescriptor<DS>> rules = new ArrayList<>();
+    private final List<RuleDescriptor<CTX>> rules = new ArrayList<>();
 
-    void addRule(RuleDescriptor<DS> descriptor) {
+    void addRule(RuleDescriptor<CTX> descriptor) {
         rules.add(descriptor);
     }
 
-    public List<RuleDescriptor<DS>> getRules() {
+    public List<RuleDescriptor<CTX>> getRules() {
         return Collections.unmodifiableList(rules);
     }
 
     @SuppressWarnings("unchecked")
-    public UnitInstance<DS> createInstance(DS ds) {
-        return new UnitInstance<>(ds, rules.toArray(new RuleDescriptor[0]));
+    public UnitInstance<CTX> createInstance(CTX ctx) {
+        return new UnitInstance<>(ctx, rules.toArray(new RuleDescriptor[0]));
     }
 }

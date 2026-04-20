@@ -3,7 +3,7 @@ package org.drools.core;
 import org.drools.api.data.ObjectHandle;
 import org.drools.core.function.Predicate4;
 
-public class Join3<DS, B, C, D> {
+public class Join3<CTX, B, C, D> {
     private BaseNode leftInput;
 
     private BaseNode rightInput;
@@ -12,7 +12,7 @@ public class Join3<DS, B, C, D> {
 
     private Predicate4 predicate4;
 
-    private void leftAdd(Context<DS> ctx, ObjectHandle<B> b, ObjectHandle<C> c) {
+    private void leftAdd(Context<CTX> ctx, ObjectHandle<B> b, ObjectHandle<C> c) {
         ObjectHandle<D> d = null;
         if (predicate4.test(ctx, b, c, d)) {
 

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TypeIndexer<DS> {
+public class TypeIndexer<CTX> {
     // Type erasure is necessary here, so it can be cast in the getDataProcessorsByTypeAssignment method.
     private Map<Class, List> map;
 
@@ -14,11 +14,11 @@ public class TypeIndexer<DS> {
         this.map = new HashMap<>();
     }
 
-    public <T> void buildCache(Class cls, List<DataProcessor<DS, ? extends T>> list) {
+    public <T> void buildCache(Class cls, List<DataProcessor<CTX, ? extends T>> list) {
         map.put(cls, list);
     }
 
-    public <T, K extends T> List<DataProcessor<DS, K>> getDataProcessorsByTypeAssignment(Class cls) {
+    public <T, K extends T> List<DataProcessor<CTX, K>> getDataProcessorsByTypeAssignment(Class cls) {
         return map.get(cls);
     }
 }
