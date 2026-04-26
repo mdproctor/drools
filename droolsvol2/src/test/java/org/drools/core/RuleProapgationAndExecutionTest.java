@@ -429,4 +429,48 @@ public class RuleProapgationAndExecutionTest {
         persons.add(new Person("Bob", 25, "Paris"));
         assertThat(fired).containsExactly("Alice");  // Bob not on allowlist → blocked
     }
+
+    // =========================================================================
+    // Lambda not()/exists() — multiple inner joins in scope
+    // =========================================================================
+
+    record CTX4(DataStore<Person> persons, DataStore<String> cities, DataStore<String> blocklist) {}
+
+    @Test
+    public void testLambdaNotScopeTwoInnerJoins() {
+        // Scope has two inner joins: cities and blocklist.
+        // Filter references outer Person + inner city + inner blocklist entry.
+        // not(scope): blocks person if scope finds a matching (city, entry) pair where
+        //   city == "London" AND entry == p.name().
+        // Alice: "London" in cities AND "Alice" in blocklist → scope matches → BLOCKED.
+        // Bob: "London" in cities BUT "Bob" not in blocklist → scope empty → PASSES.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities    = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> blocklist = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        CTX4 ctx4 = new CTX4(persons, cities, blocklist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX4> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U3")
+                        .add(new RuleBuilder<CTX4>().rule("twoInnerNot")
+                                .from(CTX4::persons)
+                                .not(scope -> scope
+                                        .join(CTX4::cities)
+                                        .join(CTX4::blocklist)
+                                        .filter((ctx, p, city, entry) ->
+                                                city.equals("London") && entry.equals(p.name())))
+                                .ifn((ctx, p) -> fired.add(p.name()))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U3", ctx4);
+
+        cities.add("London");
+        blocklist.add("Alice");
+        persons.add(new Person("Alice", 30, "London"));
+        assertThat(fired).isEmpty();  // Alice blocked: scope matches (London, Alice)
+
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).containsExactly("Bob");  // Bob passes: "Bob" not in blocklist
+    }
 }

@@ -504,13 +504,6 @@ public class RuleBuilder<CTX> {
             return new @PermuteDeclr(type = "RuleExtendsPoint${i+1}") RuleExtendsPoint3<>(rule);
         }
 
-        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')")
-        public Join2Gate<END, CTX, B, C> not(
-                @PermuteDeclr(type = "Function1<CTX, DataSource<${alpha(i+1)}>>", name = "from${alpha(i+1)}")
-                Function1<CTX, DataSource<C>> fromC) {
-            return this;
-        }
-
         // not() with Not2 — kept on template only; Not2 is arity-2 only
         @PermuteReturn(className = "void", when = "false")
         public Not2<Join2Gate<END, CTX, B, C>, CTX, B, C> not() {
