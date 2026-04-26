@@ -431,6 +431,49 @@ public class RuleProapgationAndExecutionTest {
     }
 
     // =========================================================================
+    // Lambda not()/exists() — two outer facts (join rule + scope)
+    // =========================================================================
+
+    @Test
+    public void testLambdaNotScopeTwoOuterFacts() {
+        // Rule: from(persons).join(cities) → fires for each (person, city) pair.
+        // not(scope): blocks if person's name appears on the blocklist.
+        // Both outer facts (p and city) visible in scope filter.
+        // Alice on blocklist → all (Alice, *) pairs blocked.
+        // Bob not on blocklist → (Bob, *) pairs fire.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities    = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> blocklist = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        CTX4 ctx4 = new CTX4(persons, cities, blocklist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX4> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U3")
+                        .add(new RuleBuilder<CTX4>().rule("twoOuterNot")
+                                .from(CTX4::persons)
+                                .join(CTX4::cities)
+                                .not(scope -> scope
+                                        .join(CTX4::blocklist)
+                                        .filter((ctx, p, city, entry) -> p.name().equals(entry)))
+                                .ifn((ctx, p, city) -> fired.add(p.name() + ":" + city))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U3", ctx4);
+
+        blocklist.add("Alice");
+        persons.add(new Person("Alice", 30, "London"));
+        cities.add("London");
+        assertThat(fired).isEmpty();  // Alice blocked by not (name on blocklist)
+
+        persons.add(new Person("Bob", 25, "Paris"));
+        cities.add("Paris");
+        // Bob+London and Bob+Paris fire (Bob not on blocklist)
+        // Alice+London and Alice+Paris stay blocked
+        assertThat(fired).containsExactlyInAnyOrder("Bob:London", "Bob:Paris");
+    }
+
+    // =========================================================================
     // Lambda not()/exists() — multiple inner joins in scope
     // =========================================================================
 

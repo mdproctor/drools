@@ -107,12 +107,17 @@ public class UnitInstance<CTX> {
             Object filter0 = filters.size() > 0 ? filters.get(0) : null;
             Object filter1 = filters.size() > 1 ? filters.get(1) : null;
 
-            DataProcessor<CTX, Object> leftIn  = new JoinLeftInlet<>(joinNode, nodeMemories, consumer, immediate, agenda);
-            DataProcessor<CTX, Object> rightIn = new JoinRightInlet<>(joinNode, nodeMemories, consumer, immediate, agenda);
-            // Scope guards applied on the right inlet only (right fact is the last joined)
-            rightIn = scopeGuard(rightIn, negations, existences);
-            subscribeWithFilter(0, leftIn, filter0);
-            subscribeWithFilter(1, rightIn, filter1);
+            // For 2-source rules, wrap the consumer (not the inlets) so both outer facts
+            // are available to scope predicates. The consumer receives (ctx, leftFact, rightFact).
+            Consumer3<Context<CTX>, Object, Object> scopedConsumer = negations.isEmpty() && existences.isEmpty()
+                    ? consumer
+                    : (c, leftFact, rightFact) -> {
+                        if (scopesAllow2(c, negations, existences, leftFact, rightFact))
+                            consumer.accept(c, leftFact, rightFact);
+                    };
+
+            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, nodeMemories, scopedConsumer, immediate, agenda), filter0);
+            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, scopedConsumer, immediate, agenda), filter1);
 
         } else {
             throw new UnsupportedOperationException("Rules with " + sources.size() + " patterns not yet supported");
@@ -133,6 +138,19 @@ public class UnitInstance<CTX> {
             if (found != null) return found;
         }
         return null;
+    }
+
+    /** Checks scopes for a 2-fact outer rule where both left and right facts are available. */
+    private boolean scopesAllow2(Context<CTX> c,
+            List<ScopeDescriptor<CTX>> negations,
+            List<ScopeDescriptor<CTX>> existences,
+            Object leftFact, Object rightFact) {
+        Object[] outerFacts = new Object[]{ leftFact, rightFact };
+        for (ScopeDescriptor<CTX> neg : negations)
+            if (scopeHasMatch(neg, c, outerFacts)) return false;
+        for (ScopeDescriptor<CTX> ex : existences)
+            if (!scopeHasMatch(ex, c, outerFacts)) return false;
+        return true;
     }
 
     /** Wraps a processor to check not()/exists() scopes before delegating. */
