@@ -363,4 +363,70 @@ public class RuleProapgationAndExecutionTest {
         names.add("Vader");
         assertThat(fired).containsExactlyInAnyOrder("r1:Darth", "r2:Darth:Vader");
     }
+
+    // =========================================================================
+    // Lambda not()/exists() scopes
+    // =========================================================================
+
+    record CTX3(DataStore<Person> persons, DataStore<String> blocklist) {}
+
+    @Test
+    public void testLambdaNotScopeBlocksWhenScopeHasMatch() {
+        // not(scope): rule fires for each person whose name is NOT on the blocklist.
+        // Alice is on the blocklist → blocked. Bob is not → fires.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> blocklist = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX3 ctx3 = new CTX3(persons, blocklist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX3> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U1")
+                        .add(new RuleBuilder<CTX3>().rule("notScope")
+                                .from(CTX3::persons)
+                                .not(scope -> scope
+                                        .join(CTX3::blocklist)
+                                        .filter((ctx, p, name) -> p.name().equals(name)))
+                                .ifn((ctx, p) -> fired.add(p.name()))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U1", ctx3);
+
+        blocklist.add("Alice");
+        persons.add(new Person("Alice", 30, "London"));
+        assertThat(fired).isEmpty();  // Alice blocked by not()
+
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).containsExactly("Bob");  // Bob not on blocklist → fires
+    }
+
+    @Test
+    public void testLambdaExistsScopeRequiresMatch() {
+        // exists(scope): rule fires for each person whose name IS on the allowlist.
+        // Alice is on the allowlist → fires. Bob is not → blocked.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> allowlist = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX3 ctx3 = new CTX3(persons, allowlist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX3> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U2")
+                        .add(new RuleBuilder<CTX3>().rule("existsScope")
+                                .from(CTX3::persons)
+                                .exists(scope -> scope
+                                        .join(CTX3::blocklist)
+                                        .filter((ctx, p, name) -> p.name().equals(name)))
+                                .ifn((ctx, p) -> fired.add(p.name()))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U2", ctx3);
+
+        allowlist.add("Alice");
+        persons.add(new Person("Alice", 30, "London"));
+        assertThat(fired).containsExactly("Alice");  // Alice on allowlist → fires
+
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).containsExactly("Alice");  // Bob not on allowlist → blocked
+    }
 }

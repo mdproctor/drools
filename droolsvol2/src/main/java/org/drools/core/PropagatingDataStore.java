@@ -63,6 +63,11 @@ public class PropagatingDataStore<T> extends AbstractDataSource<T> implements Da
         return store.get(object);
     }
 
+    @Override
+    public java.util.List<T> asList() {
+        return new java.util.ArrayList<>(store.keySet());
+    }
+
     public void subscribe(DataProcessor processor) {
         subscribers.add(processor);
     }

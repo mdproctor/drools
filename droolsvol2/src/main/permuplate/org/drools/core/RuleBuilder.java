@@ -1,9 +1,12 @@
 package org.drools.core;
 
 import io.quarkiverse.permuplate.Permute;
+import io.quarkiverse.permuplate.PermuteBody;
 import io.quarkiverse.permuplate.PermuteDeclr;
+import io.quarkiverse.permuplate.PermuteMacros;
 import io.quarkiverse.permuplate.PermuteMethod;
 import io.quarkiverse.permuplate.PermuteReturn;
+import io.quarkiverse.permuplate.PermuteSelf;
 import io.quarkiverse.permuplate.PermuteTypeParam;
 
 import org.drools.api.data.DataSource;
@@ -39,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.IdentityHashMap;
+import java.util.function.Consumer;
 
 public class RuleBuilder<CTX> {
 
@@ -75,21 +79,27 @@ public class RuleBuilder<CTX> {
         private final List<Function1<CTX, DataSource<?>>> sources;
         private final List<Object> filters;
         private final Object wrappedHead;
+        private final List<ScopeDescriptor<CTX>> negations;
+        private final List<ScopeDescriptor<CTX>> existences;
 
         @SuppressWarnings("unchecked")
         RuleDescriptor(Rule rule) {
             this.rule = (RuleImpl) rule;
             Object[] state = BaseRuleBuilder.RULE_STATE.getOrDefault(rule,
-                    new Object[]{new ArrayList<>(), null, new ArrayList<>()});
-            this.sources     = (List<Function1<CTX, DataSource<?>>>) state[0];
+                    new Object[]{new ArrayList<>(), null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>()});
+            this.sources    = (List<Function1<CTX, DataSource<?>>>) state[0];
             this.wrappedHead = state[1];
-            this.filters     = (List<Object>) state[2];
+            this.filters    = (List<Object>) state[2];
+            this.negations  = (List<ScopeDescriptor<CTX>>) state[3];
+            this.existences = (List<ScopeDescriptor<CTX>>) state[4];
         }
 
-        public RuleImpl getRule()                               { return rule; }
-        public List<Function1<CTX, DataSource<?>>> getSources() { return sources; }
-        public List<Object> getFilters()                        { return filters; }
-        public boolean isImmediate()                            { return !(wrappedHead instanceof DeferredHead); }
+        public RuleImpl getRule()                                    { return rule; }
+        public List<Function1<CTX, DataSource<?>>> getSources()      { return sources; }
+        public List<Object> getFilters()                             { return filters; }
+        public List<ScopeDescriptor<CTX>> getNegations()             { return negations; }
+        public List<ScopeDescriptor<CTX>> getExistences()            { return existences; }
+        public boolean isImmediate()                                 { return !(wrappedHead instanceof DeferredHead); }
 
         /** Returns the raw consumer (unwrapped). */
         public Object getHead() {
@@ -99,16 +109,26 @@ public class RuleBuilder<CTX> {
         }
     }
 
+    /**
+     * Holds the sources and filters for a not()/exists() scope sub-network.
+     * Built by ScopeGate inside the lambda, then stored on the outer RuleDescriptor.
+     */
+    public static class ScopeDescriptor<CTX> {
+        final List<Function1<CTX, DataSource<?>>> sources = new ArrayList<>();
+        final List<Object> filters = new ArrayList<>();
+    }
+
     public static class BaseRuleBuilder<END> {
         private END end;
         protected Rule rule;
 
         // Keyed by RuleImpl identity (==); cleared once descriptor() is called
+        // state[0]=sources, state[1]=head, state[2]=filters, state[3]=negations, state[4]=existences
         @SuppressWarnings("rawtypes")
         static final IdentityHashMap<Rule, Object[]> RULE_STATE = new IdentityHashMap<>();
 
         private static Object[] newState() {
-            return new Object[]{new ArrayList<>(), null, new ArrayList<>()};
+            return new Object[]{new ArrayList<>(), null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>()};
         }
 
         public BaseRuleBuilder(END end, Rule rule) {
@@ -146,6 +166,18 @@ public class RuleBuilder<CTX> {
             Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
             List filters = (List) state[2];
             if (!filters.isEmpty()) filters.set(filters.size() - 1, pred);
+        }
+
+        @SuppressWarnings("rawtypes")
+        protected void storeNot(Object scopeDesc) {
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
+            ((List) state[3]).add(scopeDesc);
+        }
+
+        @SuppressWarnings("rawtypes")
+        protected void storeExists(Object scopeDesc) {
+            Object[] state = RULE_STATE.computeIfAbsent(rule, k -> newState());
+            ((List) state[4]).add(scopeDesc);
         }
 
         public <CTX> RuleDescriptor<CTX> descriptor() {
@@ -263,6 +295,22 @@ public class RuleBuilder<CTX> {
         public <B, C, D, E> Join4First<END, CTX, B, C, D, E> extendsRule(RuleExtendsPoint5<CTX, B, C, D, E> extension5) {
             return new Join4First<>(end(), rule);
         }
+
+        /** Lambda-scope not: fires outer rule only when the scope produces zero matches. */
+        public ParametersFirst<END, CTX> not(Consumer<ScopeGate0<CTX>> scopeFn) {
+            ScopeGate0<CTX> scope = new ScopeGate0<>();
+            scopeFn.accept(scope);
+            storeNot(scope.toDescriptor());
+            return this;
+        }
+
+        /** Lambda-scope exists: fires outer rule only when the scope produces at least one match. */
+        public ParametersFirst<END, CTX> exists(Consumer<ScopeGate0<CTX>> scopeFn) {
+            ScopeGate0<CTX> scope = new ScopeGate0<>();
+            scopeFn.accept(scope);
+            storeExists(scope.toDescriptor());
+            return this;
+        }
     }
 
     public static class ParametersSecond<END, CTX, B> extends BaseRuleBuilder<END> {
@@ -328,8 +376,20 @@ public class RuleBuilder<CTX> {
             return null;
         }
 
-        public <C> Join2First<END, CTX, B, C> not(Function1<CTX, DataSource<C>> fromC) {
-            return null;
+        /** Lambda-scope not: fires outer rule only when the scope produces zero matches. */
+        public From1First<END, CTX, B> not(Consumer<ScopeGate1<CTX, B>> scopeFn) {
+            ScopeGate1<CTX, B> scope = new ScopeGate1<>();
+            scopeFn.accept(scope);
+            storeNot(scope.toDescriptor());
+            return this;
+        }
+
+        /** Lambda-scope exists: fires outer rule only when the scope produces at least one match. */
+        public From1First<END, CTX, B> exists(Consumer<ScopeGate1<CTX, B>> scopeFn) {
+            ScopeGate1<CTX, B> scope = new ScopeGate1<>();
+            scopeFn.accept(scope);
+            storeExists(scope.toDescriptor());
+            return this;
         }
 
         public <C, D> Join3First<END, CTX, B, C, D> join(Join2Gate<Void, CTX, C, D> fromCD) {
@@ -426,6 +486,7 @@ public class RuleBuilder<CTX> {
         }
     }
 
+    @PermuteMacros({"alphaFacts=typeArgList(2, i+1, 'alpha')"})
     @Permute(varName = "i", from = 3, to = 10, className = "Join${i}Gate", inline = true, keepTemplate = true)
     public static class Join2Gate<END, CTX, B,
             @PermuteTypeParam(varName = "j", from = "3", to = "${i+1}", name = "${alpha(j)}") C>
@@ -434,6 +495,9 @@ public class RuleBuilder<CTX> {
         public Join2Gate(END end, Rule rule) {
             super(end, rule);
         }
+
+        @SuppressWarnings("unchecked")
+        private static <T> T cast(Object o) { return (T) o; }
 
         @PermuteReturn(className = "RuleExtendsPoint${i+1}", typeArgs = "'CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 6")
         public RuleExtendsPoint3<CTX, B, C> extensionPoint() {
@@ -451,6 +515,27 @@ public class RuleBuilder<CTX> {
         @PermuteReturn(className = "void", when = "false")
         public Not2<Join2Gate<END, CTX, B, C>, CTX, B, C> not() {
             return new Not2<>(this, rule);
+        }
+
+        /**
+         * Lambda-scope not/exists: fires outer rule only when the scope produces zero/one+ matches.
+         * Scope predicates receive all outer facts plus inner facts at full arity.
+         */
+        @PermuteMethod(varName = "scope", values = {"not", "exists"}, name = "${scope}",
+                       macros = {"Scope=capitalize(scope)"})
+        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", alwaysEmit = true)
+        @PermuteBody(body = "{ ScopeGate${i}<CTX, ${typeArgList(2, i+1, 'alpha')}> scope = cast(newScopeGate()); scopeFn.accept(scope); store${Scope}(scope.toDescriptor()); return cast(this); }")
+        public Object lambdaScopeTemplate(
+                @PermuteDeclr(type = "java.util.function.Consumer<ScopeGate${i}<CTX, ${typeArgList(2, i+1, 'alpha')}>>")
+                Object scopeFn) {
+            return null; // replaced by @PermuteBody
+        }
+
+        /** Factory: creates a scope builder of the current generated arity. */
+        @PermuteReturn(className = "ScopeGate${i}", typeArgs = "'CTX, ' + typeArgList(2, i+1, 'alpha')", alwaysEmit = true)
+        @PermuteBody(body = "{ return new ScopeGate${i}<>(); }")
+        protected ScopeGate2<CTX, B, C> newScopeGate() {
+            return new ScopeGate2<>(); // template placeholder — replaced by @PermuteBody
         }
 
         @PermuteReturn(className = "Join${i+1}First", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha') + ', T'", when = "i + 1 <= 10")
@@ -533,6 +618,87 @@ public class RuleBuilder<CTX> {
     }
 
     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // ScopeGate — scope builder for lambda not()/exists()
+    // -------------------------------------------------------------------------
+
+    /**
+     * Scope builder for lambda-scope not()/exists() with no outer facts (used by ParametersFirst).
+     * Call join() to add inner data sources, filter() to constrain them.
+     */
+    public static class ScopeGate0<CTX> {
+        private final ScopeDescriptor<CTX> descriptor = new ScopeDescriptor<>();
+
+        @SuppressWarnings("unchecked")
+        public <T> ScopeGate1<CTX, T> join(Function1<CTX, DataSource<T>> source) {
+            descriptor.sources.add((Function1<CTX, DataSource<?>>) (Object) source);
+            descriptor.filters.add(null);
+            return new ScopeGate1<>(descriptor);
+        }
+
+        public ScopeDescriptor<CTX> toDescriptor() { return descriptor; }
+    }
+
+    /**
+     * Scope builder carrying N total facts (outer + inner accumulated).
+     * Template generates ScopeGate2..ScopeGate10; ScopeGate1 is the base (1 total fact).
+     *
+     * <p>Type params after CTX are alpha-named: B=alpha(2), C=alpha(3), etc. — matching
+     * the Join2Gate/From1First conventions so predicates compose naturally.
+     */
+    @Permute(varName = "n", from = 1, to = 10, className = "ScopeGate${n}", inline = true, keepTemplate = false)
+    public static class ScopeGate1<CTX, B,
+            @PermuteTypeParam(varName = "j", from = "3", to = "${n+1}", name = "${alpha(j)}") C> {
+
+        private final ScopeDescriptor<CTX> descriptor;
+
+        ScopeGate1() { this.descriptor = new ScopeDescriptor<>(); }
+        ScopeGate1(ScopeDescriptor<CTX> descriptor) { this.descriptor = descriptor; }
+
+        /**
+         * Adds an inner data source to the scope, growing the total arity by one.
+         * The new fact type T appears last in the returned scope's type parameter list.
+         */
+        @PermuteReturn(className = "ScopeGate${n+1}", typeArgs = "'CTX, ' + typeArgList(2, n+1, 'alpha') + ', T'", when = "n < 10")
+        @SuppressWarnings("unchecked")
+        public <T> Object join(Function1<CTX, DataSource<T>> source) {
+            descriptor.sources.add((Function1<CTX, DataSource<?>>) (Object) source);
+            descriptor.filters.add(null);
+            return cast(new ScopeGate1<>(descriptor)); // coherence renames to ScopeGate${n+1}
+        }
+
+        /**
+         * Filters on the last joined fact only.
+         * Useful for simple single-fact constraints inside the scope.
+         */
+        @PermuteReturn(className = "ScopeGate${n}", typeArgs = "'CTX, ' + typeArgList(2, n+1, 'alpha')")
+        public Object filter(
+                @PermuteDeclr(type = "Predicate2<Context<CTX>, ${alpha(n+1)}>")
+                Predicate2<Context<CTX>, B> pred) {
+            if (!descriptor.filters.isEmpty())
+                descriptor.filters.set(descriptor.filters.size() - 1, pred);
+            return this;
+        }
+
+        /**
+         * Filters using all facts in scope (outer + inner) — enables cross-scope predicate access.
+         * The predicate receives Context&lt;CTX&gt; followed by all outer and inner facts.
+         */
+        @PermuteReturn(className = "ScopeGate${n}", typeArgs = "'CTX, ' + typeArgList(2, n+1, 'alpha')", when = "n >= 2 && n + 1 <= 10")
+        public Object filter(
+                @PermuteDeclr(type = "Predicate${n+1}<Context<CTX>, ${typeArgList(2, n+1, 'alpha')}>")
+                Predicate3<Context<CTX>, B, Object> predAllFacts) {
+            if (!descriptor.filters.isEmpty())
+                descriptor.filters.set(descriptor.filters.size() - 1, predAllFacts);
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <T> T cast(Object o) { return (T) o; }
+
+        public ScopeDescriptor<CTX> toDescriptor() { return descriptor; }
+    }
+
     // Not2 / Group2 — arity-2 only, not templated
     // -------------------------------------------------------------------------
 

@@ -4,12 +4,15 @@ import org.drools.api.data.DataProcessor;
 import org.drools.api.data.DataSource;
 import org.drools.api.data.ObjectHandle;
 import org.drools.core.RuleBuilder.RuleDescriptor;
+import org.drools.core.RuleBuilder.ScopeDescriptor;
 import org.drools.core.function.Consumer2;
 import org.drools.core.function.Consumer3;
 import org.drools.core.function.Function1;
 import org.drools.core.function.Predicate2;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -88,10 +91,14 @@ public class UnitInstance<CTX> {
             throw new UnsupportedOperationException("Rules with no from() not yet supported");
         }
 
+        List<ScopeDescriptor<CTX>> negations = desc.getNegations();
+        List<ScopeDescriptor<CTX>> existences = desc.getExistences();
+
         if (sources.size() == 1) {
             Consumer2<Context<CTX>, Object> consumer = (Consumer2<Context<CTX>, Object>) rawHead;
             DataProcessor<CTX, Object> action = buildAction(consumer, immediate);
-            subscribeWithFilter(0, action, filters.isEmpty() ? null : filters.get(0));
+            DataProcessor<CTX, Object> scoped = scopeGuard(action, negations, existences);
+            subscribeWithFilter(0, scoped, filters.isEmpty() ? null : filters.get(0));
 
         } else if (sources.size() == 2) {
             Consumer3<Context<CTX>, Object, Object> consumer = (Consumer3<Context<CTX>, Object, Object>) rawHead;
@@ -100,8 +107,12 @@ public class UnitInstance<CTX> {
             Object filter0 = filters.size() > 0 ? filters.get(0) : null;
             Object filter1 = filters.size() > 1 ? filters.get(1) : null;
 
-            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, nodeMemories, consumer, immediate, agenda), filter0);
-            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, consumer, immediate, agenda), filter1);
+            DataProcessor<CTX, Object> leftIn  = new JoinLeftInlet<>(joinNode, nodeMemories, consumer, immediate, agenda);
+            DataProcessor<CTX, Object> rightIn = new JoinRightInlet<>(joinNode, nodeMemories, consumer, immediate, agenda);
+            // Scope guards applied on the right inlet only (right fact is the last joined)
+            rightIn = scopeGuard(rightIn, negations, existences);
+            subscribeWithFilter(0, leftIn, filter0);
+            subscribeWithFilter(1, rightIn, filter1);
 
         } else {
             throw new UnsupportedOperationException("Rules with " + sources.size() + " patterns not yet supported");
@@ -122,6 +133,78 @@ public class UnitInstance<CTX> {
             if (found != null) return found;
         }
         return null;
+    }
+
+    /** Wraps a processor to check not()/exists() scopes before delegating. */
+    @SuppressWarnings("unchecked")
+    private DataProcessor<CTX, Object> scopeGuard(
+            DataProcessor<CTX, Object> delegate,
+            List<ScopeDescriptor<CTX>> negations,
+            List<ScopeDescriptor<CTX>> existences) {
+        if (negations.isEmpty() && existences.isEmpty()) return delegate;
+        return new DataProcessor<CTX, Object>() {
+            public void add(Context<CTX> c, ObjectHandle<Object> h) {
+                Object fact = h.getObject();
+                if (scopesAllow(c, fact)) delegate.add(c, h);
+            }
+            public void update(Context<CTX> c, ObjectHandle<Object> h) {
+                Object fact = h.getObject();
+                if (scopesAllow(c, fact)) delegate.update(c, h);
+            }
+            public void remove(Context<CTX> c, ObjectHandle<Object> h) {
+                delegate.remove(c, h);
+            }
+            private boolean scopesAllow(Context<CTX> c, Object fact) {
+                Object[] outerFacts = new Object[]{ fact };
+                for (ScopeDescriptor<CTX> neg : negations)
+                    if (scopeHasMatch(neg, c, outerFacts)) return false;
+                for (ScopeDescriptor<CTX> ex : existences)
+                    if (!scopeHasMatch(ex, c, outerFacts)) return false;
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Evaluates a scope by cross-producting its inner sources with the outer facts,
+     * applying each filter, and returning true if any combination passes all filters.
+     */
+    @SuppressWarnings("unchecked")
+    private boolean scopeHasMatch(ScopeDescriptor<CTX> scope, Context<CTX> ctx, Object[] outerFacts) {
+        List<Object[]> combinations = new ArrayList<>();
+        combinations.add(outerFacts);
+        for (int i = 0; i < scope.sources.size(); i++) {
+            DataSource<?> ds = scope.sources.get(i).apply(ctx.context());
+            Object filterPred = scope.filters.get(i);
+            List<Object[]> next = new ArrayList<>();
+            for (Object item : ds.asList()) {
+                for (Object[] outer : combinations) {
+                    Object[] combined = Arrays.copyOf(outer, outer.length + 1);
+                    combined[outer.length] = item;
+                    if (filterPred == null || invokePredicate(filterPred, ctx, combined)) {
+                        next.add(combined);
+                    }
+                }
+            }
+            combinations = next;
+            if (combinations.isEmpty()) return false;
+        }
+        return !combinations.isEmpty();
+    }
+
+    private boolean invokePredicate(Object pred, Context<CTX> ctx, Object[] facts) {
+        try {
+            Method m = Arrays.stream(pred.getClass().getMethods())
+                    .filter(me -> me.getName().equals("test") && !me.isSynthetic())
+                    .findFirst()
+                    .orElseThrow();
+            Object[] args = new Object[facts.length + 1];
+            args[0] = ctx;
+            System.arraycopy(facts, 0, args, 1, facts.length);
+            return (Boolean) m.invoke(pred, args);
+        } catch (Exception e) {
+            throw new RuntimeException("Scope predicate invocation failed", e);
+        }
     }
 
     private DataProcessor<CTX, Object> buildAction(Consumer2<Context<CTX>, Object> consumer, boolean immediate) {
