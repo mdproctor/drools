@@ -332,7 +332,7 @@ public class RuleBuilder<CTX> {
             return null;
         }
 
-        public <C, D> Join3First<END, CTX, B, C, D> join(Join2Second<Void, CTX, C, D> fromCD) {
+        public <C, D> Join3First<END, CTX, B, C, D> join(Join2Gate<Void, CTX, C, D> fromCD) {
             return null;
         }
 
@@ -381,7 +381,7 @@ public class RuleBuilder<CTX> {
     @Permute(varName = "i", from = 3, to = 10, className = "Join${i}First", inline = true, keepTemplate = true)
     public static class Join2First<END, CTX, B,
             @PermuteTypeParam(varName = "j", from = "3", to = "${i+1}", name = "${alpha(j)}") C>
-            extends Join2Second<END, CTX, B, C> {
+            extends Join2Gate<END, CTX, B, C> {
 
         public Join2First(END end, Rule rule) {
             super(end, rule);
@@ -426,12 +426,12 @@ public class RuleBuilder<CTX> {
         }
     }
 
-    @Permute(varName = "i", from = 3, to = 10, className = "Join${i}Second", inline = true, keepTemplate = true)
-    public static class Join2Second<END, CTX, B,
+    @Permute(varName = "i", from = 3, to = 10, className = "Join${i}Gate", inline = true, keepTemplate = true)
+    public static class Join2Gate<END, CTX, B,
             @PermuteTypeParam(varName = "j", from = "3", to = "${i+1}", name = "${alpha(j)}") C>
             extends BaseRuleBuilder<END> {
 
-        public Join2Second(END end, Rule rule) {
+        public Join2Gate(END end, Rule rule) {
             super(end, rule);
         }
 
@@ -440,8 +440,8 @@ public class RuleBuilder<CTX> {
             return new @PermuteDeclr(type = "RuleExtendsPoint${i+1}") RuleExtendsPoint3<>(rule);
         }
 
-        @PermuteReturn(className = "Join${i}Second", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')")
-        public Join2Second<END, CTX, B, C> not(
+        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')")
+        public Join2Gate<END, CTX, B, C> not(
                 @PermuteDeclr(type = "Function1<CTX, DataSource<${alpha(i+1)}>>", name = "from${alpha(i+1)}")
                 Function1<CTX, DataSource<C>> fromC) {
             return this;
@@ -449,7 +449,7 @@ public class RuleBuilder<CTX> {
 
         // not() with Not2 — kept on template only; Not2 is arity-2 only
         @PermuteReturn(className = "void", when = "false")
-        public Not2<Join2Second<END, CTX, B, C>, CTX, B, C> not() {
+        public Not2<Join2Gate<END, CTX, B, C>, CTX, B, C> not() {
             return new Not2<>(this, rule);
         }
 
@@ -477,9 +477,9 @@ public class RuleBuilder<CTX> {
             return null;
         }
 
-        // Consumer${i+1} only exists up to Consumer10; omit ifn/fn for Join10Second
-        @PermuteReturn(className = "Join${i}Second", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
-        public Join2Second<END, CTX, B, C> ifn(
+        // Consumer${i+1} only exists up to Consumer10; omit ifn/fn for Join10Gate
+        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
+        public Join2Gate<END, CTX, B, C> ifn(
                 @PermuteDeclr(type = "Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>",
                         name = "fn${i+1}")
                 Consumer3<Context<CTX>, B, C> fn3) {
@@ -487,8 +487,8 @@ public class RuleBuilder<CTX> {
             return this;
         }
 
-        @PermuteReturn(className = "Join${i}Second", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
-        public Join2Second<END, CTX, B, C> fn(
+        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
+        public Join2Gate<END, CTX, B, C> fn(
                 @PermuteDeclr(type = "Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>",
                         name = "fn${i+1}")
                 Consumer3<Context<CTX>, B, C> fn3) {
@@ -542,7 +542,7 @@ public class RuleBuilder<CTX> {
         }
     }
 
-    public static class Group2<END, CTX, B, C> extends Join2Second<END, CTX, B, C> {
+    public static class Group2<END, CTX, B, C> extends Join2Gate<END, CTX, B, C> {
         public Group2(END end, Rule rule) {
             super(end, rule);
         }
