@@ -171,21 +171,8 @@ public class RuleBuilderTest {
 
     }
 
-    @Test
-    public void testNot() {
-        RuleBuilder<Ctx> builder = new RuleBuilder<>();
-
-        builder.rule("rule1").<Params3>params()
-               .join(Ctx::persons).filter((ctx, b) -> b.age() > 20)
-               .not()
-                   .join(builder.from(Ctx::misc)
-                                .<Map<String, Person>>type()
-                                .filter((ctx, p) -> p.get("xxx").age() > 20))
-                   .join(Ctx::libraries)
-               .end()
-               .fn( (a, b, c) -> System.out.println(a.context() + b.p3_1 + c.name()))
-               .end();
-    }
+    // testNot (chain-form not() via Not2) removed — Not2/Group2 were unimplemented stubs;
+    // lambda not(Consumer<ScopeGate>) is the supported form.
 
     @Test
     public void testDataSource() {

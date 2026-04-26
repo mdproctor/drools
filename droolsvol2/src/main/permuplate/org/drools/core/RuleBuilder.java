@@ -438,7 +438,7 @@ public class RuleBuilder<CTX> {
     // Join2 — templates generating Join3..Join10
     // -------------------------------------------------------------------------
 
-    @Permute(varName = "i", from = 3, to = 10, className = "Join${i}First", inline = true, keepTemplate = true)
+    @Permute(varName = "i", from = 2, to = 10, className = "Join${i}First", inline = true, keepTemplate = false)
     public static class Join2First<END, CTX, B,
             @PermuteTypeParam(varName = "j", from = "3", to = "${i+1}", name = "${alpha(j)}") C>
             extends Join2Gate<END, CTX, B, C> {
@@ -487,7 +487,7 @@ public class RuleBuilder<CTX> {
     }
 
     @PermuteMacros({"alphaFacts=typeArgList(2, i+1, 'alpha')"})
-    @Permute(varName = "i", from = 3, to = 10, className = "Join${i}Gate", inline = true, keepTemplate = true)
+    @Permute(varName = "i", from = 2, to = 10, className = "Join${i}Gate", inline = true, keepTemplate = false)
     public static class Join2Gate<END, CTX, B,
             @PermuteTypeParam(varName = "j", from = "3", to = "${i+1}", name = "${alpha(j)}") C>
             extends BaseRuleBuilder<END> {
@@ -502,12 +502,6 @@ public class RuleBuilder<CTX> {
         @PermuteReturn(className = "RuleExtendsPoint${i+1}", typeArgs = "'CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 6")
         public RuleExtendsPoint3<CTX, B, C> extensionPoint() {
             return new @PermuteDeclr(type = "RuleExtendsPoint${i+1}") RuleExtendsPoint3<>(rule);
-        }
-
-        // not() with Not2 — kept on template only; Not2 is arity-2 only
-        @PermuteReturn(className = "void", when = "false")
-        public Not2<Join2Gate<END, CTX, B, C>, CTX, B, C> not() {
-            return new Not2<>(this, rule);
         }
 
         /**
@@ -595,8 +589,8 @@ public class RuleBuilder<CTX> {
             return new Path4<>(null, null, null);
         }
 
-        // path5/path6: template-only stubs; @PermuteReturn(when="false") suppresses R1 and removes from generated
-        @PermuteReturn(className = "void", when = "false")
+        // path5/path6: arity-2 only; suppressed from Join3Gate..Join10Gate
+        @PermuteReturn(when = "i == 2")
         <PB, PC, PD, PE> Path4<Join3First<END, CTX, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, PB, PC, PD, PE> path5(
                 Function2<PathContext<Tuple5<C, PB, PC, PD, PE>>, C, ?> fn2,
                 Predicate2<PathContext<Tuple5<C, PB, PC, PD, PE>>, PB> flt2) {
@@ -604,7 +598,7 @@ public class RuleBuilder<CTX> {
             return path5.path(fn2, flt2);
         }
 
-        @PermuteReturn(className = "void", when = "false")
+        @PermuteReturn(when = "i == 2")
         <PB, PC, PD, PE, PF> Path6<Join3First<END, CTX, B, C, Tuple6<C, PB, PC, PD, PE, PF>>, Tuple6<C, PB, PC, PD, PE, PF>, C, PB, PC, PD, PE, PF> path6() {
             return new Path6<>(null, null, null);
         }
