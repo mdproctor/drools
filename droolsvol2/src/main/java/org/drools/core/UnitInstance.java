@@ -116,8 +116,25 @@ public class UnitInstance<CTX> {
                             consumer.accept(c, leftFact, rightFact);
                     };
 
-            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, nodeMemories, scopedConsumer, immediate, agenda), filter0);
-            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, scopedConsumer, immediate, agenda), filter1);
+            // filter1 may be a single-fact (Predicate2: ctx + 1 fact) or an all-facts predicate
+            // (Predicate3+: ctx + 2 facts). Single-fact filters work per-inlet via subscribeWithFilter.
+            // All-facts filters need post-join evaluation — wrap into the consumer instead.
+            Object inletFilter1;
+            Consumer3<Context<CTX>, Object, Object> finalConsumer;
+            if (filter1 != null && isMultiFactFilter(filter1)) {
+                final Object postJoinFilter = filter1;
+                finalConsumer = (c, left, right) -> {
+                    if (invokePredicate(postJoinFilter, c, new Object[]{left, right}))
+                        scopedConsumer.accept(c, left, right);
+                };
+                inletFilter1 = null;
+            } else {
+                finalConsumer = scopedConsumer;
+                inletFilter1 = filter1;
+            }
+
+            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, nodeMemories, finalConsumer, immediate, agenda), filter0);
+            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, finalConsumer, immediate, agenda), inletFilter1);
 
         } else {
             // N≥3 sources: delta evaluation — when fact F is added to source K, fire only
@@ -301,6 +318,14 @@ public class UnitInstance<CTX> {
             if (combinations.isEmpty()) return false;
         }
         return !combinations.isEmpty();
+    }
+
+    private static boolean isMultiFactFilter(Object filter) {
+        return Arrays.stream(filter.getClass().getMethods())
+                .filter(m -> m.getName().equals("test") && !m.isSynthetic())
+                .findFirst()
+                .map(m -> m.getParameterCount() > 2) // Predicate2 = ctx+1 fact; Predicate3+ = all-facts
+                .orElse(false);
     }
 
     private boolean invokePredicate(Object pred, Context<CTX> ctx, Object[] facts) {
