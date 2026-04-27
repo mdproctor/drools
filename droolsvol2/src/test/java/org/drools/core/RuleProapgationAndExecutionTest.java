@@ -373,6 +373,36 @@ public class RuleProapgationAndExecutionTest {
     record CTX3(DataStore<Person> persons, DataStore<String> blocklist) {}
 
     @Test
+    public void testTwoSourceAllFactsPostJoinFilter() {
+        // filter((p, n) -> ...) on a 2-source join — all-facts, post-join.
+        // Before this fix, subscribeWithFilter cast the Predicate3 to Predicate2 → ClassCast.
+        // Now: all-facts filters (paramCount > 2) are wrapped into the consumer post-join.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX2 ctx2 = new CTX2(persons, names);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX2> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_2postjoin")
+                        .add(new RuleBuilder<CTX2>().rule("twoSourceAllFacts")
+                                .from(CTX2::persons)
+                                .join(CTX2::names)
+                                .filter((p, n) -> p.name().equals(n))  // all-facts, both A and B
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_2postjoin", ctx2);
+
+        persons.add(new Person("Alice", 30, "London"));
+        names.add("Bob");
+        assertThat(fired).isEmpty(); // Alice != Bob
+
+        names.add("Alice");
+        assertThat(fired).containsExactly("Alice:Alice"); // Alice == Alice
+    }
+
+    @Test
     public void testLambdaNotScopeBlocksWhenScopeHasMatch() {
         // not(scope): rule fires for each person whose name is NOT on the blocklist.
         // Alice is on the blocklist → blocked. Bob is not → fires.
@@ -660,5 +690,244 @@ public class RuleProapgationAndExecutionTest {
         // Add Bob after OPEN to verify new persons fire.
         persons.add(new Person("Bob", 25, "Paris"));
         assertThat(fired).containsExactly("Bob");
+    }
+
+    // =========================================================================
+    // ctx-at-end filter and ifn overloads
+    // =========================================================================
+
+    @Test
+    public void testCtxAtEndSingleSourceFilterAndIfn() {
+        // Verifies that filter((fact, ctx) -> ...) and ifn((fact, ctx) -> ...) resolve correctly.
+        // ctx is the last parameter; behavior must be identical to the no-ctx overload.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        CTX1 ctx1 = new CTX1(persons);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX1> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_ctxEnd1")
+                        .add(new RuleBuilder<CTX1>().rule("ctxAtEndSingle")
+                                .from(CTX1::persons)
+                                .filter((p, ctx) -> p.age() > 18)        // ctx at end
+                                .ifn((p, ctx) -> fired.add(p.name()))));  // ctx at end
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_ctxEnd1", ctx1);
+
+        persons.add(new Person("Alice", 30, "London"));
+        assertThat(fired).containsExactly("Alice");
+
+        persons.add(new Person("Bob", 15, "Paris"));
+        assertThat(fired).containsExactly("Alice"); // Bob too young
+    }
+
+    @Test
+    public void testCtxAtEndTwoSourceIfn() {
+        // Verifies ctx-at-end ifn((p, n, ctx) -> ...) on a 2-source join.
+        // The filter is applied before join (ctx-at-end single-fact on From1First),
+        // and the consumer is ctx-at-end. All-facts post-join filters for 2-source rules
+        // are not supported in the current wireHead architecture (subscribeWithFilter
+        // casts to Predicate2; all-facts predicates are Predicate3+).
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX2 ctx2 = new CTX2(persons, names);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX2> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_ctxEnd2")
+                        .add(new RuleBuilder<CTX2>().rule("ctxAtEndTwo")
+                                .from(CTX2::persons)
+                                .filter((p, ctx) -> p.age() > 18)            // ctx-at-end on From1First
+                                .join(CTX2::names)
+                                .ifn((p, n, ctx) -> fired.add(p.name() + ":" + n))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_ctxEnd2", ctx2);
+
+        persons.add(new Person("Alice", 30, "London"));
+        names.add("Wonderland");
+        assertThat(fired).containsExactly("Alice:Wonderland");
+
+        persons.add(new Person("Bob", 15, "Paris"));
+        assertThat(fired).containsExactly("Alice:Wonderland"); // Bob too young
+    }
+
+    // =========================================================================
+    // Lambda exists() scope — two outer facts
+    // =========================================================================
+
+    @Test
+    public void testLambdaExistsScopeTwoOuterFacts() {
+        // Rule: from(persons).join(cities) → fires for each (person, city) pair.
+        // exists(scope): fires only when person's name appears on the allowlist.
+        // Both outer facts (p and city) visible in scope filter.
+        // Alice on allowlist → all (Alice, *) pairs fire.
+        // Bob not on allowlist → (Bob, *) pairs do not fire.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities    = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> allowlist = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        CTX4 ctx4 = new CTX4(persons, cities, allowlist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX4> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_existsTwo")
+                        .add(new RuleBuilder<CTX4>().rule("existsTwoOuter")
+                                .from(CTX4::persons)
+                                .join(CTX4::cities)
+                                .exists(scope -> scope
+                                        .join(CTX4::blocklist)
+                                        .filter((p, city, entry) -> p.name().equals(entry)))
+                                .ifn((p, city) -> fired.add(p.name() + ":" + city))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_existsTwo", ctx4);
+
+        cities.add("London");
+        cities.add("Paris");
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).isEmpty(); // Bob not on allowlist → exists fails
+
+        allowlist.add("Alice");
+        persons.add(new Person("Alice", 30, "London"));
+        // Alice on allowlist → (Alice, London) and (Alice, Paris) fire
+        assertThat(fired).containsExactlyInAnyOrder("Alice:London", "Alice:Paris");
+        // Bob still not on allowlist → no Bob pairs fire
+        assertThat(fired).noneMatch(s -> s.startsWith("Bob:"));
+    }
+
+    // =========================================================================
+    // Lambda not() scope — three outer facts
+    // =========================================================================
+
+    record CTX6(DataStore<Person> persons, DataStore<String> cities,
+                DataStore<String> roles, DataStore<String> blocklist) {}
+
+    @Test
+    public void testLambdaNotScopeThreeOuterFacts() {
+        // Rule: from(persons).join(cities).join(roles) → fires for each (p, city, role) triple.
+        // not(scope): blocks if person's name appears on the blocklist.
+        // All three outer facts visible in scope filter.
+        // Alice on blocklist → all (Alice, *, *) triples blocked.
+        // Bob not on blocklist → (Bob, *, *) triples fire.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities    = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> roles     = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        PropagatingDataStore<String> blocklist = new PropagatingDataStore<>(3, new TypeIndexer<>());
+        CTX6 ctx6 = new CTX6(persons, cities, roles, blocklist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX6> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_notThree")
+                        .add(new RuleBuilder<CTX6>().rule("notThreeOuter")
+                                .from(CTX6::persons)
+                                .join(CTX6::cities)
+                                .join(CTX6::roles)
+                                .not(scope -> scope
+                                        .join(CTX6::blocklist)
+                                        .filter((p, city, role, entry) -> p.name().equals(entry)))
+                                .ifn((p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_notThree", ctx6);
+
+        blocklist.add("Alice");
+        persons.add(new Person("Alice", 30, "London"));
+        cities.add("London");
+        roles.add("Admin");
+        assertThat(fired).isEmpty(); // Alice blocked by not
+
+        persons.add(new Person("Bob", 25, "Paris"));
+        // Bob not on blocklist → (Bob, London, Admin) and (Bob, Paris, Admin) fire... wait
+        // Bob is added as a new person, triggers all (Bob, city, role) combos
+        assertThat(fired).containsExactlyInAnyOrder("Bob:London:Admin");
+        // Add Paris city → Bob:Paris:Admin fires too
+        cities.add("Paris");
+        assertThat(fired).containsExactlyInAnyOrder("Bob:London:Admin", "Bob:Paris:Admin");
+    }
+
+    // =========================================================================
+    // Lambda exists() scope — three outer facts
+    // =========================================================================
+
+    @Test
+    public void testLambdaExistsScopeThreeOuterFacts() {
+        // Rule: from(persons).join(cities).join(roles) → fires for each (p, city, role) triple.
+        // exists(scope): fires only when person's name appears on the allowlist.
+        // All three outer facts visible in scope filter.
+        // Alice on allowlist → all (Alice, *, *) triples fire.
+        // Bob not on allowlist → (Bob, *, *) triples do not fire.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities    = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> roles     = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        PropagatingDataStore<String> allowlist = new PropagatingDataStore<>(3, new TypeIndexer<>());
+        CTX6 ctx6 = new CTX6(persons, cities, roles, allowlist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX6> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_existsThree")
+                        .add(new RuleBuilder<CTX6>().rule("existsThreeOuter")
+                                .from(CTX6::persons)
+                                .join(CTX6::cities)
+                                .join(CTX6::roles)
+                                .exists(scope -> scope
+                                        .join(CTX6::blocklist)
+                                        .filter((p, city, role, entry) -> p.name().equals(entry)))
+                                .ifn((p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_existsThree", ctx6);
+
+        allowlist.add("Alice");
+        cities.add("London");
+        roles.add("Admin");
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).isEmpty(); // Bob not on allowlist → exists fails
+
+        persons.add(new Person("Alice", 30, "London"));
+        // Alice on allowlist → (Alice, London, Admin) fires
+        assertThat(fired).containsExactlyInAnyOrder("Alice:London:Admin");
+        // Bob still not on allowlist → no Bob triples fire
+        assertThat(fired).noneMatch(s -> s.startsWith("Bob:"));
+    }
+
+    // =========================================================================
+    // 3-source join — remove fact (delta evaluation)
+    // =========================================================================
+
+    @Test
+    public void testThreeSourceJoinRemoveFact() {
+        // Verify that removing a fact from a 3-source rule retracts all dependent triples.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities  = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> roles   = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        CTX5 ctx5 = new CTX5(persons, cities, roles);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX5> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_remove3")
+                        .add(new RuleBuilder<CTX5>().rule("threeJoinRemove")
+                                .from(CTX5::persons)
+                                .join(CTX5::cities)
+                                .join(CTX5::roles)
+                                .ifn((p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+
+        UnitInstance<CTX5> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.U_remove3", ctx5);
+
+        ObjectHandle<Person> alice = ui.add(persons, new Person("Alice", 30, "London"));
+        ui.add(cities, "London");
+        ui.add(roles, "Admin");
+        assertThat(fired).containsExactly("Alice:London:Admin");
+
+        ui.remove(persons, alice);
+        // After Alice is removed, adding another city should not produce Alice triples
+        ui.add(cities, "Paris");
+        assertThat(fired).containsExactly("Alice:London:Admin"); // no new Alice firings
     }
 }
