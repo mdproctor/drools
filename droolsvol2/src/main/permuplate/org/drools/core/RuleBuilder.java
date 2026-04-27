@@ -116,6 +116,43 @@ public class RuleBuilder<CTX> {
     public static class ScopeDescriptor<CTX> {
         final List<Function1<CTX, DataSource<?>>> sources = new ArrayList<>();
         final List<Object> filters = new ArrayList<>();
+        /** True for chain-form scopes (global evaluation); false for lambda-form (per-outer-tuple). */
+        boolean globalEval = false;
+    }
+
+    /**
+     * Scope builder for the chain form: {@code .not().join(...).filter(...).end()}.
+     * Evaluates globally — not per outer tuple. {@code end()} returns the typed outer builder.
+     */
+    public static class ChainScope<END, CTX> {
+        private final END outer;
+        private final java.util.function.Consumer<ScopeDescriptor<CTX>> register;
+        private final ScopeDescriptor<CTX> descriptor;
+
+        ChainScope(END outer, java.util.function.Consumer<ScopeDescriptor<CTX>> register) {
+            this.outer = outer;
+            this.register = register;
+            this.descriptor = new ScopeDescriptor<>();
+            this.descriptor.globalEval = true;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> ChainScope<END, CTX> join(Function1<CTX, DataSource<T>> source) {
+            descriptor.sources.add((Function1<CTX, DataSource<?>>) (Object) source);
+            descriptor.filters.add(null);
+            return this;
+        }
+
+        public ChainScope<END, CTX> filter(Object predicate) {
+            if (!descriptor.filters.isEmpty())
+                descriptor.filters.set(descriptor.filters.size() - 1, predicate);
+            return this;
+        }
+
+        public END end() {
+            register.accept(descriptor);
+            return outer;
+        }
     }
 
     public static class BaseRuleBuilder<END> {
@@ -296,6 +333,16 @@ public class RuleBuilder<CTX> {
             return new Join4First<>(end(), rule);
         }
 
+        /** Chain-form not: evaluates globally; scope built imperatively, closed with end(). */
+        public ChainScope<ParametersFirst<END, CTX>, CTX> not() {
+            return new ChainScope<>(this, desc -> storeNot(desc));
+        }
+
+        /** Chain-form exists: evaluates globally; scope built imperatively, closed with end(). */
+        public ChainScope<ParametersFirst<END, CTX>, CTX> exists() {
+            return new ChainScope<>(this, desc -> storeExists(desc));
+        }
+
         /** Lambda-scope not: fires outer rule only when the scope produces zero matches. */
         public ParametersFirst<END, CTX> not(Consumer<ScopeGate0<CTX>> scopeFn) {
             ScopeGate0<CTX> scope = new ScopeGate0<>();
@@ -374,6 +421,16 @@ public class RuleBuilder<CTX> {
 
         public <C> Join2First<END, CTX, B, C> not(From1First<Void, CTX, C> fromC) {
             return null;
+        }
+
+        /** Chain-form not: evaluates globally; scope built imperatively, closed with end(). */
+        public ChainScope<From1First<END, CTX, B>, CTX> not() {
+            return new ChainScope<>(this, desc -> storeNot(desc));
+        }
+
+        /** Chain-form exists: evaluates globally; scope built imperatively, closed with end(). */
+        public ChainScope<From1First<END, CTX, B>, CTX> exists() {
+            return new ChainScope<>(this, desc -> storeExists(desc));
         }
 
         /** Lambda-scope not: fires outer rule only when the scope produces zero matches. */
@@ -483,6 +540,18 @@ public class RuleBuilder<CTX> {
         @PermuteReturn(className = "Join${i}First", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')")
         public Join2First<END, CTX, B, C> var(Variable var) {
             return this;
+        }
+
+        /** Chain-form not: evaluates globally; scope built imperatively, closed with end(). */
+        @PermuteReturn(className = "ChainScope", typeArgs = "'Join${i}First<END, CTX, ' + typeArgList(2, i+1, 'alpha') + '>, CTX'", alwaysEmit = true)
+        public Object not() {
+            return new ChainScope<>(this, desc -> storeNot(desc));
+        }
+
+        /** Chain-form exists: evaluates globally; scope built imperatively, closed with end(). */
+        @PermuteReturn(className = "ChainScope", typeArgs = "'Join${i}First<END, CTX, ' + typeArgList(2, i+1, 'alpha') + '>, CTX'", alwaysEmit = true)
+        public Object exists() {
+            return new ChainScope<>(this, desc -> storeExists(desc));
         }
     }
 

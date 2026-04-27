@@ -147,9 +147,9 @@ public class UnitInstance<CTX> {
             Object leftFact, Object rightFact) {
         Object[] outerFacts = new Object[]{ leftFact, rightFact };
         for (ScopeDescriptor<CTX> neg : negations)
-            if (scopeHasMatch(neg, c, outerFacts)) return false;
+            if (scopeHasMatch(neg, c, neg.globalEval ? new Object[0] : outerFacts)) return false;
         for (ScopeDescriptor<CTX> ex : existences)
-            if (!scopeHasMatch(ex, c, outerFacts)) return false;
+            if (!scopeHasMatch(ex, c, ex.globalEval ? new Object[0] : outerFacts)) return false;
         return true;
     }
 
@@ -175,9 +175,9 @@ public class UnitInstance<CTX> {
             private boolean scopesAllow(Context<CTX> c, Object fact) {
                 Object[] outerFacts = new Object[]{ fact };
                 for (ScopeDescriptor<CTX> neg : negations)
-                    if (scopeHasMatch(neg, c, outerFacts)) return false;
+                    if (scopeHasMatch(neg, c, neg.globalEval ? new Object[0] : outerFacts)) return false;
                 for (ScopeDescriptor<CTX> ex : existences)
-                    if (!scopeHasMatch(ex, c, outerFacts)) return false;
+                    if (!scopeHasMatch(ex, c, ex.globalEval ? new Object[0] : outerFacts)) return false;
                 return true;
             }
         };

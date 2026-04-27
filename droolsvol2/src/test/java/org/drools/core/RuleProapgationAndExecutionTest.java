@@ -5,6 +5,7 @@ import org.drools.api.data.ObjectHandle;
 import org.drools.core.RuleBuilder.RuleDescriptor;
 import org.drools.core.function.Consumer2;
 import org.drools.core.function.Consumer3;
+import org.drools.core.function.Predicate2;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -515,5 +516,77 @@ public class RuleProapgationAndExecutionTest {
 
         persons.add(new Person("Bob", 25, "Paris"));
         assertThat(fired).containsExactly("Bob");  // Bob passes: "Bob" not in blocklist
+    }
+
+    // =========================================================================
+    // Chain-form not()/exists() scopes — global evaluation
+    // =========================================================================
+
+    @Test
+    public void testChainNotScopeGlobalEval() {
+        // Chain form: not().join(source).filter(pred).end()
+        // Evaluates globally — if ANY entry on the blocklist triggers the filter,
+        // ALL persons are blocked (no per-outer-tuple correlation).
+        // Blocklist has "BLOCKED" → global scope matches → all persons blocked.
+        PropagatingDataStore<Person> persons   = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> blocklist = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX3 ctx3 = new CTX3(persons, blocklist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX3> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U4")
+                        .add(new RuleBuilder<CTX3>().rule("chainNot")
+                                .from(CTX3::persons)
+                                .not()
+                                    .join(CTX3::blocklist)
+                                    .filter((Object)(Predicate2<Context<CTX3>, String>)(ctx, s) -> s.equals("BLOCKED"))
+                                .end()
+                                .ifn((ctx, p) -> fired.add(p.name()))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U4", ctx3);
+
+        persons.add(new Person("Alice", 30, "London"));
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).containsExactlyInAnyOrder("Alice", "Bob"); // blocklist empty → not() passes
+
+        blocklist.add("BLOCKED");
+        // Global: scope now matches → all persons blocked
+        assertThat(fired).containsExactlyInAnyOrder("Alice", "Bob"); // already fired, no new firings
+    }
+
+    @Test
+    public void testChainExistsScopeGlobalEval() {
+        // Chain form: exists().join(source).filter(pred).end()
+        // Evaluates globally — rule fires only when the exists scope has any match.
+        PropagatingDataStore<Person> persons    = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> allowlist  = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX3 ctx3 = new CTX3(persons, allowlist);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX3> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U5")
+                        .add(new RuleBuilder<CTX3>().rule("chainExists")
+                                .from(CTX3::persons)
+                                .exists()
+                                    .join(CTX3::blocklist)
+                                    .filter((Object)(Predicate2<Context<CTX3>, String>)(ctx, s) -> s.equals("OPEN"))
+                                .end()
+                                .ifn((ctx, p) -> fired.add(p.name()))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U5", ctx3);
+
+        persons.add(new Person("Alice", 30, "London"));
+        assertThat(fired).isEmpty(); // allowlist empty → exists() fails globally → no firing
+
+        allowlist.add("OPEN");
+        // exists() now matches globally — but reactive model fires on right-side add,
+        // not on left-side retroactively. Alice was added before OPEN.
+        // Add Bob after OPEN to verify new persons fire.
+        persons.add(new Person("Bob", 25, "Paris"));
+        assertThat(fired).containsExactly("Bob");
     }
 }
