@@ -52,8 +52,8 @@ public class RuleBaseTest {
                         .apply(RuleBaseModifier.changeSet()
                                                .selectPackage("org.domain").selectUnit("Unit1")
                                                .add(rb.rule("rule1").<P3>params()
-                                                           .join(rb.from(CTX::persons).filter((ctx, b) -> b.age() > 20))
-                                                           .filter((ctx, a, b) -> a.p3_1().length() > b.age())));
+                                                           .join(rb.from(CTX::persons).filter(b -> b.age() > 20))
+                                                           .filter((a, b) -> a.p3_1().length() > b.age())));
 
     }
 

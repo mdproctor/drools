@@ -404,8 +404,15 @@ public class RuleBuilder<CTX> {
             return new From1First<>(end(), rule);
         }
 
-        public From1First<END, CTX, B> filter(Predicate2<Context<CTX>, B> prd2) {
-            storeFilter(prd2);
+        /** Filter with no context (most common — omit ctx when not needed). */
+        public From1First<END, CTX, B> filter(Predicate1<B> pred) {
+            storeFilter((Predicate2<Context<CTX>, B>)(ctx, b) -> pred.test(b));
+            return this;
+        }
+
+        /** Filter with context as last parameter. */
+        public From1First<END, CTX, B> filter(Predicate2<B, Context<CTX>> pred) {
+            storeFilter((Predicate2<Context<CTX>, B>)(ctx, b) -> pred.test(b, ctx));
             return this;
         }
 
@@ -457,13 +464,27 @@ public class RuleBuilder<CTX> {
             return null;
         }
 
-        public From1First<END, CTX, B> ifn(Consumer2<Context<CTX>, B> fn2) {
-            storeHead(fn2);
+        /** Immediate action with no context. */
+        public From1First<END, CTX, B> ifn(Consumer1<B> fn) {
+            storeHead((Consumer2<Context<CTX>, B>)(ctx, b) -> fn.accept(b));
             return this;
         }
 
-        public From1First<END, CTX, B> fn(Consumer2<Context<CTX>, B> fn2) {
-            storeFnHead(fn2);
+        /** Immediate action with context as last parameter. */
+        public From1First<END, CTX, B> ifn(Consumer2<B, Context<CTX>> fn) {
+            storeHead((Consumer2<Context<CTX>, B>)(ctx, b) -> fn.accept(b, ctx));
+            return this;
+        }
+
+        /** Deferred action with no context. */
+        public From1First<END, CTX, B> fn(Consumer1<B> fn) {
+            storeFnHead((Consumer2<Context<CTX>, B>)(ctx, b) -> fn.accept(b));
+            return this;
+        }
+
+        /** Deferred action with context as last parameter. */
+        public From1First<END, CTX, B> fn(Consumer2<B, Context<CTX>> fn) {
+            storeFnHead((Consumer2<Context<CTX>, B>)(ctx, b) -> fn.accept(b, ctx));
             return this;
         }
 
@@ -504,21 +525,34 @@ public class RuleBuilder<CTX> {
             super(end, rule);
         }
 
+        @SuppressWarnings("unchecked")
+        private static <T> T cast(Object o) { return (T) o; }
+
+        // Single-fact filter — no ctx
         @PermuteReturn(className = "Join${i}First", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')")
-        public Join2First<END, CTX, B, C> filter(
-                @PermuteDeclr(type = "Predicate2<Context<CTX>, ${alpha(i+1)}>")
-                Predicate2<Context<CTX>, C> predicate2) {
-            storeFilter(predicate2);
-            return this;
+        @PermuteBody(body = "{ storeFilter((Predicate2<Context<CTX>, ${alpha(i+1)}>) (ctx, ${lower(i+1)}) -> pred.test(${lower(i+1)})); return cast(this); }")
+        public Object filter(
+                @PermuteDeclr(type = "Predicate1<${alpha(i+1)}>")
+                Object pred) {
+            return null;
         }
 
-        // Predicate${i+1} only exists up to Predicate10; omit multi-fact filter for Join10First
+        // All-facts filter — no ctx; Predicate${i} exists up to Predicate10
         @PermuteReturn(className = "Join${i}First", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
-        public Join2First<END, CTX, B, C> filter(
-                @PermuteDeclr(type = "Predicate${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>")
-                Predicate3<Context<CTX>, B, C> predicate3) {
-            storeFilter(predicate3);
-            return this;
+        @PermuteBody(body = "{ storeFilter((Predicate${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>) (ctx, ${typeArgList(2, i+1, 'lower')}) -> pred.test(${typeArgList(2, i+1, 'lower')})); return cast(this); }")
+        public Object filter(
+                @PermuteDeclr(type = "Predicate${i}<${typeArgList(2, i+1, 'alpha')}>")
+                Object pred) {
+            return null;
+        }
+
+        // All-facts filter — ctx at end; Predicate${i+1} exists up to Predicate10
+        @PermuteReturn(className = "Join${i}First", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
+        @PermuteBody(body = "{ storeFilter((Predicate${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>) (ctx, ${typeArgList(2, i+1, 'lower')}) -> pred.test(${typeArgList(2, i+1, 'lower')}, ctx)); return cast(this); }")
+        public Object filter(
+                @PermuteDeclr(type = "Predicate${i+1}<${typeArgList(2, i+1, 'alpha')}, Context<CTX>>")
+                Object pred) {
+            return null;
         }
 
         @PermuteReturn(className = "Join${i}First", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')")
@@ -556,7 +590,6 @@ public class RuleBuilder<CTX> {
         }
     }
 
-    @PermuteMacros({"alphaFacts=typeArgList(2, i+1, 'alpha')"})
     @Permute(varName = "i", from = 2, to = 10, className = "Join${i}Gate", inline = true, keepTemplate = false)
     public static class Join2Gate<END, CTX, B,
             @PermuteTypeParam(varName = "j", from = "3", to = "${i+1}", name = "${alpha(j)}") C>
@@ -619,23 +652,37 @@ public class RuleBuilder<CTX> {
             return null;
         }
 
-        // Consumer${i+1} only exists up to Consumer10; omit ifn/fn for Join10Gate
+        // Consumer${i} only exists up to Consumer10; omit ifn/fn for Join10Gate (i=10 needs Consumer10, i+1=11 doesn't exist)
         @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
-        public Join2Gate<END, CTX, B, C> ifn(
-                @PermuteDeclr(type = "Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>",
-                        name = "fn${i+1}")
-                Consumer3<Context<CTX>, B, C> fn3) {
-            storeHead(fn3);
-            return this;
+        @PermuteBody(body = "{ storeHead((Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>) (ctx, ${typeArgList(2, i+1, 'lower')}) -> fn.accept(${typeArgList(2, i+1, 'lower')})); return cast(this); }")
+        public Object ifn(
+                @PermuteDeclr(type = "Consumer${i}<${typeArgList(2, i+1, 'alpha')}>")
+                Object fn) {
+            return null;
         }
 
         @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
-        public Join2Gate<END, CTX, B, C> fn(
-                @PermuteDeclr(type = "Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>",
-                        name = "fn${i+1}")
-                Consumer3<Context<CTX>, B, C> fn3) {
-            storeFnHead(fn3);
-            return this;
+        @PermuteBody(body = "{ storeHead((Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>) (ctx, ${typeArgList(2, i+1, 'lower')}) -> fn.accept(${typeArgList(2, i+1, 'lower')}, ctx)); return cast(this); }")
+        public Object ifn(
+                @PermuteDeclr(type = "Consumer${i+1}<${typeArgList(2, i+1, 'alpha')}, Context<CTX>>")
+                Object fn) {
+            return null;
+        }
+
+        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
+        @PermuteBody(body = "{ storeFnHead((Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>) (ctx, ${typeArgList(2, i+1, 'lower')}) -> fn.accept(${typeArgList(2, i+1, 'lower')})); return cast(this); }")
+        public Object fn(
+                @PermuteDeclr(type = "Consumer${i}<${typeArgList(2, i+1, 'alpha')}>")
+                Object fn) {
+            return null;
+        }
+
+        @PermuteReturn(className = "Join${i}Gate", typeArgs = "'END, CTX, ' + typeArgList(2, i+1, 'alpha')", when = "i + 1 <= 10")
+        @PermuteBody(body = "{ storeFnHead((Consumer${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>) (ctx, ${typeArgList(2, i+1, 'lower')}) -> fn.accept(${typeArgList(2, i+1, 'lower')}, ctx)); return cast(this); }")
+        public Object fn(
+                @PermuteDeclr(type = "Consumer${i+1}<${typeArgList(2, i+1, 'alpha')}, Context<CTX>>")
+                Object fn) {
+            return null;
         }
 
         @PermuteReturn(className = "Path2",
@@ -725,10 +772,10 @@ public class RuleBuilder<CTX> {
         }
 
         /**
-         * Filters on the last joined fact only.
-         * Useful for simple single-fact constraints inside the scope.
+         * Filters on the last joined fact with context. Suppressed at n=2 to avoid
+         * erasure clash with the no-ctx all-facts Predicate2 overload at that arity.
          */
-        @PermuteReturn(className = "ScopeGate${n}", typeArgs = "'CTX, ' + typeArgList(2, n+1, 'alpha')")
+        @PermuteReturn(className = "ScopeGate${n}", typeArgs = "'CTX, ' + typeArgList(2, n+1, 'alpha')", when = "n != 2")
         public Object filter(
                 @PermuteDeclr(type = "Predicate2<Context<CTX>, ${alpha(n+1)}>")
                 Predicate2<Context<CTX>, B> pred) {
@@ -748,6 +795,19 @@ public class RuleBuilder<CTX> {
             if (!descriptor.filters.isEmpty())
                 descriptor.filters.set(descriptor.filters.size() - 1, predAllFacts);
             return this;
+        }
+
+        /**
+         * No-ctx all-facts filter — filters using all facts (outer + inner) without context.
+         * Wraps to ctx-first internally so invokePredicate can call it uniformly.
+         */
+        // No-ctx all-facts filter: n>=2 safe since single-fact ctx-first is suppressed at n=2
+        @PermuteReturn(className = "ScopeGate${n}", typeArgs = "'CTX, ' + typeArgList(2, n+1, 'alpha')", when = "n >= 2 && n + 1 <= 10")
+        @PermuteBody(body = "{ if (!descriptor.filters.isEmpty()) descriptor.filters.set(descriptor.filters.size() - 1, (Predicate${n+1}<Context<CTX>, ${typeArgList(2, n+1, 'alpha')}>) (ctx, ${typeArgList(2, n+1, 'lower')}) -> pred.test(${typeArgList(2, n+1, 'lower')})); return cast(this); }")
+        public Object filter(
+                @PermuteDeclr(type = "Predicate${n}<${typeArgList(2, n+1, 'alpha')}>")
+                Object pred) {
+            return null;
         }
 
         @SuppressWarnings("unchecked")

@@ -33,35 +33,35 @@ public class RuleBuilderTest {
                .join(Ctx::persons);
 
         builder.rule("rule1")
-               .from(builder.from(Ctx::persons)).filter((ctx, p) -> p.age() > 50)
-               .join(builder.from(Ctx::persons)).filter((ctx, p) -> p.age() > 50)
-               .join(builder.from(Ctx::persons)).filter((ctx, p) -> p.age() > 50);
+               .from(builder.from(Ctx::persons)).filter(p -> p.age() > 50)
+               .join(builder.from(Ctx::persons)).filter(p -> p.age() > 50)
+               .join(builder.from(Ctx::persons)).filter(p -> p.age() > 50);
 
         builder.rule("rule1")
-               .from(Ctx::persons).filter((ctx, p) -> p.age() > 50)
-               .join(Ctx::persons).filter((ctx, p) -> p.age() > 50)
-               .join(Ctx::persons).filter((ctx, p) -> p.age() > 50);
+               .from(Ctx::persons).filter(p -> p.age() > 50)
+               .join(Ctx::persons).filter(p -> p.age() > 50)
+               .join(Ctx::persons).filter(p -> p.age() > 50);
 
         builder.rule("rule1")
-               .from(builder.from(Ctx::persons)).filter((ctx, p) -> p.age() > 50)
-               .join(builder.from(Ctx::persons)).filter((ctx, p) -> p.age() > 50)
-               .filter((ctx, p1, p2) -> p1.age() > p2.age())
-               .join(builder.from(Ctx::persons)).filter((ctx, p) -> p.age() > 50)
-               .filter((ctx, p1, p2, p3) -> p1.age() > p3.age());
+               .from(builder.from(Ctx::persons)).filter(p -> p.age() > 50)
+               .join(builder.from(Ctx::persons)).filter(p -> p.age() > 50)
+               .filter((p1, p2) -> p1.age() > p2.age())
+               .join(builder.from(Ctx::persons)).filter(p -> p.age() > 50)
+               .filter((p1, p2, p3) -> p1.age() > p3.age());
 
         builder.rule("rule1")
-               .from(Ctx::persons).filter((ctx, p) -> p.age() > 50)
-               .join(Ctx::persons).filter((ctx, p) -> p.age() > 50)
-               .filter((ctx, p1, p2) -> p1.age() > p2.age())
-               .join(Ctx::persons).filter((ctx, p) -> p.age() > 50)
-               .filter((ctx, p1, p2, p3) -> p1.age() > p3.age());
+               .from(Ctx::persons).filter(p -> p.age() > 50)
+               .join(Ctx::persons).filter(p -> p.age() > 50)
+               .filter((p1, p2) -> p1.age() > p2.age())
+               .join(Ctx::persons).filter(p -> p.age() > 50)
+               .filter((p1, p2, p3) -> p1.age() > p3.age());
 
         builder.rule("rule1")
-               .from(builder.from(Ctx::persons).filter((ctx, p) -> p.age() > 50))
-               .join(builder.from(Ctx::persons).filter((ctx, p) -> p.age() > 50))
-               .filter((ctx, p1, p2) -> p1.age() > p2.age())
-               .join(builder.from(Ctx::persons).filter((ctx, p) -> p.age() > 50))
-               .filter((ctx, p1, p2, p3) -> p1.age() > p3.age());
+               .from(builder.from(Ctx::persons).filter(p -> p.age() > 50))
+               .join(builder.from(Ctx::persons).filter(p -> p.age() > 50))
+               .filter((p1, p2) -> p1.age() > p2.age())
+               .join(builder.from(Ctx::persons).filter(p -> p.age() > 50))
+               .filter((p1, p2, p3) -> p1.age() > p3.age());
     }
 
     @Test
@@ -88,48 +88,48 @@ public class RuleBuilderTest {
                .fn( (ctx) -> System.out.println("hello"));
 
         builder.rule("rule1")
-               .from(Ctx::libraries).filter((ctx, b) -> b.name() != null)
+               .from(Ctx::libraries).filter(b -> b.name() != null)
                //.path()
-               .fn( (ctx, b) -> System.out.println(b.name()));
+               .fn(b -> System.out.println(b.name()));
 
         builder.rule("rule1").<Params3>params()
-               .join(builder.from(Ctx::persons).filter((ctx, b) -> b.age() > 20))
-               .fn( (ctx, b, c) -> System.out.println("hello"));
+               .join(builder.from(Ctx::persons).filter(b -> b.age() > 20))
+               .fn((b, c) -> System.out.println("hello"));
 
         builder.rule("rule1").<Params3>params()
-               .fn( (ctx, p) -> System.out.println(p.p3_1));
+               .fn(p -> System.out.println(p.p3_1));
 
         builder.rule("rule1").<Params3>params()
-               .join(builder.from(Ctx::persons).filter((ctx, b) -> b.age() > 20))
-               .filter((ctx, a, b) -> a.p3_1().length() > b.age())
-               .join(builder.from(Ctx::persons).filter(((ctx, c) -> c.age() > 20)))
-               .filter((ctx, a, b, c) -> a != null && b.age() > 0 && c.age()> 0)
-               .fn( (ctx, a, b, c) -> System.out.println(a.p3_1));;
+               .join(builder.from(Ctx::persons).filter(b -> b.age() > 20))
+               .filter((a, b) -> a.p3_1().length() > b.age())
+               .join(builder.from(Ctx::persons).filter(c -> c.age() > 20))
+               .filter((a, b, c) -> a != null && b.age() > 0 && c.age()> 0)
+               .fn((a, b, c) -> System.out.println(a.p3_1));;
 
         builder.rule("rule1").param("name", String.class).param("age", int.class)
-               .join(builder.from(Ctx::persons).filter((ctx, b) -> b.age() > 20))
-               .filter((ctx, a, b) -> ((String)a.get(0)).length() > b.age())
-               .join(builder.from(Ctx::persons).filter((ctx, c) -> c.age() > 20))
-               .filter((ctx, a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
+               .join(builder.from(Ctx::persons).filter(b -> b.age() > 20))
+               .filter((a, b) -> ((String)a.get(0)).length() > b.age())
+               .join(builder.from(Ctx::persons).filter(c -> c.age() > 20))
+               .filter((a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
 
         builder.rule("rule1").map().param("name", String.class).param("age", int.class)
-               .join(builder.from(Ctx::persons).filter((ctx, b) -> b.age() > 20))
-               .filter((ctx, a, b) -> ((String)a.get("name")).length() > b.age())
-               .join(builder.from(Ctx::persons).filter((ctx, c) -> c.age() > 20))
-               .filter((ctx, a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
+               .join(builder.from(Ctx::persons).filter(b -> b.age() > 20))
+               .filter((a, b) -> ((String)a.get("name")).length() > b.age())
+               .join(builder.from(Ctx::persons).filter(c -> c.age() > 20))
+               .filter((a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
 
-        builder.rule("rule1").from(Ctx::persons).filter((ctx, a) -> a.age() > 20)
-               .join(builder.from(Ctx::persons).filter((ctx, b) -> b.age() > 20))
-               .filter((ctx, a, b) -> a.age() > b.age())
-               .join(builder.from(Ctx::persons).filter((ctx, c) -> c.age() > 20))
-               .filter((ctx, a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
+        builder.rule("rule1").from(Ctx::persons).filter((a) -> a.age() > 20)
+               .join(builder.from(Ctx::persons).filter(b -> b.age() > 20))
+               .filter((a, b) -> a.age() > b.age())
+               .join(builder.from(Ctx::persons).filter(c -> c.age() > 20))
+               .filter((a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
 
         builder.rule("rule1")
                .<Object>param("p1")
                .<Object>param("p2")
-               .join(builder.from(Ctx::persons).filter((ctx, b) -> b.age() > 20))
-               .join(builder.from(Ctx::persons).filter((ctx, c) -> c.age() > 20))
-               .filter((ctx, a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
+               .join(builder.from(Ctx::persons).filter(b -> b.age() > 20))
+               .join(builder.from(Ctx::persons).filter(c -> c.age() > 20))
+               .filter((a, b, c) -> a != null && b.age() > 0 && c.age()> 0);
     }
 
     public void testPath() {
@@ -142,7 +142,7 @@ public class RuleBuilderTest {
                .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
                .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
                .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
-        .filter( (ctx, b, c) -> c.getA().name() != ((Page) c.get(4)).content());
+        .filter((b, c) -> c.getA().name() != ((Page) c.get(4)).content());
 
     }
 
@@ -153,12 +153,12 @@ public class RuleBuilderTest {
                .<Room, Shelf>path3()
                .path( (ctx, l) -> l.rooms(), (ctx, r) -> r.name() != null)
                .path( (ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null)
-               .filter((ctx, a, t) -> a.name() != ((Shelf) t.get(2)).name());
+               .filter((a, t) -> a.name() != ((Shelf) t.get(2)).name());
 
         builder.rule("rule1").<Library>params()
                .<Room>path2()
                .path( (ctx, a) -> a.rooms(), (ctx, b) -> b.name() != null)
-               .filter((ctx, a, t) -> a.name() != ((Room) t.get(1)).name());
+               .filter((a, t) -> a.name() != ((Room) t.get(1)).name());
 
         builder.rule("rule1").from(Ctx::persons)
                .join(builder.from(Ctx::libraries))
@@ -166,8 +166,8 @@ public class RuleBuilderTest {
                .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
                .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
                .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
-               .filter( (ctx, p, c, d) -> p.age() <= ((Book) d.get(3)).pages().size())
-               .filter( (ctx, p, c, d) -> p.age() <= d.<Path>as().book().pages().size());
+               .filter((p, c, d) -> p.age() <= ((Book) d.get(3)).pages().size())
+               .filter((p, c, d) -> p.age() <= d.<Path>as().book().pages().size());
 
     }
 

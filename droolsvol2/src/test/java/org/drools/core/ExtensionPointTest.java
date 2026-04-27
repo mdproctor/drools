@@ -24,12 +24,12 @@ public class ExtensionPointTest {
 
         builder.rule("Rule1Ext1")
                .extendsRule(ext)
-               .filter((ctx, params) -> params.p3_1() == "Jonny Alpha");
+               .filter(params -> params.p3_1() == "Jonny Alpha");
 
         builder.rule("Rule2Ext1")
                .extendsRule(ext)
                .join(builder.from(CTX::persons))
-               .filter((ctx, params, person) -> person.name() == "Jonny Alpha");
+               .filter((params, person) -> person.name() == "Jonny Alpha");
 
     }
 
@@ -43,12 +43,12 @@ public class ExtensionPointTest {
                           .extensionPoint();
         builder.rule("Rule1ExtRule1")
                .extendsRule(ext)
-               .filter((ctx, params, person) -> person.name()== "Jonny Alpha");
+               .filter((params, person) -> person.name()== "Jonny Alpha");
 
         builder.rule("Rule2ExtRule1")
                .extendsRule(ext)
                .join(builder.from(CTX::libraries))
-               .filter((ctx, params, person, library) -> person.name() == library.name());
+               .filter((params, person, library) -> person.name() == library.name());
     }
 
     @Test
@@ -62,11 +62,11 @@ public class ExtensionPointTest {
                           .extensionPoint();
         builder.rule("Rule1ExtRule1")
                .extendsRule(ext)
-               .filter((ctx, params, person, library) -> person.name() == library.name());
+               .filter((params, person, library) -> person.name() == library.name());
         builder.rule("Rule2ExtRule1")
                .extendsRule(ext)
                .join(builder.from(CTX::rooms))
-               .filter((ctx, params, person, library, room) -> person.name() == room.name());
+               .filter((params, person, library, room) -> person.name() == room.name());
     }
 
     @Test
@@ -81,10 +81,10 @@ public class ExtensionPointTest {
                           .extensionPoint();
         builder.rule("Rule1ExtRule1")
                .extendsRule(ext)
-               .filter((ctx, params, person, library, room) -> person.name() == room.name());
+               .filter((params, person, library, room) -> person.name() == room.name());
         builder.rule("Rule2ExtRule1")
                .extendsRule(ext)
                .join(builder.from(CTX::shelf))
-               .filter((ctx, params, person, library, room, shelf) -> person.name() == room.name());
+               .filter((params, person, library, room, shelf) -> person.name() == room.name());
     }
 }

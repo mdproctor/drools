@@ -5,6 +5,7 @@ import org.drools.api.data.ObjectHandle;
 import org.drools.core.RuleBuilder.RuleDescriptor;
 import org.drools.core.function.Consumer2;
 import org.drools.core.function.Consumer3;
+import org.drools.core.function.Predicate1;
 import org.drools.core.function.Predicate2;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,7 @@ public class RuleProapgationAndExecutionTest {
         RuleDescriptor<CTX1> desc = new RuleBuilder<CTX1>()
                 .rule("r1")
                 .from(CTX1::persons)
-                .ifn((ctx, p) -> {})
+                .ifn(p -> {})
                 .descriptor();
 
         assertThat(desc.getSources()).hasSize(1);
@@ -43,7 +44,7 @@ public class RuleProapgationAndExecutionTest {
                 .rule("r1")
                 .from(CTX2::persons)
                 .join(CTX2::names)
-                .ifn((ctx, p, n) -> {})
+                .ifn((p, n) -> {})
                 .descriptor();
 
         assertThat(desc.getSources()).hasSize(2);
@@ -64,7 +65,7 @@ public class RuleProapgationAndExecutionTest {
                         .selectPackage("org.domain").selectUnit("Unit1")
                         .add(new RuleBuilder<CTX1>().rule("r1")
                                 .from(CTX1::persons)
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx1);
 
@@ -91,7 +92,7 @@ public class RuleProapgationAndExecutionTest {
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons)
                                 .join(CTX2::names)
-                                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -116,7 +117,7 @@ public class RuleProapgationAndExecutionTest {
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons)
                                 .join(CTX2::names)
-                                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -143,7 +144,7 @@ public class RuleProapgationAndExecutionTest {
                         .selectPackage("org.domain").selectUnit("Unit1")
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons).join(CTX2::names)
-                                .ifn((ctx, p, n) -> {})));
+                                .ifn((p, n) -> {})));
 
         UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -194,7 +195,7 @@ public class RuleProapgationAndExecutionTest {
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons)
                                 .join(CTX2::names)
-                                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
 
         UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -220,7 +221,7 @@ public class RuleProapgationAndExecutionTest {
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons)
                                 .join(CTX2::names)
-                                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
 
         UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -247,8 +248,8 @@ public class RuleProapgationAndExecutionTest {
                         .selectPackage("org.domain").selectUnit("Unit1")
                         .add(new RuleBuilder<CTX1>().rule("r1")
                                 .from(CTX1::persons)
-                                .filter((ctx, p) -> p.age() > 18)
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                .filter(p -> p.age() > 18)
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx1);
 
@@ -272,9 +273,9 @@ public class RuleProapgationAndExecutionTest {
                         .selectPackage("org.domain").selectUnit("Unit1")
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons)
-                                .filter((ctx, p) -> p.age() > 18)
+                                .filter(p -> p.age() > 18)
                                 .join(CTX2::names)
-                                .ifn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -300,7 +301,7 @@ public class RuleProapgationAndExecutionTest {
                         .selectPackage("org.domain").selectUnit("Unit1")
                         .add(new RuleBuilder<CTX1>().rule("r1")
                                 .from(CTX1::persons)
-                                .fn((ctx, p) -> fired.add(p.name()))));
+                                .fn(p -> fired.add(p.name()))));
 
         UnitInstance<CTX1> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx1);
 
@@ -325,7 +326,7 @@ public class RuleProapgationAndExecutionTest {
                         .add(new RuleBuilder<CTX2>().rule("r1")
                                 .from(CTX2::persons)
                                 .join(CTX2::names)
-                                .fn((ctx, p, n) -> fired.add(p.name() + ":" + n))));
+                                .fn((p, n) -> fired.add(p.name() + ":" + n))));
 
         UnitInstance<CTX2> ui = UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -350,11 +351,11 @@ public class RuleProapgationAndExecutionTest {
                         .selectPackage("org.domain").selectUnit("Unit1")
                         .add(builder.rule("r1")
                                 .from(CTX2::persons)
-                                .ifn((ctx, p) -> fired.add("r1:" + p.name())))
+                                .ifn(p -> fired.add("r1:" + p.name())))
                         .add(builder.rule("r2")
                                 .from(CTX2::persons)
                                 .join(CTX2::names)
-                                .ifn((ctx, p, n) -> fired.add("r2:" + p.name() + ":" + n))));
+                                .ifn((p, n) -> fired.add("r2:" + p.name() + ":" + n))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.Unit1", ctx2);
 
@@ -388,8 +389,8 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX3::persons)
                                 .not(scope -> scope
                                         .join(CTX3::blocklist)
-                                        .filter((ctx, p, name) -> p.name().equals(name)))
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                        .filter((p, name) -> p.name().equals(name)))
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U1", ctx3);
 
@@ -418,8 +419,8 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX3::persons)
                                 .exists(scope -> scope
                                         .join(CTX3::blocklist)
-                                        .filter((ctx, p, name) -> p.name().equals(name)))
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                        .filter((p, name) -> p.name().equals(name)))
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U2", ctx3);
 
@@ -457,8 +458,8 @@ public class RuleProapgationAndExecutionTest {
                                 .join(CTX4::cities)
                                 .not(scope -> scope
                                         .join(CTX4::blocklist)
-                                        .filter((ctx, p, city, entry) -> p.name().equals(entry)))
-                                .ifn((ctx, p, city) -> fired.add(p.name() + ":" + city))));
+                                        .filter((p, city, entry) -> p.name().equals(entry)))
+                                .ifn((p, city) -> fired.add(p.name() + ":" + city))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U3", ctx4);
 
@@ -505,7 +506,7 @@ public class RuleProapgationAndExecutionTest {
                                         .join(CTX4::blocklist)
                                         .filter((ctx, p, city, entry) ->
                                                 city.equals("London") && entry.equals(p.name())))
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U3", ctx4);
 
@@ -541,7 +542,7 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX5::persons)
                                 .join(CTX5::cities)
                                 .join(CTX5::roles)
-                                .ifn((ctx, p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+                                .ifn((p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U6", ctx5);
 
@@ -575,8 +576,8 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX5::persons)
                                 .join(CTX5::cities)
                                 .join(CTX5::roles)
-                                .filter((ctx, p, city, role) -> role.equals("Admin"))
-                                .ifn((ctx, p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+                                .filter((p, city, role) -> role.equals("Admin"))
+                                .ifn((p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U7", ctx5);
 
@@ -612,9 +613,9 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX3::persons)
                                 .not()
                                     .join(CTX3::blocklist)
-                                    .filter((Object)(Predicate2<Context<CTX3>, String>)(ctx, s) -> s.equals("BLOCKED"))
+                                    .filter((Predicate1<String>) s -> s.equals("BLOCKED"))
                                 .end()
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U4", ctx3);
 
@@ -644,9 +645,9 @@ public class RuleProapgationAndExecutionTest {
                                 .from(CTX3::persons)
                                 .exists()
                                     .join(CTX3::blocklist)
-                                    .filter((Object)(Predicate2<Context<CTX3>, String>)(ctx, s) -> s.equals("OPEN"))
+                                    .filter((Predicate1<String>) s -> s.equals("OPEN"))
                                 .end()
-                                .ifn((ctx, p) -> fired.add(p.name()))));
+                                .ifn(p -> fired.add(p.name()))));
 
         UnitInstantiator.from(ruleBase).createInstance("org.domain.U5", ctx3);
 

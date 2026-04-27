@@ -309,9 +309,19 @@ public class UnitInstance<CTX> {
                     .filter(me -> me.getName().equals("test") && !me.isSynthetic())
                     .findFirst()
                     .orElseThrow();
-            Object[] args = new Object[facts.length + 1];
-            args[0] = ctx;
-            System.arraycopy(facts, 0, args, 1, facts.length);
+            Object[] args;
+            if (m.getParameterCount() == facts.length + 1) {
+                // ctx-first form: (ctx, fact1, fact2, ...)
+                args = new Object[facts.length + 1];
+                args[0] = ctx;
+                System.arraycopy(facts, 0, args, 1, facts.length);
+            } else if (m.getParameterCount() == facts.length) {
+                // no-ctx form: (fact1, fact2, ...)
+                args = facts;
+            } else {
+                throw new IllegalArgumentException("wrong number of arguments: " +
+                        m.getParameterCount() + " expected: " + (facts.length + 1));
+            }
             return (Boolean) m.invoke(pred, args);
         } catch (Exception e) {
             throw new RuntimeException("Scope predicate invocation failed", e);
