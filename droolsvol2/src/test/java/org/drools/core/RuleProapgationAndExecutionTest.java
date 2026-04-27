@@ -519,6 +519,77 @@ public class RuleProapgationAndExecutionTest {
     }
 
     // =========================================================================
+    // 3-source outer pattern rules
+    // =========================================================================
+
+    record CTX5(DataStore<Person> persons, DataStore<String> cities, DataStore<String> roles) {}
+
+    @Test
+    public void testThreeSourceJoinFires() {
+        // from(persons).join(cities).join(roles) → fires for each (person, city, role) triple.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities  = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> roles   = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        CTX5 ctx5 = new CTX5(persons, cities, roles);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX5> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U6")
+                        .add(new RuleBuilder<CTX5>().rule("threeJoin")
+                                .from(CTX5::persons)
+                                .join(CTX5::cities)
+                                .join(CTX5::roles)
+                                .ifn((ctx, p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U6", ctx5);
+
+        persons.add(new Person("Alice", 30, "London"));
+        cities.add("London");
+        assertThat(fired).isEmpty(); // only 2 of 3 sources have data
+
+        roles.add("Admin");
+        // 1 person × 1 city × 1 role = 1 triple
+        assertThat(fired).containsExactly("Alice:London:Admin");
+
+        cities.add("Paris");
+        // 1 person × 2 cities × 1 role = 2 triples
+        assertThat(fired).containsExactlyInAnyOrder("Alice:London:Admin", "Alice:Paris:Admin");
+    }
+
+    @Test
+    public void testThreeSourceJoinWithFilter() {
+        // Three-source rule with a filter on the last join.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> cities  = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        PropagatingDataStore<String> roles   = new PropagatingDataStore<>(2, new TypeIndexer<>());
+        CTX5 ctx5 = new CTX5(persons, cities, roles);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX5> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U7")
+                        .add(new RuleBuilder<CTX5>().rule("threeJoinFilter")
+                                .from(CTX5::persons)
+                                .join(CTX5::cities)
+                                .join(CTX5::roles)
+                                .filter((ctx, p, city, role) -> role.equals("Admin"))
+                                .ifn((ctx, p, city, role) -> fired.add(p.name() + ":" + city + ":" + role))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U7", ctx5);
+
+        persons.add(new Person("Alice", 30, "London"));
+        cities.add("London");
+        roles.add("User");   // not Admin → blocked
+        assertThat(fired).isEmpty();
+
+        roles.add("Admin");  // Admin → fires
+        assertThat(fired).containsExactly("Alice:London:Admin");
+    }
+
+    // =========================================================================
     // Chain-form not()/exists() scopes — global evaluation
     // =========================================================================
 

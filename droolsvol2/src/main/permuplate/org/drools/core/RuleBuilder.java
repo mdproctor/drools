@@ -517,6 +517,7 @@ public class RuleBuilder<CTX> {
         public Join2First<END, CTX, B, C> filter(
                 @PermuteDeclr(type = "Predicate${i+1}<Context<CTX>, ${typeArgList(2, i+1, 'alpha')}>")
                 Predicate3<Context<CTX>, B, C> predicate3) {
+            storeFilter(predicate3);
             return this;
         }
 

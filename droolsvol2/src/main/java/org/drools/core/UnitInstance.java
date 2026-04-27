@@ -120,7 +120,23 @@ public class UnitInstance<CTX> {
             subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, scopedConsumer, immediate, agenda), filter1);
 
         } else {
-            throw new UnsupportedOperationException("Rules with " + sources.size() + " patterns not yet supported");
+            // N≥3 sources: delta evaluation — when fact F is added to source K, fire only
+            // NEW combinations: (snapshot_0 × ... × {F} × ... × snapshot_N).
+            for (int slot = 0; slot < sources.size(); slot++) {
+                final int triggerSlot = slot;
+                DataProcessor<CTX, Object> proc = new DataProcessor<CTX, Object>() {
+                    public void add(Context<CTX> c, ObjectHandle<Object> h) {
+                        evaluateAllCombinations(c, sources, filters, rawHead, negations, existences,
+                                immediate, agenda, triggerSlot, h.getObject());
+                    }
+                    public void update(Context<CTX> c, ObjectHandle<Object> h) {
+                        evaluateAllCombinations(c, sources, filters, rawHead, negations, existences,
+                                immediate, agenda, triggerSlot, h.getObject());
+                    }
+                    public void remove(Context<CTX> c, ObjectHandle<Object> h) { /* no re-eval on remove for now */ }
+                };
+                router.subscribe(slot, proc);
+            }
         }
     }
 
@@ -138,6 +154,83 @@ public class UnitInstance<CTX> {
             if (found != null) return found;
         }
         return null;
+    }
+
+    /**
+     * Functional cross-product evaluation for N≥3 source rules.
+     * Snapshots all sources via asList(), cross-products, applies filters and scopes,
+     * then invokes the action consumer via reflection.
+     */
+    /**
+     * Delta evaluation for N≥3 source rules.
+     * When fact {@code triggerFact} is added to source {@code triggerSlot}, fires only
+     * the NEW combinations: snapshot[0] × ... × {triggerFact} × ... × snapshot[N-1].
+     * Other slots use their full current snapshot, ensuring each combination fires exactly once.
+     */
+    @SuppressWarnings("unchecked")
+    private void evaluateAllCombinations(Context<CTX> ctx,
+            List<Function1<CTX, DataSource<?>>> sources,
+            List<Object> filters,
+            Object rawConsumer,
+            List<ScopeDescriptor<CTX>> negations,
+            List<ScopeDescriptor<CTX>> existences,
+            boolean immediate,
+            Agenda agenda,
+            int triggerSlot,
+            Object triggerFact) {
+        List<Object[]> combinations = new ArrayList<>();
+        combinations.add(new Object[0]);
+
+        for (int i = 0; i < sources.size(); i++) {
+            // For the trigger slot: only the new fact. For all others: current snapshot.
+            List<Object> items;
+            if (i == triggerSlot) {
+                items = java.util.Collections.singletonList(triggerFact);
+            } else {
+                @SuppressWarnings("rawtypes")
+                List rawList = sources.get(i).apply(ctx.context()).asList();
+                items = rawList;
+            }
+            Object filterPred = i < filters.size() ? filters.get(i) : null;
+            List<Object[]> next = new ArrayList<>();
+            for (Object item : items) {
+                for (Object[] combo : combinations) {
+                    Object[] extended = Arrays.copyOf(combo, combo.length + 1);
+                    extended[combo.length] = item;
+                    if (filterPred == null || invokePredicate(filterPred, ctx, extended)) {
+                        next.add(extended);
+                    }
+                }
+            }
+            combinations = next;
+            if (combinations.isEmpty()) return;
+        }
+
+        Method m = Arrays.stream(rawConsumer.getClass().getMethods())
+                .filter(me -> me.getName().equals("accept") && !me.isSynthetic())
+                .findFirst().orElseThrow();
+
+        for (Object[] combo : combinations) {
+            Object[] outerFacts = combo;
+            boolean allowed = true;
+            for (ScopeDescriptor<CTX> neg : negations)
+                if (scopeHasMatch(neg, ctx, neg.globalEval ? new Object[0] : outerFacts)) { allowed = false; break; }
+            if (!allowed) continue;
+            for (ScopeDescriptor<CTX> ex : existences)
+                if (!scopeHasMatch(ex, ctx, ex.globalEval ? new Object[0] : outerFacts)) { allowed = false; break; }
+            if (!allowed) continue;
+
+            Object[] args = new Object[combo.length + 1];
+            args[0] = ctx;
+            System.arraycopy(combo, 0, args, 1, combo.length);
+            final Object[] finalArgs = args;
+            try {
+                if (immediate) m.invoke(rawConsumer, finalArgs);
+                else agenda.enqueue(() -> { try { m.invoke(rawConsumer, finalArgs); } catch (Exception e) { throw new RuntimeException(e); } });
+            } catch (Exception e) {
+                throw new RuntimeException("Consumer invocation failed", e);
+            }
+        }
     }
 
     /** Checks scopes for a 2-fact outer rule where both left and right facts are available. */
