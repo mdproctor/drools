@@ -403,6 +403,72 @@ public class RuleProapgationAndExecutionTest {
     }
 
     @Test
+    public void testTwoSourceChainedPerInletAndPostJoinFilters() {
+        // filter(a -> ...) before join → filter0 (single-fact, per-inlet on left).
+        // filter((p, n) -> ...) after join → filter1 (all-facts, post-join consumer wrapping).
+        // Both filters active simultaneously: only Alice(30, "London") + "London" passes both.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX2 ctx2 = new CTX2(persons, names);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX2> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_chain2")
+                        .add(new RuleBuilder<CTX2>().rule("chainedFilters")
+                                .from(CTX2::persons)
+                                .filter(p -> p.age() > 18)              // filter0: per-inlet, single-fact
+                                .join(CTX2::names)
+                                .filter((p, n) -> p.city().equals(n))   // filter1: post-join, all-facts
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_chain2", ctx2);
+
+        persons.add(new Person("Alice", 30, "London"));
+        persons.add(new Person("Bob", 15, "Paris"));
+        names.add("London");
+        // Alice(30 > 18) + "London" (city matches) → fires
+        // Bob(15 ≤ 18) → blocked by filter0
+        assertThat(fired).containsExactly("Alice:London");
+
+        names.add("Paris");
+        // Alice + "Paris": city "London" ≠ "Paris" → blocked by filter1
+        // Bob: still blocked by filter0
+        assertThat(fired).containsExactly("Alice:London");
+    }
+
+    @Test
+    public void testTwoSourceCtxAtEndAllFactsPostJoinFilter() {
+        // filter((p, n, ctx) -> ...) after join — ctx-at-end, all-facts.
+        // Stored as Predicate3<Context<CTX>, B, C> (ctx-first internally).
+        // isMultiFactFilter() detects paramCount=3 > 2 → post-join consumer path.
+        PropagatingDataStore<Person> persons = new PropagatingDataStore<>(0, new TypeIndexer<>());
+        PropagatingDataStore<String> names   = new PropagatingDataStore<>(1, new TypeIndexer<>());
+        CTX2 ctx2 = new CTX2(persons, names);
+        List<String> fired = new ArrayList<>();
+        RuleBase<CTX2> ruleBase = new RuleBase<>();
+
+        RuleBaseModifier.with(ruleBase).apply(
+                RuleBaseModifier.changeSet()
+                        .selectPackage("org.domain").selectUnit("U_ctxEnd2all")
+                        .add(new RuleBuilder<CTX2>().rule("ctxAtEndAllFacts")
+                                .from(CTX2::persons)
+                                .join(CTX2::names)
+                                .filter((p, n, ctx) -> p.name().equals(n))  // ctx-at-end, all-facts
+                                .ifn((p, n) -> fired.add(p.name() + ":" + n))));
+
+        UnitInstantiator.from(ruleBase).createInstance("org.domain.U_ctxEnd2all", ctx2);
+
+        persons.add(new Person("Alice", 30, "London"));
+        names.add("Bob");
+        assertThat(fired).isEmpty(); // Alice ≠ Bob
+
+        names.add("Alice");
+        assertThat(fired).containsExactly("Alice:Alice"); // Alice == Alice
+    }
+
+    @Test
     public void testLambdaNotScopeBlocksWhenScopeHasMatch() {
         // not(scope): rule fires for each person whose name is NOT on the blocklist.
         // Alice is on the blocklist → blocked. Bob is not → fires.
