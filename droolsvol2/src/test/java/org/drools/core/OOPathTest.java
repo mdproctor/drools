@@ -50,10 +50,10 @@ public class OOPathTest {
                       Library, Page,Tuple5<Library, Room, Shelf, Book, Page>> builder = new OOPathBuilder<>(end, finisher);
 
         OOPath<Library, Page, Tuple5<Library, Room, Shelf, Book, Page>> path =
-        builder.<Library, Room, Shelf, Book, Page>path5((ctx, l) -> l.rooms(), (ctx, r) -> r.name() != null)
-               .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
-               .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
-               .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
+        builder.<Library, Room, Shelf, Book, Page>path5(Library::rooms, r -> r.name() != null)
+               .path(Room::shelves, s -> s.name() != null)
+               .path(Shelf::books, b -> b.title() != null)
+               .path(Book::pages, p -> p.content() != null)
                .build();
 
 //        OOPath<Library, Page, Tuple5<Library, Room, Shelf, Book, Page>> path =

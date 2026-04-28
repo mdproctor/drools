@@ -493,10 +493,10 @@ public class RuleBuilder<CTX> {
         }
 
         <PB, PC, PD, PE> Path4<Join2First<END, CTX, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, PB, PC, PD, PE> path5(
-                Function2<PathContext<Tuple5<B, PB, PC, PD, PE>>, B, ?> fn2,
-                Predicate2<PathContext<Tuple5<B, PB, PC, PD, PE>>, PB> flt2) {
+                Function1<B, ?> fn,
+                Predicate1<PB> flt) {
             Path5<Join2First<END, CTX, B, Tuple5<B, PB, PC, PD, PE>>, Tuple5<B, PB, PC, PD, PE>, B, PB, PC, PD, PE> path5 = new Path5<>(null, null, null);
-            return path5.path(fn2, flt2);
+            return path5.path((Function1<B, Iterable<PB>>) b -> (Iterable<PB>) fn.apply(b), flt);
         }
 
         <PB, PC, PD> Path4<Join2First<END, CTX, B, Tuple4<B, PB, PC, PD>>, Tuple4<B, PB, PC, PD>, B, PB, PC, PD> path4() {
@@ -709,10 +709,10 @@ public class RuleBuilder<CTX> {
         // path5/path6: arity-2 only; suppressed from Join3Gate..Join10Gate
         @PermuteReturn(when = "i == 2")
         <PB, PC, PD, PE> Path4<Join3First<END, CTX, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, PB, PC, PD, PE> path5(
-                Function2<PathContext<Tuple5<C, PB, PC, PD, PE>>, C, ?> fn2,
-                Predicate2<PathContext<Tuple5<C, PB, PC, PD, PE>>, PB> flt2) {
+                Function1<C, ?> fn,
+                Predicate1<PB> flt) {
             Path5<Join3First<END, CTX, B, C, Tuple5<C, PB, PC, PD, PE>>, Tuple5<C, PB, PC, PD, PE>, C, PB, PC, PD, PE> path5 = new Path5<>(null, null, null);
-            return path5.path(fn2, flt2);
+            return path5.path((Function1<C, Iterable<PB>>) c -> (Iterable<PB>) fn.apply(c), flt);
         }
 
         @PermuteReturn(when = "i == 2")

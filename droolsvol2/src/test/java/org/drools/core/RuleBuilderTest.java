@@ -138,10 +138,10 @@ public class RuleBuilderTest {
         DataStore<Object> ds = new PropagatingDataStore<>(0, new TypeIndexer<>());
 
         builder.rule("rule1").<Library>params()
-               .<Room, Shelf, Book, Page>path5((ctx,l) -> l.rooms(), (ctx, r) -> r.name() != null)
-               .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
-               .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
-               .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
+               .<Room, Shelf, Book, Page>path5(Library::rooms, r -> r.name() != null)
+               .path(Room::shelves, s -> s.name() != null)
+               .path(Shelf::books, b -> b.title() != null)
+               .path(Book::pages, p -> p.content() != null)
         .filter((b, c) -> c.getA().name() != ((Page) c.get(4)).content());
 
     }
@@ -151,21 +151,21 @@ public class RuleBuilderTest {
 
         builder.rule("rule1").<Library>params()
                .<Room, Shelf>path3()
-               .path( (ctx, l) -> l.rooms(), (ctx, r) -> r.name() != null)
-               .path( (ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null)
+               .path(Library::rooms, r -> r.name() != null)
+               .path(Room::shelves, s -> s.name() != null)
                .filter((a, t) -> a.name() != ((Shelf) t.get(2)).name());
 
         builder.rule("rule1").<Library>params()
                .<Room>path2()
-               .path( (ctx, a) -> a.rooms(), (ctx, b) -> b.name() != null)
+               .path(Library::rooms, r -> r.name() != null)
                .filter((a, t) -> a.name() != ((Room) t.get(1)).name());
 
         builder.rule("rule1").from(Ctx::persons)
                .join(builder.from(Ctx::libraries))
-               .<Room, Shelf, Book, Page>path5((ctx,l) -> l.rooms(), (ctx, r) -> r.name() != null)
-               .path((ctx, r) -> r.shelves(), (ctx, s) -> s.name() != null )
-               .path((ctx, s) -> s.books(), (ctx, b) -> b.title() != null)
-               .path((ctx, b) -> b.pages(), (ctx, p) -> p.content() != null)
+               .<Room, Shelf, Book, Page>path5(Library::rooms, r -> r.name() != null)
+               .path(Room::shelves, s -> s.name() != null)
+               .path(Shelf::books, b -> b.title() != null)
+               .path(Book::pages, p -> p.content() != null)
                .filter((p, c, d) -> p.age() <= ((Book) d.get(3)).pages().size())
                .filter((p, c, d) -> p.age() <= d.<Path>as().book().pages().size());
 
