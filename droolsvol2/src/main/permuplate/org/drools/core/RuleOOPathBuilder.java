@@ -12,6 +12,7 @@ import org.drools.core.function.Function2;
 import org.drools.core.function.Predicate1;
 import org.drools.core.function.CtxLastPredicate1;
 import org.drools.core.function.Predicate2;
+import java.util.Arrays;
 import org.drools.core.function.BaseTuple;
 
 public class RuleOOPathBuilder {
@@ -98,6 +99,54 @@ public class RuleOOPathBuilder {
             return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> (Iterable<B>) fn.apply((A) a, (PathContext<T>) ctx),
                         (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx));
         }
+
+        @SuppressWarnings("unchecked")
+        public END pathArray(Function1<A, B[]> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathArray(Function1<A, B[]> fn, Predicate1<B> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b));
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathArray(Function2<A, PathContext<T>, B[]> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a, (PathContext<T>) ctx)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathArray(Function2<A, PathContext<T>, B[]> fn, CtxLastPredicate1<B, PathContext<T>> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a, (PathContext<T>) ctx)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx));
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathSingle(Function1<A, B> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathSingle(Function1<A, B> fn, Predicate1<B> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b));
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathSingle(Function2<A, PathContext<T>, B> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a, (PathContext<T>) ctx); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        public END pathSingle(Function2<A, PathContext<T>, B> fn, CtxLastPredicate1<B, PathContext<T>> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a, (PathContext<T>) ctx); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx));
+        }
     }
 
     // Template — generates Path4..Path6
@@ -169,6 +218,70 @@ public class RuleOOPathBuilder {
         @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> (Iterable<B>) fn.apply((A) a, (PathContext<T>) ctx), (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx)); }")
         public Path2<END, T, B, C> path(Function2<A, PathContext<T>, Iterable<B>> fn, CtxLastPredicate1<B, PathContext<T>> flt) {
             return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> (Iterable<B>) fn.apply((A) a, (PathContext<T>) ctx),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx));
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> java.util.Arrays.asList(fn.apply((A) a)), (Predicate2<PathContext<T>, B>) (ctx, b) -> true); }")
+        public Path2<END, T, B, C> pathArray(Function1<A, B[]> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> java.util.Arrays.asList(fn.apply((A) a)), (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b)); }")
+        public Path2<END, T, B, C> pathArray(Function1<A, B[]> fn, Predicate1<B> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b));
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> java.util.Arrays.asList(fn.apply((A) a, (PathContext<T>) ctx)), (Predicate2<PathContext<T>, B>) (ctx, b) -> true); }")
+        public Path2<END, T, B, C> pathArray(Function2<A, PathContext<T>, B[]> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a, (PathContext<T>) ctx)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> java.util.Arrays.asList(fn.apply((A) a, (PathContext<T>) ctx)), (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx)); }")
+        public Path2<END, T, B, C> pathArray(Function2<A, PathContext<T>, B[]> fn, CtxLastPredicate1<B, PathContext<T>> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> Arrays.asList(fn.apply((A) a, (PathContext<T>) ctx)),
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx));
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a); return __v != null ? java.util.List.of(__v) : java.util.List.of(); }, (Predicate2<PathContext<T>, B>) (ctx, b) -> true); }")
+        public Path2<END, T, B, C> pathSingle(Function1<A, B> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a); return __v != null ? java.util.List.of(__v) : java.util.List.of(); }, (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b)); }")
+        public Path2<END, T, B, C> pathSingle(Function1<A, B> fn, Predicate1<B> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b));
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a, (PathContext<T>) ctx); return __v != null ? java.util.List.of(__v) : java.util.List.of(); }, (Predicate2<PathContext<T>, B>) (ctx, b) -> true); }")
+        public Path2<END, T, B, C> pathSingle(Function2<A, PathContext<T>, B> fn) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a, (PathContext<T>) ctx); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
+                        (Predicate2<PathContext<T>, B>) (ctx, b) -> true);
+        }
+
+        @SuppressWarnings("unchecked")
+        @PermuteReturn(className = "Path${i-1}", typeArgs = "'END, T, ' + typeArgList(2, i, 'alpha')", when = "true")
+        @PermuteBody(body = "{ return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a, (PathContext<T>) ctx); return __v != null ? java.util.List.of(__v) : java.util.List.of(); }, (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx)); }")
+        public Path2<END, T, B, C> pathSingle(Function2<A, PathContext<T>, B> fn, CtxLastPredicate1<B, PathContext<T>> flt) {
+            return path((Function2<PathContext<T>, A, Iterable<B>>) (ctx, a) -> { B __v = (B) fn.apply((A) a, (PathContext<T>) ctx); return __v != null ? java.util.List.of(__v) : java.util.List.of(); },
                         (Predicate2<PathContext<T>, B>) (ctx, b) -> flt.test((B) b, (PathContext<T>) ctx));
         }
     }
