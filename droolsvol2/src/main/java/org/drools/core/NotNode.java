@@ -1,7 +1,7 @@
 package org.drools.core;
 
 /** TODO #6650: Temporary stub — vol2 not/negation node not yet implemented. */
-public class NotNode extends BetaNode {
+public class NotNode extends LeftAndRightNode {
     private boolean emptyBetaConstraints;
 
     public NotNode() { }

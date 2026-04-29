@@ -26,7 +26,7 @@ import org.drools.core.util.AbstractDoubleLinkedNode;
  * TODO #6650: implement vol2 AccumulateNode
  * The inner AccumulateMemory is needed by SegmentMemory prototype machinery.
  */
-public class AccumulateNode extends BetaNode implements MemoryFactory<AccumulateNode.AccumulateMemory> {
+public class AccumulateNode extends LeftAndRightNode implements MemoryFactory<AccumulateNode.AccumulateMemory> {
 
     public AccumulateNode() { }
 

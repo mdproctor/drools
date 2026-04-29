@@ -196,7 +196,7 @@ public class BuildtimeSegmentUtilities {
             nodeTypesInSegment = updateNodeTypesMask(node, nodeTypesInSegment);
             if (NodeTypeEnums.isBetaNode(node)) {
                 boolean updateAllLinked = node.getPathIndex() < recordBefore && updateNodeBit;
-                allLinkedTestMask = processBetaNode(segmentPrototypeRegistry, (BetaNode) node, removingTn, smem, memories,
+                allLinkedTestMask = processBetaNode(segmentPrototypeRegistry, (LeftAndRightNode) node, removingTn, smem, memories,
                         nodes, nodePosMask, allLinkedTestMask, updateAllLinked);
             } else {
                 switch (node.getType()) {
@@ -371,8 +371,8 @@ public class BuildtimeSegmentUtilities {
         return allLinkedTestMask;
     }
 
-    private static long processBetaNode(SegmentPrototypeRegistry prototypeRegistry, 
-                                        BetaNode betaNode,
+    private static long processBetaNode(SegmentPrototypeRegistry prototypeRegistry,
+                                        LeftAndRightNode betaNode,
                                         TerminalNode removingTn,
                                         SegmentPrototype smem,
                                         List<MemoryPrototype> memories,
@@ -414,7 +414,7 @@ public class BuildtimeSegmentUtilities {
         return allLinkedTestMask;
     }
 
-    public static boolean canBeDisabled(BetaNode betaNode) {
+    public static boolean canBeDisabled(LeftAndRightNode betaNode) {
         // non empty not nodes and accumulates can never be disabled and thus don't need checking
         return (!(NodeTypeEnums.NotNode == betaNode.getType() && !((NotNode) betaNode).isEmptyBetaConstraints()) &&
                 NodeTypeEnums.AccumulateNode != betaNode.getType() && !betaNode.getRightInput().isRightInputPassive());
