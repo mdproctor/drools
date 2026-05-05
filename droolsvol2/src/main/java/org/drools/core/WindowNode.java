@@ -2,6 +2,8 @@ package org.drools.core;
 import java.util.List;
 /** TODO #6650: Temporary stub — vol2 window node (sliding window filter) not yet implemented. */
 public class WindowNode extends BaseNode implements MemoryFactory<WindowNode.WindowMemory> {
+    @Override public int getType() { return Vol2NodeTypeEnums.WindowNode; }
+
     public WindowNode() { }
     @Override
     public WindowMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {

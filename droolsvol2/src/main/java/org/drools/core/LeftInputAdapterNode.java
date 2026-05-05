@@ -5,6 +5,8 @@ import org.drools.core.util.AbstractDoubleLinkedNode;
 
 public class LeftInputAdapterNode extends BaseNode implements MemoryFactory<LeftInputAdapterNode.LiaNodeMemory> {
 
+    @Override public int getType() { return Vol2NodeTypeEnums.LeftInputAdapterNode; }
+
     public LeftInputAdapterNode() {
         super(0, 0, 0);
     }

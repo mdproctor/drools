@@ -6,6 +6,8 @@ import org.drools.util.bitmask.BitMask;
 public class AlphaNode extends BaseNode {
     private AlphaNodeFieldConstraint constraint;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.AlphaNode; }
+
     public AlphaNode(int id, int pathIndex, int objectIndex) {
         super(id, pathIndex, objectIndex);
     }

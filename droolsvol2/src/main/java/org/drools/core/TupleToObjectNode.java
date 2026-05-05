@@ -34,6 +34,8 @@ public class TupleToObjectNode extends BaseNode implements PathEndNode, MemoryFa
     private SegmentMemory.SegmentPrototype[] eagerSegmentPrototypes;
     private BaseNode startLeftInput;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.TupleToObjectNode; }
+
     public TupleToObjectNode() { }
 
     public TupleToObjectNode(int id, int pathIndex, int objectIndex) {

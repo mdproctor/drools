@@ -7,6 +7,8 @@ public class JoinNode extends LeftAndRightNode implements MemoryFactory<JoinMemo
         super(id, pathIndex, objectIndex);
     }
 
+    @Override public int getType() { return Vol2NodeTypeEnums.JoinNode; }
+
     @Override
     public int getMemoryId() { return getId(); }
 

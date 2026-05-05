@@ -27,6 +27,8 @@ import org.drools.core.util.AbstractDoubleLinkedNode;
  */
 public class FromNode<T extends FromNode.FromMemory> extends BaseNode implements MemoryFactory<T> {
 
+    @Override public int getType() { return Vol2NodeTypeEnums.FromNode; }
+
     public FromNode() { }
 
     public FromNode(int id, int pathIndex, int objectIndex) {

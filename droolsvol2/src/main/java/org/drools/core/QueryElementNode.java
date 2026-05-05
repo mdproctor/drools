@@ -11,6 +11,8 @@ public class QueryElementNode extends BaseNode implements MemoryFactory<QueryEle
 
     private org.drools.base.rule.QueryElement queryElement;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.QueryElementNode; }
+
     public QueryElementNode() {
         super(0, 0, 0);
     }

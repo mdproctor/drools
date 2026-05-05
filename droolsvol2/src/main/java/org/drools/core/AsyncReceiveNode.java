@@ -32,6 +32,8 @@ import java.util.List;
  */
 public class AsyncReceiveNode extends BaseNode implements MemoryFactory<AsyncReceiveNode.AsyncReceiveMemory> {
 
+    @Override public int getType() { return Vol2NodeTypeEnums.AsyncReceiveNode; }
+
     public AsyncReceiveNode() { }
 
     public AsyncReceiveNode(int id, int pathIndex, int objectIndex) {

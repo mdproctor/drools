@@ -10,6 +10,8 @@ public class FilterNode<CTX, T> extends BaseNode {
     private Predicate2<Context<CTX>, T> predicate;
     private List<NetworkNode>          children;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.FilterNode; }
+
     public FilterNode(int id) {
         super(id, 0, -1);
     }

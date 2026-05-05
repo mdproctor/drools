@@ -4,6 +4,8 @@ package org.drools.core;
 public class NotNode extends LeftAndRightNode {
     private boolean emptyBetaConstraints;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.NotNode; }
+
     public NotNode() { }
     public NotNode(int id, int pathIndex, int objectIndex) { super(id, pathIndex, objectIndex); }
 

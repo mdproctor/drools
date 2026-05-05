@@ -17,8 +17,6 @@ public class RuleBaseTest {
                         .apply(RuleBaseModifier.changeSet()
                                                .selectPackage("org.domain").selectUnit("Unit1")
                                                .add(builder.rule("r1").ifn(() -> {System.out.println("hello");})));
-
-
     }
 
     @Test

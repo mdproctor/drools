@@ -51,6 +51,8 @@ public class TerminalNode extends BaseNode implements PathEndNode, BaseTerminalN
 
     private int objectCount;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.TerminalNode; }
+
     public TerminalNode() { }
 
     public TerminalNode(int id, BaseNode leftInput,

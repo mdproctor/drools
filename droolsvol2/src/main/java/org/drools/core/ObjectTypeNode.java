@@ -7,6 +7,8 @@ public class ObjectTypeNode extends BaseNode {
     private ObjectType objectType;
     private long       expirationOffset = -1;
 
+    @Override public int getType() { return Vol2NodeTypeEnums.ObjectTypeNode; }
+
     public ObjectTypeNode(int id, int pathIndex, int objectIndex) {
         super(id, pathIndex, objectIndex);
     }

@@ -1,5 +1,7 @@
 package org.drools.core;
 
+import org.drools.core.function.BiLinearTuplePredicateCache;
+import org.drools.core.function.LinearTuplePredicateCache;
 import org.drools.core.function.Predicate5;
 import org.drools.core.function.Predicate6;
 import org.drools.core.function.Predicate7;
@@ -8,7 +10,7 @@ import org.drools.core.rete.NetworkNode;
 import org.drools.core.util.AbstractDoubleLinkedNode;
 import org.drools.core.util.FastIterator;
 
-public class JoinN<CTX, T> extends NetworkNode {
+public class JoinN<CTX, T>  {
     private BaseNode leftInput;
 
     private BaseNode rightInput;
@@ -21,6 +23,9 @@ public class JoinN<CTX, T> extends NetworkNode {
     private Predicate5<Context<CTX>, Object, Object, Object, Object> predicate5;
 
     private int rightSize;
+
+
+    private BiLinearTuplePredicateCache cache;
 
     public void test1() {
         Join4Memory j = new Join4Memory();
@@ -61,16 +66,20 @@ public class JoinN<CTX, T> extends NetworkNode {
     }
 
 
-    private void leftAdd(Context<CTX> ctx, TupleImpl<T> tp) {
+    private void leftAdd(Context<CTX> ctx, TupleImpl<T> lt) {
         Join4Memory             memory      = ctx.getMemory(this);
         TupleMemory             rightMemory = memory.rightMemory();
-        TupleImpl               rightTp     = rightMemory.getFirstN(tp);
+        TupleImpl               rt          = rightMemory.getFirstN(lt);
         FastIterator<TupleImpl> it          = rightMemory.fastIterator();
 
-        while ((rightTp = it.next(rightTp)) != null) {
+        cache.setLeft(lt);
 
+        while ((rt = it.next(rt)) != null) {
+            if (cache.applyRight(ctx, rt)) {
+
+            }
         }
-
+    }
 
 //        switch (rightSize) {
 //            case 1:
@@ -96,7 +105,7 @@ public class JoinN<CTX, T> extends NetworkNode {
 ////        if (predicate5.test(ds, b, c, d, e)) {
 ////            //sink.leftAdd(ds, b, c, d, e);
 ////        }
-    }
+//    }
 
 
 //    private void join(Context<CTX> ctx, DataHandle<B> b, DataHandle<C> c, DataHandle<D> d, DataHandle<E> e) {

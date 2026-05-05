@@ -28,6 +28,8 @@ import org.drools.core.util.AbstractDoubleLinkedNode;
  */
 public class AccumulateNode extends LeftAndRightNode implements MemoryFactory<AccumulateNode.AccumulateMemory> {
 
+    @Override public int getType() { return Vol2NodeTypeEnums.AccumulateNode; }
+
     public AccumulateNode() { }
 
     public AccumulateNode(int id, int pathIndex, int objectIndex) {

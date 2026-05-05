@@ -29,6 +29,8 @@ import org.drools.core.util.index.TupleList;
  */
 public class TimerNode extends BaseNode implements MemoryFactory<TimerNode.TimerNodeMemory> {
 
+    @Override public int getType() { return Vol2NodeTypeEnums.TimerNode; }
+
     public TimerNode() { }
 
     public TimerNode(int id, int pathIndex, int objectIndex) {
