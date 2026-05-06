@@ -4,11 +4,11 @@ import org.drools.api.data.ObjectHandle;
 import org.drools.api.data.DataProcessor;
 import org.drools.core.function.Predicate2;
 
-public class Filter1<CTX, T> extends AbstractDataProcessor<CTX, T> implements DataProcessor<CTX, T> {
-    private Predicate2<Context<CTX>, T> predicate;
+/** Alpha-chain predicate filter — implements DataProcessor for use in the DataSource network. */
+public class Filter1DataProcessor<CTX, T> extends AbstractDataProcessor<CTX, T> implements DataProcessor<CTX, T> {
+    private final Predicate2<Context<CTX>, T> predicate;
 
-    public Filter1(Predicate2<Context<CTX>, T> predicate) {
-        super();
+    public Filter1DataProcessor(Predicate2<Context<CTX>, T> predicate) {
         this.predicate = predicate;
     }
 
@@ -24,14 +24,12 @@ public class Filter1<CTX, T> extends AbstractDataProcessor<CTX, T> implements Da
         if (predicate.test(ctx, handle.getObject())) {
             subscribers.forEach(c -> c.update(ctx, handle));
         } else {
-            subscribers.forEach( c -> c.remove(ctx, handle) );
+            subscribers.forEach(c -> c.remove(ctx, handle));
         }
     }
 
     @Override
     public void remove(Context<CTX> ctx, ObjectHandle<T> handle) {
-        subscribers.forEach( c -> c.remove(ctx, handle) );
+        subscribers.forEach(c -> c.remove(ctx, handle));
     }
-
-
 }

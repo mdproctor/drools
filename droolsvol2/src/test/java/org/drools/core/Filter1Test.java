@@ -14,7 +14,7 @@ public class Filter1Test {
     public void testPropagation() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore(0, new TypeIndexer<>());
 
-        Filter1<DataStore<Person>, Person> f1 = new Filter1<>((ctx, p) -> p.age() > 0) {};
+        Filter1DataProcessor<DataStore<Person>, Person> f1 = new Filter1DataProcessor<>((ctx, p) -> p.age() > 0);
         persons.subscribe(f1);
 
         RecordingDataProcessor<DataStore<Person>, Person> recorder = new RecordingDataProcessor<>(0);

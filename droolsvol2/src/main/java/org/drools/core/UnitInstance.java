@@ -31,12 +31,19 @@ public class UnitInstance<CTX> {
     private final NodeMemories nodeMemories = new SimpleNodeMemories();
     private final EntryPointNode rete;
 
+    /** Minimal constructor for testing — context only, no rule wiring. */
+    UnitInstance(CTX ctx) {
+        this.rete    = null;
+        this.router  = null;
+        this.context = new ContextPojoDS<>(ctx);
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     public UnitInstance(CTX ctx, EntryPointNode rete, RuleDescriptor<CTX>... descriptors) {
         this.rete    = rete;
         this.router  = new Router<>(countSlots(descriptors));
         this.context = new ContextPojoDS<>(ctx);
-        this.router.addContext(context);
+        this.router.addContext(this);
 
         List<DataSource<?>> wired = new ArrayList<>();
         for (RuleDescriptor<CTX> desc : descriptors) {
@@ -78,6 +85,12 @@ public class UnitInstance<CTX> {
 
     public NodeMemories getNodeMemories() { return nodeMemories; }
 
+    public <M extends Memory> M getMemory(MemoryFactory<M> node) {
+        return nodeMemories.getNodeMemory(node);
+    }
+
+    public Agenda getAgenda() { return agenda; }
+
     // --- Internal wiring ---
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -96,8 +109,8 @@ public class UnitInstance<CTX> {
 
         if (sources.size() == 1) {
             Consumer2<Context<CTX>, Object> consumer = (Consumer2<Context<CTX>, Object>) rawHead;
-            DataProcessor<CTX, Object> action = buildAction(consumer, immediate);
-            DataProcessor<CTX, Object> scoped = scopeGuard(action, negations, existences);
+            UnitProcessor<CTX, Object> action = buildAction(consumer, immediate);
+            UnitProcessor<CTX, Object> scoped = scopeGuard(action, negations, existences);
             subscribeWithFilter(0, scoped, filters.isEmpty() ? null : filters.get(0));
 
         } else if (sources.size() == 2) {
@@ -133,24 +146,24 @@ public class UnitInstance<CTX> {
                 inletFilter1 = filter1;
             }
 
-            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, nodeMemories, finalConsumer, immediate, agenda), filter0);
-            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, nodeMemories, finalConsumer, immediate, agenda), inletFilter1);
+            subscribeWithFilter(0, new JoinLeftInlet<>(joinNode, finalConsumer, immediate), filter0);
+            subscribeWithFilter(1, new JoinRightInlet<>(joinNode, finalConsumer, immediate), inletFilter1);
 
         } else {
             // N≥3 sources: delta evaluation — when fact F is added to source K, fire only
             // NEW combinations: (snapshot_0 × ... × {F} × ... × snapshot_N).
             for (int slot = 0; slot < sources.size(); slot++) {
                 final int triggerSlot = slot;
-                DataProcessor<CTX, Object> proc = new DataProcessor<CTX, Object>() {
-                    public void add(Context<CTX> c, ObjectHandle<Object> h) {
-                        evaluateAllCombinations(c, sources, filters, rawHead, negations, existences,
-                                immediate, agenda, triggerSlot, h.getObject());
+                UnitProcessor<CTX, Object> proc = new UnitProcessor<CTX, Object>() {
+                    public void add(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+                        evaluateAllCombinations(unit.getContext(), sources, filters, rawHead, negations, existences,
+                                immediate, unit.getAgenda(), triggerSlot, h.getObject());
                     }
-                    public void update(Context<CTX> c, ObjectHandle<Object> h) {
-                        evaluateAllCombinations(c, sources, filters, rawHead, negations, existences,
-                                immediate, agenda, triggerSlot, h.getObject());
+                    public void update(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+                        evaluateAllCombinations(unit.getContext(), sources, filters, rawHead, negations, existences,
+                                immediate, unit.getAgenda(), triggerSlot, h.getObject());
                     }
-                    public void remove(Context<CTX> c, ObjectHandle<Object> h) { /* no re-eval on remove for now */ }
+                    public void remove(UnitInstance<CTX> unit, ObjectHandle<Object> h) { /* no re-eval on remove for now */ }
                 };
                 router.subscribe(slot, proc);
             }
@@ -265,22 +278,20 @@ public class UnitInstance<CTX> {
 
     /** Wraps a processor to check not()/exists() scopes before delegating. */
     @SuppressWarnings("unchecked")
-    private DataProcessor<CTX, Object> scopeGuard(
-            DataProcessor<CTX, Object> delegate,
+    private UnitProcessor<CTX, Object> scopeGuard(
+            UnitProcessor<CTX, Object> delegate,
             List<ScopeDescriptor<CTX>> negations,
             List<ScopeDescriptor<CTX>> existences) {
         if (negations.isEmpty() && existences.isEmpty()) return delegate;
-        return new DataProcessor<CTX, Object>() {
-            public void add(Context<CTX> c, ObjectHandle<Object> h) {
-                Object fact = h.getObject();
-                if (scopesAllow(c, fact)) delegate.add(c, h);
+        return new UnitProcessor<CTX, Object>() {
+            public void add(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+                if (scopesAllow(unit.getContext(), h.getObject())) delegate.add(unit, h);
             }
-            public void update(Context<CTX> c, ObjectHandle<Object> h) {
-                Object fact = h.getObject();
-                if (scopesAllow(c, fact)) delegate.update(c, h);
+            public void update(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+                if (scopesAllow(unit.getContext(), h.getObject())) delegate.update(unit, h);
             }
-            public void remove(Context<CTX> c, ObjectHandle<Object> h) {
-                delegate.remove(c, h);
+            public void remove(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+                delegate.remove(unit, h);
             }
             private boolean scopesAllow(Context<CTX> c, Object fact) {
                 Object[] outerFacts = new Object[]{ fact };
@@ -353,20 +364,20 @@ public class UnitInstance<CTX> {
         }
     }
 
-    private DataProcessor<CTX, Object> buildAction(Consumer2<Context<CTX>, Object> consumer, boolean immediate) {
+    private UnitProcessor<CTX, Object> buildAction(Consumer2<Context<CTX>, Object> consumer, boolean immediate) {
         if (immediate) return new Action1<>(consumer);
-        return new DataProcessor<CTX, Object>() {
-            public void add(Context<CTX> c, ObjectHandle<Object> h) { agenda.enqueue(() -> consumer.accept(c, h.getObject())); }
-            public void update(Context<CTX> c, ObjectHandle<Object> h) { agenda.enqueue(() -> consumer.accept(c, h.getObject())); }
-            public void remove(Context<CTX> c, ObjectHandle<Object> h) { }
+        return new UnitProcessor<CTX, Object>() {
+            public void add(UnitInstance<CTX> unit, ObjectHandle<Object> h) { unit.getAgenda().enqueue(() -> consumer.accept(unit.getContext(), h.getObject())); }
+            public void update(UnitInstance<CTX> unit, ObjectHandle<Object> h) { unit.getAgenda().enqueue(() -> consumer.accept(unit.getContext(), h.getObject())); }
+            public void remove(UnitInstance<CTX> unit, ObjectHandle<Object> h) { }
         };
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void subscribeWithFilter(int slot, DataProcessor<CTX, Object> processor, Object filter) {
+    private void subscribeWithFilter(int slot, UnitProcessor<CTX, Object> processor, Object filter) {
         if (filter != null) {
             Predicate2<Context<CTX>, Object> pred = (Predicate2<Context<CTX>, Object>) filter;
-            Filter1<CTX, Object> f1 = new Filter1<>(pred);
+            Filter1UnitProcessor<CTX, Object> f1 = new Filter1UnitProcessor<>(pred);
             f1.subscribe(processor);
             router.subscribe(slot, f1);
         } else {
@@ -385,6 +396,6 @@ public class UnitInstance<CTX> {
         return false;
     }
 
-    public Router<CTX> getRouter()         { return router; }
-    public ContextPojoDS<CTX> getContext() { return context; }
+    public Router<CTX>   getRouter()  { return router; }
+    public Context<CTX>  getContext() { return context; }
 }

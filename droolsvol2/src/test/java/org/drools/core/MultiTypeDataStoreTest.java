@@ -14,26 +14,26 @@ public class MultiTypeDataStoreTest {
     public void testNonIndexedPropagation() {
         PropagatingDataStore<Object> objects = new PropagatingDataStore(0, new TypeIndexer<>());
 
-        record CTX1(DataStore<Object> objects) {};
+        record CTX1(DataStore<Object> objects) {}
 
-        Filter1Type<DataStore<Object>, Person> personOtn = new Filter1Type<>( new ClassObjectType(Person.class) );
-        Filter1Type<DataStore<Object>, City>   cityOtn = new Filter1Type<>( new ClassObjectType(City.class) );
+        Filter1Type<DataStore<Object>, Person> personOtn = new Filter1Type<>(new ClassObjectType(Person.class));
+        Filter1Type<DataStore<Object>, City>   cityOtn   = new Filter1Type<>(new ClassObjectType(City.class));
 
         objects.subscribe(personOtn);
         objects.subscribe(cityOtn);
 
         Router<CTX1> router = new Router<>(2);
 
-        ContextPojoDS<CTX1> ctx         = new ContextPojoDS<>(new CTX1(objects));
-        router.addContext(ctx);
-        ContextRouterAdapter<DataStore<Object>, CTX1, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<Object>, CTX1, City>   ctxAdapter1 = new ContextRouterAdapter(1, router);
+        UnitInstance<CTX1> unit = new UnitInstance<>(new CTX1(objects));
+        router.addContext(unit);
+        ContextRouterAdapter<DataStore<Object>, CTX1, Person> ctxAdapter0 = new ContextRouterAdapter<>(0, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, City>   ctxAdapter1 = new ContextRouterAdapter<>(1, router);
 
         personOtn.subscribe(ctxAdapter0);
         cityOtn.subscribe(ctxAdapter1);
 
-        RecordingDataProcessor<CTX1, Person> recorder0 = new RecordingDataProcessor<>(0);
-        RecordingDataProcessor<CTX1, City> recorder1 = new RecordingDataProcessor<>(1);
+        RecordingUnitProcessor<CTX1, Person> recorder0 = new RecordingUnitProcessor<>(0);
+        RecordingUnitProcessor<CTX1, City>   recorder1 = new RecordingUnitProcessor<>(1);
         router.subscribe(0, recorder0);
         router.subscribe(1, recorder1);
 
@@ -79,19 +79,19 @@ public class MultiTypeDataStoreTest {
 
     @Test
     public void testIndexedPropagation() {
-        TypeIndexer<DataStore<Object>> typeIndex =new TypeIndexer<>();
+        TypeIndexer<DataStore<Object>> typeIndex = new TypeIndexer<>();
 
         PropagatingDataStore<Object> objects = new PropagatingDataStore(0, typeIndex);
 
-        record CTX1(DataStore<Object> objects) {};
+        record CTX1(DataStore<Object> objects) {}
 
         Router<CTX1> router = new Router<>(3);
 
-        ContextPojoDS<CTX1> ctx         = new ContextPojoDS<>(new CTX1(objects));
-        router.addContext(ctx);
-        ContextRouterAdapter<DataStore<Object>, CTX1, A1> a1 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<Object>, CTX1, A2> a2 = new ContextRouterAdapter(1, router);
-        ContextRouterAdapter<DataStore<Object>, CTX1, A3> a3 = new ContextRouterAdapter(2, router);
+        UnitInstance<CTX1> unit = new UnitInstance<>(new CTX1(objects));
+        router.addContext(unit);
+        ContextRouterAdapter<DataStore<Object>, CTX1, A1> a1 = new ContextRouterAdapter<>(0, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, A2> a2 = new ContextRouterAdapter<>(1, router);
+        ContextRouterAdapter<DataStore<Object>, CTX1, A3> a3 = new ContextRouterAdapter<>(2, router);
 
         typeIndex.buildCache(Base123.class, List.of(a1, a2, a3));
         typeIndex.buildCache(Base1.class, List.of(a1));
@@ -101,9 +101,9 @@ public class MultiTypeDataStoreTest {
         Filter1TypeIndex indexedTypeIndex = new Filter1TypeIndex();
         objects.subscribe(indexedTypeIndex);
 
-        RecordingDataProcessor<CTX1, Object> recorder0 = new RecordingDataProcessor<>(0);
-        RecordingDataProcessor<CTX1, Object> recorder1 = new RecordingDataProcessor<>(1);
-        RecordingDataProcessor<CTX1, Object> recorder2 = new RecordingDataProcessor<>(2);
+        RecordingUnitProcessor<CTX1, Object> recorder0 = new RecordingUnitProcessor<>(0);
+        RecordingUnitProcessor<CTX1, Object> recorder1 = new RecordingUnitProcessor<>(1);
+        RecordingUnitProcessor<CTX1, Object> recorder2 = new RecordingUnitProcessor<>(2);
         router.subscribe(0, recorder0);
         router.subscribe(1, recorder1);
         router.subscribe(2, recorder2);
@@ -145,38 +145,12 @@ public class MultiTypeDataStoreTest {
         assertThat(list2.get(1).object()).isSameAs(h123.getObject());
     }
 
-    public class Base123 implements A1, A2, A3 {
+    public class Base123 implements A1, A2, A3 {}
+    public class Base1 implements A1 {}
+    public class Base2 implements A2 {}
+    public class Base3 implements A3 {}
 
-    }
-
-    public class Base1 implements A1 {
-
-    }
-
-    public class Base2 implements A2 {
-
-    }
-
-    public class Base3 implements A3 {
-
-    }
-
-    public interface A1 {
-        default boolean a1() {
-            return true;
-        }
-    }
-
-    public interface A2 {
-        default boolean a2() {
-            return true;
-        }
-    }
-
-    public interface A3 {
-        default boolean a3() {
-            return true;
-        }
-    }
-
+    public interface A1 { default boolean a1() { return true; } }
+    public interface A2 { default boolean a2() { return true; } }
+    public interface A3 { default boolean a3() { return true; } }
 }

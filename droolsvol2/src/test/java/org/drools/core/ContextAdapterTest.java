@@ -14,22 +14,22 @@ public class ContextAdapterTest {
     @Test
     public void testPropagation() {
         PropagatingDataStore<Person> persons = new PropagatingDataStore(0, new TypeIndexer<>());
-        PropagatingDataStore<City> cities = new PropagatingDataStore(1, new TypeIndexer<>());
+        PropagatingDataStore<City> cities   = new PropagatingDataStore(1, new TypeIndexer<>());
 
-        record CTX1(DataStore<Person> persons, DataStore<City> cities) {};
+        record CTX1(DataStore<Person> persons, DataStore<City> cities) {}
 
         Router<CTX1> router = new Router<>(2);
 
-        ContextPojoDS<CTX1>                                                  ctx         = new ContextPojoDS<>(new CTX1(persons, cities));
-        Handle                                                              handle      = router.addContext(ctx);
-        ContextRouterAdapter<DataStore<Person>, ContextPojoDS<CTX1>, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<City>, ContextPojoDS<CTX1>, City>     ctxAdapter1 = new ContextRouterAdapter(1, router);
+        UnitInstance<CTX1> unit = new UnitInstance<>(new CTX1(persons, cities));
+        router.addContext(unit);
 
+        ContextRouterAdapter<DataStore<Person>, CTX1, Person> ctxAdapter0 = new ContextRouterAdapter<>(0, router);
+        ContextRouterAdapter<DataStore<City>,   CTX1, City>   ctxAdapter1 = new ContextRouterAdapter<>(1, router);
         persons.subscribe(ctxAdapter0);
         cities.subscribe(ctxAdapter1);
 
-        RecordingDataProcessor<CTX1, Object> recorder0 = new RecordingDataProcessor<>(0);
-        RecordingDataProcessor<CTX1, Object> recorder1 = new RecordingDataProcessor<>(1);
+        RecordingUnitProcessor<CTX1, Object> recorder0 = new RecordingUnitProcessor<>(0);
+        RecordingUnitProcessor<CTX1, Object> recorder1 = new RecordingUnitProcessor<>(1);
         router.subscribe(0, recorder0);
         router.subscribe(1, recorder1);
 
@@ -73,46 +73,41 @@ public class ContextAdapterTest {
     public void testAddRemoveMultipleContexts() {
         PropagatingDataStore<Person> persons1 = new PropagatingDataStore(0, new TypeIndexer<>());
         PropagatingDataStore<Person> persons2 = new PropagatingDataStore(1, new TypeIndexer<>());
-        PropagatingDataStore<City> cities = new PropagatingDataStore(2, new TypeIndexer<>());
+        PropagatingDataStore<City>   cities   = new PropagatingDataStore(2, new TypeIndexer<>());
         List<String> list1 = new ArrayList<>();
         List<String> list2 = new ArrayList<>();
 
-        record CTX1(String name, DataStore<Person> persons, DataStore<City> cities, List<String> list) {};
+        record CTX1(String name, DataStore<Person> persons, DataStore<City> cities, List<String> list) {}
 
         Router<CTX1> router = new Router<>(2);
 
-        ContextPojoDS<CTX1> ctx1         = new ContextPojoDS<>(new CTX1("ctx1", persons1, cities, list1));
-        ContextPojoDS<CTX1> ctx2         = new ContextPojoDS<>(new CTX1("ctx2", persons2, cities, list2));
-        Handle ctx1H = router.addContext(ctx1);
-        Handle ctx2H = router.addContext(ctx2);
+        UnitInstance<CTX1> unit1 = new UnitInstance<>(new CTX1("ctx1", persons1, cities, list1));
+        UnitInstance<CTX1> unit2 = new UnitInstance<>(new CTX1("ctx2", persons2, cities, list2));
+        Handle unit1H = router.addContext(unit1);
+        Handle unit2H = router.addContext(unit2);
 
-        ContextRouterAdapter<DataStore<Person>, ContextPojoDS<CTX1>, Person> ctxAdapter0 = new ContextRouterAdapter(0, router);
-        ContextRouterAdapter<DataStore<City>, ContextPojoDS<CTX1>, City>     ctxAdapter1 = new ContextRouterAdapter(1, router);
-
+        ContextRouterAdapter<DataStore<Person>, CTX1, Person> ctxAdapter0 = new ContextRouterAdapter<>(0, router);
+        ContextRouterAdapter<DataStore<City>,   CTX1, City>   ctxAdapter1 = new ContextRouterAdapter<>(1, router);
         persons1.subscribe(ctxAdapter0);
         cities.subscribe(ctxAdapter1);
 
         Action1<CTX1, Person> pfn = new Action1<>((ctx, o) -> ctx.context().list().add(ctx.context().name() + ":" + o.name()));
         Action1<CTX1, City>   cfn = new Action1<>((ctx, o) -> ctx.context().list().add(ctx.context().name() + ":" + o.name()));
-
         router.subscribe(0, pfn);
         router.subscribe(1, cfn);
 
-        ObjectHandle<Person> data1H = persons1.add(new Person("Darth", 100, "London"));
-        assertThat(ctx1.context().list()).containsExactly("ctx1:Darth");
-        assertThat(ctx2.context().list()).containsExactly("ctx2:Darth");
+        persons1.add(new Person("Darth", 100, "London"));
+        assertThat(unit1.getContext().context().list()).containsExactly("ctx1:Darth");
+        assertThat(unit2.getContext().context().list()).containsExactly("ctx2:Darth");
 
-        router.removeContext(ctx1H);
-        ObjectHandle<Person> data2H = persons1.add(new Person("Yoda", 300, "Paris"));
-        assertThat(ctx1.context().list()).containsExactly("ctx1:Darth");
-        assertThat(ctx2.context().list()).containsExactly("ctx2:Darth", "ctx2:Yoda");
+        router.removeContext(unit1H);
+        persons1.add(new Person("Yoda", 300, "Paris"));
+        assertThat(unit1.getContext().context().list()).containsExactly("ctx1:Darth");
+        assertThat(unit2.getContext().context().list()).containsExactly("ctx2:Darth", "ctx2:Yoda");
 
-        ctx1H = router.addContext(ctx1);
-        ObjectHandle<Person> data3H = persons1.add(new Person("Luke", 30, "Barcelona"));
-        assertThat(ctx1.context().list()).containsExactly("ctx1:Darth", "ctx1:Luke");
-        assertThat(ctx2.context().list()).containsExactly("ctx2:Darth", "ctx2:Yoda", "ctx2:Luke");
-
+        unit1H = router.addContext(unit1);
+        persons1.add(new Person("Luke", 30, "Barcelona"));
+        assertThat(unit1.getContext().context().list()).containsExactly("ctx1:Darth", "ctx1:Luke");
+        assertThat(unit2.getContext().context().list()).containsExactly("ctx2:Darth", "ctx2:Yoda", "ctx2:Luke");
     }
-
-
 }

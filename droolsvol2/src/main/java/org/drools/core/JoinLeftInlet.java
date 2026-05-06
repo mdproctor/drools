@@ -1,6 +1,5 @@
 package org.drools.core;
 
-import org.drools.api.data.DataProcessor;
 import org.drools.api.data.ObjectHandle;
 import org.drools.core.function.Consumer3;
 
@@ -8,51 +7,47 @@ import java.util.ArrayList;
 
 /**
  * Left inlet for a JoinNode.
- * Receives handles from the left DataSource stream, uses the JoinNode's id
- * to look up the combined JoinMemory in NodeMemories (O(1) array access).
+ * Implements UnitProcessor — no runtime state in fields. Beta memory and agenda
+ * are accessed through the UnitInstance passed at propagation time.
  */
-public class JoinLeftInlet<CTX> implements DataProcessor<CTX, Object> {
+public class JoinLeftInlet<CTX> implements UnitProcessor<CTX, Object> {
 
     private final JoinNode joinNode;
-    private final NodeMemories memories;
     private final Consumer3<Context<CTX>, Object, Object> consumer;
     private final boolean immediate;
-    private final Agenda agenda;
 
-    public JoinLeftInlet(JoinNode joinNode, NodeMemories memories,
+    public JoinLeftInlet(JoinNode joinNode,
                          Consumer3<Context<CTX>, Object, Object> consumer,
-                         boolean immediate, Agenda agenda) {
+                         boolean immediate) {
         this.joinNode  = joinNode;
-        this.memories  = memories;
         this.consumer  = consumer;
         this.immediate = immediate;
-        this.agenda    = agenda;
     }
 
     @Override
-    public void add(Context<CTX> c, ObjectHandle<Object> h) {
-        JoinMemory mem = ((JoinMemory) memories.getNodeMemory(joinNode));
+    public void add(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+        JoinMemory mem = unit.getMemory(joinNode);
         mem.addLeft(h);
         for (ObjectHandle<?> rh : new ArrayList<>(mem.getRightHandles())) {
-            fire(c, h.getObject(), rh.getObject());
+            fire(unit, h.getObject(), rh.getObject());
         }
     }
 
     @Override
-    public void update(Context<CTX> c, ObjectHandle<Object> h) {
-        JoinMemory mem = ((JoinMemory) memories.getNodeMemory(joinNode));
+    public void update(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+        JoinMemory mem = unit.getMemory(joinNode);
         for (ObjectHandle<?> rh : new ArrayList<>(mem.getRightHandles())) {
-            fire(c, h.getObject(), rh.getObject());
+            fire(unit, h.getObject(), rh.getObject());
         }
     }
 
     @Override
-    public void remove(Context<CTX> c, ObjectHandle<Object> h) {
-        ((JoinMemory) memories.getNodeMemory(joinNode)).removeLeft(h);
+    public void remove(UnitInstance<CTX> unit, ObjectHandle<Object> h) {
+        unit.getMemory(joinNode).removeLeft(h);
     }
 
-    private void fire(Context<CTX> c, Object left, Object right) {
-        if (immediate) consumer.accept(c, left, right);
-        else agenda.enqueue(() -> consumer.accept(c, left, right));
+    private void fire(UnitInstance<CTX> unit, Object left, Object right) {
+        if (immediate) consumer.accept(unit.getContext(), left, right);
+        else unit.getAgenda().enqueue(() -> consumer.accept(unit.getContext(), left, right));
     }
 }
