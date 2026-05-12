@@ -8,23 +8,36 @@ import java.util.List;
 
 /**
  * Compiled representation of a named unit within a RuleBase package.
- * Holds all RuleDescriptors for the unit's rules.
- * UnitInstances are created from a UnitDescriptor + a CTX record instance.
+ * Holds all RuleDescriptors for the unit's rules and the EvaluationEngine to use.
+ *
+ * compile() is called once when the descriptor is finalised (lazy, on first createInstance).
+ * Subsequent createInstance() calls go directly to CompiledEngine.createUnit().
  */
 public class UnitDescriptor<CTX> {
 
     private final List<RuleDescriptor<CTX>> rules = new ArrayList<>();
+    @SuppressWarnings("unchecked")
+    private EvaluationEngine<CTX> engine = BruteForceEngine.INSTANCE;
+    private CompiledEngine<CTX> compiledEngine;
 
     void addRule(RuleDescriptor<CTX> descriptor) {
         rules.add(descriptor);
+        compiledEngine = null; // invalidate on rule addition
     }
 
     public List<RuleDescriptor<CTX>> getRules() {
         return Collections.unmodifiableList(rules);
     }
 
-    @SuppressWarnings("unchecked")
+    public void setEngine(EvaluationEngine<CTX> engine) {
+        this.engine = engine;
+        this.compiledEngine = null;
+    }
+
     public UnitInstance<CTX> createInstance(CTX ctx, EntryPointNode rete) {
-        return new UnitInstance<>(ctx, rete, rules.toArray(new RuleDescriptor[0]));
+        if (compiledEngine == null) {
+            compiledEngine = engine.compile(this, rete);
+        }
+        return compiledEngine.createUnit(ctx);
     }
 }
